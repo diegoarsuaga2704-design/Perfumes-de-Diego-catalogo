@@ -65,6 +65,7 @@ export default function ProductDetail() {
       image: parfum.image,
       totalPrice,
       precio30ml: parfum?.precio30ml,
+      casa: parfum.casa,
     };
     addToCart(product);
 

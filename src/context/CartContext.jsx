@@ -6,6 +6,20 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  // 💰 Estados del descuento
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountValue, setDiscountValue] = useState(0);
+  const [discountType, setDiscountType] = useState(null);
+  const [discountTarget, setDiscountTarget] = useState("ALL"); // marca a la que aplica
+  const [isDiscountApplied, setIsDiscountApplied] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // 🛍️ Códigos disponibles con restricciones
+  const availableDiscounts = {
+    PAPUE: { type: "percentage", value: 10, appliesTo: "ALL" },
+    LV15: { type: "percentage", value: 15, appliesTo: "Louis Vuitton" },
+  };
+
   // 🛒 Añadir producto
   const addToCart = (product) => {
     setCartItems((prev) => {
@@ -18,17 +32,16 @@ export function CartProvider({ children }) {
                 mililitros: item.mililitros + product.mililitros,
                 totalPrice:
                   (item.mililitros + product.mililitros) *
-                  (item.totalPrice / item.mililitros), // recalcular proporcionalmente
+                  (item.totalPrice / item.mililitros),
               }
             : item
         );
       }
       return [...prev, product];
     });
-    // setIsCartOpen(true); // abrir el carrito al agregar algo
   };
 
-  // ✏️ Actualizar cantidad (mililitros) y total
+  // ✏️ Actualizar cantidad
   const updateCartItem = (id, newMililitros) => {
     setCartItems((prev) =>
       prev.map((item) =>
@@ -36,7 +49,7 @@ export function CartProvider({ children }) {
           ? {
               ...item,
               mililitros: newMililitros,
-              totalPrice: newMililitros * (item.totalPrice / item.mililitros), // mantener proporción de precio
+              totalPrice: newMililitros * (item.totalPrice / item.mililitros),
             }
           : item
       )
@@ -53,17 +66,95 @@ export function CartProvider({ children }) {
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
+  // 🧮 Subtotal general
+  const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
+
+  // 🎟️ Aplicar descuento con validación de marca
+  const applyDiscountCode = (code) => {
+    const upperCode = code.trim().toUpperCase();
+    const discount = availableDiscounts[upperCode];
+
+    if (!discount) {
+      setErrorMessage("El código ingresado no existe o no es válido.");
+      setIsDiscountApplied(false);
+      return;
+    }
+
+    // Verificar si hay productos aplicables
+    const applicableItems = cartItems.filter((item) => {
+      if (discount.appliesTo === "ALL") return true;
+      if (Array.isArray(discount.appliesTo))
+        return discount.appliesTo.includes(item.casa);
+      return item.casa === discount.appliesTo;
+    });
+
+    if (applicableItems.length === 0) {
+      setErrorMessage(
+        `El código ${upperCode} no aplica a los productos en tu carrito.`
+      );
+      setIsDiscountApplied(false);
+      return;
+    }
+
+    // Guardar información del descuento si aplica
+    setDiscountCode(upperCode);
+    setDiscountType(discount.type);
+    setDiscountValue(discount.value);
+    setDiscountTarget(discount.appliesTo);
+    setIsDiscountApplied(true);
+    setErrorMessage("");
+  };
+
+  // 🧾 Calcular total con descuento (solo sobre productos válidos)
+  const calculateDiscount = () => {
+    if (!isDiscountApplied) return subtotal;
+
+    let discountableTotal = 0;
+
+    cartItems.forEach((item) => {
+      if (
+        discountTarget === "ALL" ||
+        (Array.isArray(discountTarget)
+          ? discountTarget.includes(item.casa)
+          : item.casa === discountTarget)
+      ) {
+        discountableTotal += item.totalPrice;
+      }
+    });
+
+    let totalAfterDiscount = subtotal;
+
+    if (discountType === "percentage") {
+      totalAfterDiscount -= (discountableTotal * discountValue) / 100;
+    } else if (discountType === "amount") {
+      totalAfterDiscount -= discountValue;
+    }
+
+    return Math.max(0, totalAfterDiscount);
+  };
+
+  const totalWithDiscount = calculateDiscount();
+
   return (
     <CartContext.Provider
       value={{
         cartItems,
         addToCart,
         removeFromCart,
+        updateCartItem,
         isCartOpen,
         openCart,
         closeCart,
         toggleCart,
-        updateCartItem,
+        subtotal,
+        totalWithDiscount,
+        discountCode,
+        discountType,
+        discountValue,
+        discountTarget,
+        isDiscountApplied,
+        applyDiscountCode,
+        errorMessage,
       }}
     >
       {children}
