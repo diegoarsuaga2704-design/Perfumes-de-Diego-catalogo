@@ -64,7 +64,7 @@ function ShoppingCartProduct() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 overflow-y-auto p-6 items-center">
       {cartItems.length === 0 ? (
         <p className="text-gray-500 text-center mt-10">
           Tu carrito está vacío.
@@ -75,11 +75,11 @@ function ShoppingCartProduct() {
           const discountedPrice = getDiscountedPrice(item);
 
           return (
-            <div key={item.id} className="flex gap-4 border-b pb-4">
+            <div key={item.id} className="flex gap-4 border-b py-3">
               <img
                 src={item.image}
                 alt={item.nombre}
-                className="w-16 object-cover rounded-md"
+                className="w-24 h-32 object-cover rounded-md"
               />
 
               <div className="flex-1">

@@ -16,8 +16,9 @@ export function CartProvider({ children }) {
 
   // 🛍️ Códigos disponibles con restricciones
   const availableDiscounts = {
-    PAPUE: { type: "percentage", value: 10, appliesTo: "ALL" },
-    LV15: { type: "percentage", value: 15, appliesTo: "Louis Vuitton" },
+    // PAPUE: { type: "percentage", value: 10, appliesTo: "ALL" },
+    PROMOLV10: { type: "percentage", value: 10, appliesTo: "Louis Vuitton" },
+    TOSKO10: { type: "percentage", value: 10, appliesTo: "Toskovat" },
   };
 
   // 🛒 Añadir producto
@@ -87,8 +88,8 @@ export function CartProvider({ children }) {
       // Descuento general
       if (discount.appliesTo === "ALL") return true;
 
-      // Caso especial: LV15 → solo Louis Vuitton con menos de 30 ml
-      if (upperCode === "LV15") {
+      // Caso especial: PROMOLV10 → solo Louis Vuitton con menos de 30 ml
+      if (upperCode === "PROMOLV10") {
         return item.casa === "Louis Vuitton" && item.mililitros < 11;
       }
 
@@ -131,9 +132,9 @@ export function CartProvider({ children }) {
         applies = discountTarget.includes(item.casa);
       else applies = item.casa === discountTarget;
 
-      // 🔹 Ajuste: si el código es LV15, también requiere <30 ml
+      // 🔹 Ajuste: si el código es PROMOLV10, también requiere <30 ml
       if (
-        discountCode === "LV15" &&
+        discountCode === "PROMOLV10" &&
         !(item.casa === "Louis Vuitton" && item.mililitros < 11)
       ) {
         applies = false;
