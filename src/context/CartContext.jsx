@@ -81,10 +81,22 @@ export function CartProvider({ children }) {
     }
 
     // Verificar si hay productos aplicables
+
+    // Verificar productos a los que puede aplicar el descuento
     const applicableItems = cartItems.filter((item) => {
+      // Descuento general
       if (discount.appliesTo === "ALL") return true;
+
+      // Caso especial: LV15 → solo Louis Vuitton con menos de 30 ml
+      if (upperCode === "LV15") {
+        return item.casa === "Louis Vuitton" && item.mililitros < 11;
+      }
+
+      // Si aplica a varias marcas
       if (Array.isArray(discount.appliesTo))
         return discount.appliesTo.includes(item.casa);
+
+      // Por defecto, aplica solo a una marca específica
       return item.casa === discount.appliesTo;
     });
 
@@ -112,14 +124,22 @@ export function CartProvider({ children }) {
     let discountableTotal = 0;
 
     cartItems.forEach((item) => {
+      let applies = false;
+
+      if (discountTarget === "ALL") applies = true;
+      else if (Array.isArray(discountTarget))
+        applies = discountTarget.includes(item.casa);
+      else applies = item.casa === discountTarget;
+
+      // 🔹 Ajuste: si el código es LV15, también requiere <30 ml
       if (
-        discountTarget === "ALL" ||
-        (Array.isArray(discountTarget)
-          ? discountTarget.includes(item.casa)
-          : item.casa === discountTarget)
+        discountCode === "LV15" &&
+        !(item.casa === "Louis Vuitton" && item.mililitros < 11)
       ) {
-        discountableTotal += item.totalPrice;
+        applies = false;
       }
+
+      if (applies) discountableTotal += item.totalPrice;
     });
 
     let totalAfterDiscount = subtotal;
