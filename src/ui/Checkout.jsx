@@ -61,16 +61,26 @@ function Checkout({ totalCartPrice, postalCode, disabled }) {
   } = useCart();
 
   const [isTikTokBrowser, setIsTikTokBrowser] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  // 🔍 Detección del navegador interno de TikTok
+  // 🔍 Detección robusta de TikTok o WebView
   useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    if (/TikTok/i.test(userAgent)) {
+    const ua = navigator.userAgent || "";
+    const isInAppBrowser =
+      /TikTok|Instagram|FBAN|FBAV/i.test(ua) ||
+      window.navigator.standalone === false ||
+      !window.matchMedia("(display-mode: standalone)").matches;
+
+    // Algunos WebViews no incluyen 'TikTok', pero sí bloquean window.opener
+    const isProbablyWebView =
+      !window.opener && !document.referrer.includes(window.location.host);
+
+    if (isInAppBrowser || isProbablyWebView) {
       setIsTikTokBrowser(true);
     }
   }, []);
 
-  // 🧾 Mensaje automático de pedido
+  // 🧾 Mensaje automático
   const mensajePedido = `Hola Diego, me gustaría realizar mi pedido:
 ${cartItems
   .map(
@@ -96,10 +106,22 @@ Gracias!`;
     mensajePedido
   )}`;
 
+  // 🚫 Si el usuario está en TikTok, el botón no redirige — muestra aviso
+  const handleCheckoutClick = (e) => {
+    if (isTikTokBrowser) {
+      e.preventDefault();
+      setShowModal(true);
+    }
+  };
+
   return (
     <>
-      {/* Botón de realizar pedido */}
-      <a href={enlaceWhatsApp} target="_blank" rel="noopener noreferrer">
+      <a
+        href={enlaceWhatsApp}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={handleCheckoutClick}
+      >
         <button
           className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-2 rounded-md font-medium transition-colors"
           disabled={cartItems.length === 0 || disabled}
@@ -108,17 +130,18 @@ Gracias!`;
         </button>
       </a>
 
-      {/* Modal de advertencia si se abre desde TikTok */}
-      {isTikTokBrowser && (
+      {/* Modal de aviso elegante */}
+      {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-lg max-w-sm p-6 text-center">
             <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              Estás usando TikTok
+              Abre tu navegador
             </h2>
             <p className="text-gray-600 text-sm mb-5 leading-relaxed">
-              Para poder enviarnos tu pedido por WhatsApp, por favor abre esta
-              página en tu navegador (Chrome o Safari). TikTok no permite abrir
-              directamente WhatsApp desde su navegador interno.
+              Estás usando TikTok u otro navegador interno. Para enviarnos tu
+              pedido por WhatsApp, por favor abre esta página en tu navegador
+              (Chrome o Safari), ya que TikTok no permite abrir WhatsApp
+              directamente.
             </p>
             <div className="flex flex-col gap-2">
               <a
@@ -130,7 +153,7 @@ Gracias!`;
                 Abrir en navegador
               </a>
               <button
-                onClick={() => setIsTikTokBrowser(false)}
+                onClick={() => setShowModal(false)}
                 className="text-sm text-gray-500 underline hover:text-gray-700"
               >
                 Entendido
