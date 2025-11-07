@@ -60,12 +60,12 @@ function Checkout({ totalCartPrice, postalCode, disabled }) {
     discountCode,
   } = useCart();
 
-  const [showWarning, setShowWarning] = useState(false);
+  const [isTikTokBrowser, setIsTikTokBrowser] = useState(false);
 
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     if (/tiktok/i.test(userAgent)) {
-      setShowWarning(true);
+      setIsTikTokBrowser(true);
     }
   }, []);
 
@@ -94,43 +94,45 @@ Gracias!`;
     mensajePedido
   )}`;
 
-  const abrirEnNavegador = () => {
-    // Intenta abrir la misma página fuera de TikTok
-    const url = window.location.href;
-    window.open(url, "_blank");
-  };
-
   return (
     <>
-      {/* --- Pantalla de advertencia si está dentro de TikTok --- */}
-      {showWarning && (
+      {isTikTokBrowser && (
         <div className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center text-center p-6 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm shadow-lg">
             <h2 className="text-lg font-semibold mb-3">
-              ⚠️ Abre tu pedido en tu navegador
+              ⚠️ Abre esta página en tu navegador
             </h2>
             <p className="mb-4 text-gray-700">
-              TikTok bloquea el acceso directo a WhatsApp. Por favor abre esta
-              página en tu navegador (Safari o Chrome) para poder enviar tu
-              pedido correctamente.
+              TikTok no permite abrir WhatsApp directamente desde su navegador
+              interno. Para completar tu pedido:
+              <br />
+              <br />
+              1️⃣ Toca los tres puntos arriba a la derecha. <br />
+              2️⃣ Selecciona <strong>“Abrir en navegador”</strong>. <br />
+              3️⃣ Una vez abierta la página en Safari o Chrome, vuelve a tocar el
+              botón para enviar tu pedido por WhatsApp.
             </p>
             <button
-              onClick={abrirEnNavegador}
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert(
+                  "Enlace copiado. Pégalo en tu navegador si lo prefieres."
+                );
+              }}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors"
             >
-              Abrir en navegador
+              Copiar enlace
             </button>
           </div>
         </div>
       )}
 
-      {/* --- Botón de WhatsApp (solo si no está en TikTok) --- */}
       <a
         href={enlaceWhatsApp}
         target="_blank"
         rel="noopener noreferrer"
         className={`block ${
-          showWarning ? "pointer-events-none opacity-50" : ""
+          isTikTokBrowser ? "pointer-events-none opacity-50" : ""
         }`}
       >
         <button
