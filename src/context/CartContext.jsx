@@ -17,6 +17,7 @@ export function CartProvider({ children }) {
   // 🛍️ Códigos disponibles con restricciones
   const availableDiscounts = {
     PTM10: { type: "percentage", value: 10, appliesTo: "ALL" },
+    CARLOS5: { type: "percentage", value: 5, appliesTo: "ALL" },
     // PROMOLV10: { type: "percentage", value: 10, appliesTo: "Louis Vuitton" },
     // TOSKO10: { type: "percentage", value: 10, appliesTo: "Toskovat" },
     FILIPPO10: {
