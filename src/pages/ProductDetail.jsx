@@ -154,7 +154,12 @@ export default function ProductDetail() {
 
               <div
                 className={`               
-                  ${parfum.disponible === "Agotado" ? "hidden" : ""} 
+                  ${
+                    parfum.disponible === "Agotado" ||
+                    parfum.disponible === "Próximamente"
+                      ? "hidden"
+                      : ""
+                  } 
                   `}
               >
                 <SelectMililitros onChange={(valor) => setMililitros(valor)} />
