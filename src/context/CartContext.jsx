@@ -19,6 +19,7 @@ export function CartProvider({ children }) {
     PTM10: { type: "percentage", value: 10, appliesTo: "ALL" },
     CARLOS5: { type: "percentage", value: 5, appliesTo: "ALL" },
     PAPU10: { type: "percentage", value: 10, appliesTo: "ALL" },
+    ANGEL5: { type: "percentage", value: 5, appliesTo: "ALL" },
     // PROMOLV10: { type: "percentage", value: 10, appliesTo: "Louis Vuitton" },
     TOSKO10: { type: "percentage", value: 10, appliesTo: "Toskovat" },
     FILIPPO10: {
