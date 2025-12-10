@@ -14,7 +14,7 @@ function Footer() {
             />
           </div>
           <p className="text-sm mb-2 font-italic">
-            Entregas personales en Puebla, envíos a todo México.
+            Envíos a todo México.
             <br />
             Si tienes alguna duda, no dudes en contactarme 🙌🏻
           </p>
