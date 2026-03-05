@@ -3,7 +3,7 @@ import { FaTiktok, FaWhatsapp } from "react-icons/fa";
 
 function Footer() {
   return (
-    <footer className="bg-gray-50 text-gray-700 md:py-8 py-3 px-6 md:px-12 lg:px-20 border-t">
+    <footer className="bg-gray-100 text-gray-700 md:py-8 py-3 px-6 md:px-12 lg:px-20 border-t">
       <div className="max-w-7xl mx-auto grid md:gap-10 gap-5 md:grid-cols-2">
         {/* Logo y descripción */}
         <div className="content-center">

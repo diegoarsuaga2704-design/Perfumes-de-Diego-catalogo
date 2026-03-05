@@ -28,8 +28,8 @@ function ProductCard({ parfum }) {
           parfum.disponible === "Agotado" ? "bg-red-600" : ""
         }
       ${parfum.disponible === "Próximamente" ? "bg-yellow-500" : ""} ${
-          parfum.disponible === "Disponible" ? "hidden" : ""
-        }`}
+        parfum.disponible === "Disponible" ? "hidden" : ""
+      }`}
       >
         {parfum.disponible === "Disponible" ? "" : parfum.disponible}
       </span>
@@ -49,7 +49,8 @@ function ProductCard({ parfum }) {
         </div>
         <div className="border-t border-gray-200 pt-4 flex flex-col justify-between">
           <span className="text-gray-800 text-sm font-semibold">
-            Precio: ${parfum.precio}/ml
+            Precio: ${parfum.precio}
+            {!parfum.stock && "/ml"}
           </span>
           <span className="hidden sm:block text-xs text-gray-600">
             {parfum.notas}

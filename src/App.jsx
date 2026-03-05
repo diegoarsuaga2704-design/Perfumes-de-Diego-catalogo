@@ -7,6 +7,7 @@ import Promociones from "./pages/Promociones";
 import AppLayout from "./ui/AppLayout";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
+import Prehome from "./pages/Prehome";
 
 const router = createBrowserRouter([
   {
@@ -14,6 +15,10 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
+        element: <Prehome />,
+      },
+      {
+        path: "/home",
         element: <Home />,
       },
       {

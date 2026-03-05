@@ -74,7 +74,7 @@ export default function ShoppingCart() {
                 value={postalCode}
                 onChange={handlePostalCodeChange}
                 placeholder="Ej. 12345"
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
+                className="border bg-[#A47E3B] border-gray-300 rounded-md px-3 py-2 placeholder-white text-white text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
                 inputMode="numeric"
                 maxLength={5}
               />

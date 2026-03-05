@@ -33,42 +33,61 @@ export function CartProvider({ children }) {
   // 🛒 Añadir producto
   const addToCart = (product) => {
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find(
+        (item) =>
+          item.id === product.id &&
+          item.tipoVenta === product.tipoVenta &&
+          (item.tipoVenta === "botella"
+            ? true
+            : item.mililitros === product.mililitros),
+      );
+
       if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? {
+        return prev.map((item) => {
+          if (item.id === product.id && item.tipoVenta === product.tipoVenta) {
+            if (item.tipoVenta === "botella") {
+              if (item.cantidad + 1 > item.stockDisponible) return item;
+
+              return {
                 ...item,
-                mililitros: item.mililitros + product.mililitros,
-                totalPrice:
-                  (item.mililitros + product.mililitros) *
-                  (item.totalPrice / item.mililitros),
-              }
-            : item
-        );
+                cantidad: item.cantidad + 1,
+              };
+            } else {
+              return item; // decants no se acumulan automáticamente
+            }
+          }
+          return item;
+        });
       }
+
       return [...prev, product];
     });
   };
 
   // ✏️ Actualizar cantidad
-  const updateCartItem = (id, newMililitros) => {
+  const updateCartItem = (id, tipoVenta, newValue) => {
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              mililitros: newMililitros,
-              totalPrice: newMililitros * (item.totalPrice / item.mililitros),
-            }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id === id && item.tipoVenta === tipoVenta) {
+          if (tipoVenta === "botella") {
+            if (newValue > item.stockDisponible) return item;
+            return { ...item, cantidad: newValue };
+          }
+
+          if (tipoVenta === "decant") {
+            return { ...item, mililitros: newValue };
+          }
+        }
+        return item;
+      }),
     );
   };
 
   // 🗑️ Eliminar producto
-  const removeFromCart = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (id, tipoVenta) => {
+    setCartItems((prev) =>
+      prev.filter((item) => !(item.id === id && item.tipoVenta === tipoVenta)),
+    );
   };
 
   // ⚙️ Abrir / Cerrar carrito
@@ -77,7 +96,17 @@ export function CartProvider({ children }) {
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
   // 🧮 Subtotal general
-  const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
+  const subtotal = cartItems.reduce((acc, item) => {
+    if (item.tipoVenta === "botella") {
+      return acc + item.precioUnitario * item.cantidad;
+    }
+
+    if (item.tipoVenta === "decant") {
+      return acc + item.precioUnitario * item.mililitros;
+    }
+
+    return acc;
+  }, 0);
 
   // 🎟️ Aplicar descuento con validación de marca
   const applyDiscountCode = (code) => {
@@ -112,7 +141,7 @@ export function CartProvider({ children }) {
 
     if (applicableItems.length === 0) {
       setErrorMessage(
-        `El código ${upperCode} no aplica a los productos en tu carrito.`
+        `El código ${upperCode} no aplica a los productos en tu carrito.`,
       );
       setIsDiscountApplied(false);
       return;
@@ -128,6 +157,7 @@ export function CartProvider({ children }) {
   };
 
   // 🧾 Calcular total con descuento (solo sobre productos válidos)
+  // 🧾 Calcular total con descuento (corregido)
   const calculateDiscount = () => {
     if (!isDiscountApplied) return subtotal;
 
@@ -141,7 +171,6 @@ export function CartProvider({ children }) {
         applies = discountTarget.includes(item.casa);
       else applies = item.casa === discountTarget;
 
-      // 🔹 Ajuste: si el código es PROMOLV10, también requiere <30 ml
       if (
         discountCode === "PROMOLV10" &&
         !(item.casa === "Louis Vuitton" && item.mililitros < 11)
@@ -149,7 +178,13 @@ export function CartProvider({ children }) {
         applies = false;
       }
 
-      if (applies) discountableTotal += item.totalPrice;
+      if (applies) {
+        if (item.tipoVenta === "botella") {
+          discountableTotal += item.precioUnitario * item.cantidad;
+        } else if (item.tipoVenta === "decant") {
+          discountableTotal += item.precioUnitario * item.mililitros;
+        }
+      }
     });
 
     let totalAfterDiscount = subtotal;

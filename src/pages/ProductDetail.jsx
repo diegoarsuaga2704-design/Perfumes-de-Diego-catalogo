@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ShoppingCart, CreditCard, ArrowLeft, CheckCircle } from "lucide-react";
+import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import getParfums from "../functions/getParfums";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
@@ -13,7 +13,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mililitros, setMililitros] = useState(1);
-  const [showSuccess, setShowSuccess] = useState(false); // 👈 nuevo estado
+  const [showSuccess, setShowSuccess] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -21,6 +21,7 @@ export default function ProductDetail() {
       try {
         const data = await getParfums();
         const found = data.find((item) => String(item.id) === String(id));
+
         if (!found) {
           setError("Perfume no encontrado");
         } else {
@@ -33,10 +34,19 @@ export default function ProductDetail() {
         setLoading(false);
       }
     }
+
     fetchParfum();
   }, [id]);
 
+  /* Reinicia mililitros cuando cambia el producto */
+  useEffect(() => {
+    if (parfum?.stock === true) {
+      setMililitros(1);
+    }
+  }, [parfum]);
+
   if (loading) return <LoadingSpinner />;
+
   if (error)
     return (
       <div className="text-center mt-20">
@@ -50,26 +60,40 @@ export default function ProductDetail() {
       </div>
     );
 
-  const totalPrice =
-    mililitros === 30 && parfum.casa === "Louis Vuitton"
+  /* ===========================
+     LÓGICA DE TIPO DE VENTA
+  ============================ */
+
+  const esBotellaCompleta = parfum.stock === true;
+  const esDecant = parfum.stock === false;
+  const estaDisponible = parfum.disponible === "Disponible";
+
+  const totalPrice = esBotellaCompleta
+    ? parfum.precio
+    : mililitros === 30 && parfum.casa === "Louis Vuitton"
       ? parfum?.precio30ml
       : parfum.precio * mililitros;
 
   const handleAddToCart = () => {
+    if (!estaDisponible) return;
+
     const product = {
       id: parfum.id,
       nombre: parfum.nombre,
-      precio: parfum.precio,
-      disponible: parfum.disponible,
-      mililitros,
       image: parfum.image,
-      totalPrice,
-      precio30ml: parfum?.precio30ml,
       casa: parfum.casa,
+      tipoVenta: esBotellaCompleta ? "botella" : "decant",
+      precioUnitario: parfum.precio,
+      mlBotella: esBotellaCompleta ? parfum.mlBotella : null,
+      mililitros: esDecant ? mililitros : null,
+      cantidad: esBotellaCompleta ? 1 : null,
+      stockDisponible: esBotellaCompleta
+        ? parfum.stockBotellas
+        : parfum.stockMililitros,
     };
+
     addToCart(product);
 
-    // ✅ Mostrar mensaje de éxito por 3 segundos
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
@@ -80,6 +104,7 @@ export default function ProductDetail() {
     <>
       <div className="flex flex-col lg:flex-row gap-10 bg-white p-6 rounded-2xl shadow-md max-w-6xl mx-auto my-10 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* IMAGEN */}
           <div>
             <button
               onClick={() => {
@@ -90,6 +115,7 @@ export default function ProductDetail() {
             >
               <ArrowLeft size={24} />
             </button>
+
             <img
               src={parfum.image}
               alt={parfum.nombre}
@@ -97,109 +123,124 @@ export default function ProductDetail() {
             />
           </div>
 
+          {/* INFORMACIÓN */}
           <div className="flex-1 flex flex-col justify-between">
             <div>
               <h1 className="text-2xl font-semibold mb-2">{parfum.nombre}</h1>
-              <p className="text-gray-500 text-sm  italic">
+
+              <p className="text-gray-500 text-sm italic">
                 {parfum.concentracion}
               </p>
-              <p className="text-gray-500 text-sm font-semibold mb-3 ">
+
+              <p className="text-gray-500 text-sm font-semibold mb-3">
                 {parfum.casa}
               </p>
 
               {/* PRECIO */}
-              <div className="flex items-center gap-4 my-5">
-                <span className="text-3xl font-bold text-gray-900">
-                  ${parfum.precio}/ml
-                </span>
-                <span
-                  className={`font-medium pl-6
-                    ${parfum.disponible === "Agotado" ? "text-red-600" : ""}
-                    ${
-                      parfum.disponible === "Próximamente"
-                        ? "text-yellow-600"
-                        : ""
-                    } ${
-                    parfum.disponible === "Disponible" ? "text-green-600" : ""
-                  }
-                  `}
-                >
-                  {parfum.disponible}
-                </span>
+              <div className="flex items-center gap-4 my-5 flex-wrap">
+                {esBotellaCompleta && (
+                  <>
+                    <span className="text-3xl font-bold text-gray-900">
+                      ${parfum.precio}
+                    </span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">
+                      Botella completa
+                    </span>
+                  </>
+                )}
+
+                {esDecant && (
+                  <>
+                    <span className="text-3xl font-bold text-gray-900">
+                      ${parfum.precio}
+                      <span className="text-lg">/ml</span>
+                    </span>
+                    <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold">
+                      Decant
+                    </span>
+                  </>
+                )}
               </div>
 
+              {/* DETALLES */}
               <div className="my-6">
+                {parfum.mlBotella && (
+                  <>
+                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
+                      TAMAÑO:
+                    </h2>
+                    <ul className="text-sm text-gray-600 leading-6">
+                      <li>{parfum.mlBotella} ml</li>
+                    </ul>
+                  </>
+                )}
+
                 <h2 className="text-sm font-semibold text-gray-700 mt-2">
                   NOTAS:
                 </h2>
                 <ul className="text-sm text-gray-600 leading-6">
                   <li>{parfum.notas}</li>
                 </ul>
+
                 <h2 className="text-sm font-semibold text-gray-700 mt-2">
                   CATEGORÍA:
                 </h2>
                 <ul className="text-sm text-gray-600 leading-6">
                   <li>{parfum.categoria}</li>
                 </ul>
-                <a
-                  href={parfum.fraganticaLink}
-                  className="text-sm text-[#D4AF7A] hover:underline mt-4 inline-block"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Conocer más sobre "{parfum.nombre}"
-                  {parfum.fraganticaLink && " en Fragrantica"}
-                </a>
+
+                {parfum.fraganticaLink && (
+                  <a
+                    href={parfum.fraganticaLink}
+                    className="text-sm text-[#D4AF7A] hover:underline mt-4 inline-block"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Conocer más sobre "{parfum.nombre}" en Fragrantica
+                  </a>
+                )}
               </div>
 
-              <div
-                className={`               
-                  ${
-                    parfum.disponible === "Agotado" ||
-                    parfum.disponible === "Próximamente"
-                      ? "hidden"
-                      : ""
-                  } 
-                  `}
-              >
-                <SelectMililitros onChange={(valor) => setMililitros(valor)} />
+              {/* SELECTOR SOLO PARA DECANTS */}
+              {esDecant && (
+                <>
+                  <SelectMililitros
+                    onChange={(valor) => setMililitros(valor)}
+                  />
 
-                <div className="text-[#D4AF7A] mt-4 font-semibold">
-                  Total: ${totalPrice} por {mililitros}ml
-                </div>
+                  <div className="text-[#D4AF7A] mt-4 font-semibold">
+                    Total: ${totalPrice} por {mililitros}ml
+                  </div>
+                </>
+              )}
 
-                <div
-                  className={`text-sm text-gray-500 font-semibold mt-3              
-                  ${parfum.disponible !== "Próximamente" ? "hidden" : ""} 
-                  `}
+              {/* BOTÓN */}
+              <div className="mt-4 flex gap-4 items-center">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!estaDisponible}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm transition-all duration-300 ${
+                    estaDisponible
+                      ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
-                  Este perfume tardará de 2-3 semanas en llegar. Pero puedes
-                  pedirlo ahora
-                </div>
-                <div className="mt-2 flex gap-4 items-center">
-                  <button
-                    onClick={handleAddToCart}
-                    className="flex items-center gap-2 bg-[#A47E3B] text-white px-5 py-2 rounded-lg hover:bg-[#D4AF7A] text-sm transition-all duration-300"
-                  >
-                    <ShoppingCart size={18} />
-                    Añadir al carrito
-                  </button>
+                  <ShoppingCart size={18} />
+                  Añadir al carrito
+                </button>
 
-                  {/* ✅ Mensaje temporal de éxito */}
-                  {showSuccess && (
-                    <span className="flex items-center gap-1 text-green-600 text-sm font-medium animate-fade-in">
-                      <CheckCircle size={16} />
-                      Agregado con éxito
-                    </span>
-                  )}
-                </div>
+                {showSuccess && (
+                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium animate-fade-in">
+                    <CheckCircle size={16} />
+                    Agregado con éxito
+                  </span>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Animación Tailwind personalizada */}
       <style>
         {`
           @keyframes fade-in {
