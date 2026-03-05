@@ -281,7 +281,7 @@ function ShoppingCartProduct() {
                       Contenido: {item.mlBotella} ml
                     </p>
                     <p className="text-gray-500 text-sm">
-                      Botellas: {item.cantidad}
+                      Piezas: {item.cantidad}
                     </p>
                   </>
                 )}
