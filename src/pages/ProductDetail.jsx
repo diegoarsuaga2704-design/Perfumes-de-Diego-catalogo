@@ -13,6 +13,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mililitros, setMililitros] = useState(1);
+  const [botellas, setBotellas] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const { addToCart } = useCart();
 
@@ -39,10 +40,14 @@ export default function ProductDetail() {
   }, [id]);
 
   /* Reinicia mililitros cuando cambia el producto */
+  // useEffect(() => {
+  //   if (parfum?.stock === true) {
+  //     setMililitros(1);
+  //   }
+  // }, [parfum]);
   useEffect(() => {
-    if (parfum?.stock === true) {
-      setMililitros(1);
-    }
+    setMililitros(1);
+    setBotellas(1);
   }, [parfum]);
 
   if (loading) return <LoadingSpinner />;
@@ -68,8 +73,13 @@ export default function ProductDetail() {
   const esDecant = parfum.stock === false;
   const estaDisponible = parfum.disponible === "Disponible";
 
+  // const totalPrice = esBotellaCompleta
+  //   ? parfum.precio
+  //   : mililitros === 30 && parfum.casa === "Louis Vuitton"
+  //     ? parfum?.precio30ml
+  //     : parfum.precio * mililitros;
   const totalPrice = esBotellaCompleta
-    ? parfum.precio
+    ? parfum.precio * botellas
     : mililitros === 30 && parfum.casa === "Louis Vuitton"
       ? parfum?.precio30ml
       : parfum.precio * mililitros;
@@ -86,9 +96,9 @@ export default function ProductDetail() {
       precioUnitario: parfum.precio,
       mlBotella: esBotellaCompleta ? parfum.mlBotella : null,
       mililitros: esDecant ? mililitros : null,
-      cantidad: esBotellaCompleta ? 1 : null,
+      cantidad: esBotellaCompleta ? botellas : null,
       stockDisponible: esBotellaCompleta
-        ? parfum.stockBotellas
+        ? parfum.botellasDisponibles
         : parfum.stockMililitros,
     };
 
@@ -161,6 +171,34 @@ export default function ProductDetail() {
                   </>
                 )}
               </div>
+              {/* SELECTOR PARA BOTELLAS */}
+              {esBotellaCompleta && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700 mb-1">
+                    Selecciona cantidad de botellas
+                  </label>
+
+                  <select
+                    value={botellas}
+                    onChange={(e) => setBotellas(parseInt(e.target.value))}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-gray-800 bg-white shadow-sm focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B]"
+                  >
+                    {Array.from(
+                      { length: parfum.botellasDisponibles },
+                      (_, i) => i + 1,
+                    ).map((num) => (
+                      <option key={num} value={num}>
+                        {num} botella{num > 1 ? "s" : ""}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="text-[#D4AF7A] mt-4 font-semibold">
+                    Total: ${totalPrice} por {botellas} botella
+                    {botellas > 1 ? "s" : ""}
+                  </div>
+                </div>
+              )}
 
               {/* DETALLES */}
               <div className="my-6">
