@@ -14,7 +14,7 @@ function Prehome() {
     },
     {
       image: "https://fraguru.com/himg/o.gxxUAHYdeV7.jpg",
-      title: "Stock disponible",
+      title: "Botellas completas y parciales",
       description: "Perfumes sellados y parciales disponibles.",
     },
   ];
@@ -25,7 +25,7 @@ function Prehome() {
   //   };
 
   const handleClick = (store) => {
-    if (store === "Stock disponible") {
+    if (store === "Botellas completas y parciales") {
       navigate("/home", { state: { mode: "stock" } });
     } else if (store === "Decants") {
       navigate("/home", { state: { mode: "decants" } });

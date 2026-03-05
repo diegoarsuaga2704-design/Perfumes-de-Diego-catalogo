@@ -60,7 +60,7 @@ export default function ShoppingCart() {
 
         <div className="flex flex-col h-[calc(100%-70px)] overflow-y-auto">
           {/* Campo de código postal */}
-          <div className={`${cartItems.length === 0 ? "hidden" : ""}`}>
+          {/* <div className={`${cartItems.length === 0 ? "hidden" : ""}`}>
             <div className="border-b p-4 flex flex-col gap-2">
               <label
                 htmlFor="postalCode"
@@ -74,12 +74,12 @@ export default function ShoppingCart() {
                 value={postalCode}
                 onChange={handlePostalCodeChange}
                 placeholder="Ej. 12345"
-                className="border bg-[#A47E3B] border-gray-300 rounded-md px-3 py-2 placeholder-white text-white text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
+                className="border bg-red-200 border-gray-300 rounded-md px-3 py-2 placeholder:text-black text-white text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
                 inputMode="numeric"
                 maxLength={5}
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Lista de productos */}
           <ShoppingCartProduct />
@@ -124,6 +124,27 @@ export default function ShoppingCart() {
             <div className="flex justify-between text-gray-900 font-semibold border-t pt-3">
               <span>Total:</span>
               <span>${totalWithDiscount.toFixed(2)}</span>
+            </div>
+
+            <div className={`${cartItems.length === 0 ? "hidden" : ""}`}>
+              <div className="border-b p-4 flex flex-col gap-2">
+                <label
+                  htmlFor="postalCode"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Ingresa tu código postal:
+                </label>
+                <input
+                  id="postalCode"
+                  type="text"
+                  value={postalCode}
+                  onChange={handlePostalCodeChange}
+                  placeholder="Ej. 12345"
+                  className="border bg-red-200 border-gray-300 rounded-md px-3 py-2 placeholder:text-black text-white text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
+                  inputMode="numeric"
+                  maxLength={5}
+                />
+              </div>
             </div>
 
             <div
