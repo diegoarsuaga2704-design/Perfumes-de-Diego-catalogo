@@ -175,7 +175,7 @@ export default function ProductDetail() {
               {esBotellaCompleta && (
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700 mb-1">
-                    Selecciona cantidad de botellas
+                    Selecciona cantidad de piezas
                   </label>
 
                   <select
@@ -188,13 +188,13 @@ export default function ProductDetail() {
                       (_, i) => i + 1,
                     ).map((num) => (
                       <option key={num} value={num}>
-                        {num} botella{num > 1 ? "s" : ""}
+                        {num} pieza{num > 1 ? "s" : ""}
                       </option>
                     ))}
                   </select>
 
                   <div className="text-[#D4AF7A] mt-4 font-semibold">
-                    Total: ${totalPrice} por {botellas} botella
+                    Total: ${totalPrice} por {botellas} pieza
                     {botellas > 1 ? "s" : ""}
                   </div>
                 </div>
