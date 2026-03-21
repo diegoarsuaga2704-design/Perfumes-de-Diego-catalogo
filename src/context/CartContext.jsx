@@ -10,41 +10,39 @@ export function CartProvider({ children }) {
   const [discountCode, setDiscountCode] = useState("");
   const [discountValue, setDiscountValue] = useState(0);
   const [discountType, setDiscountType] = useState(null);
-  const [discountTarget, setDiscountTarget] = useState("ALL"); // marca a la que aplica
+  const [discountTarget, setDiscountTarget] = useState("ALL");
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 🛍️ Códigos disponibles con restricciones
-  const availableDiscounts = {
-    DIAPERFUME: { type: "percentage", value: 10, appliesTo: "ALL" },
-    //CARLOS5: { type: "percentage", value: 5, appliesTo: "ALL" },
-    //PAPU10: { type: "percentage", value: 10, appliesTo: "ALL" },
-    //ANGEL5: { type: "percentage", value: 5, appliesTo: "ALL" },
-    // PROMOLV10: { type: "percentage", value: 10, appliesTo: "Louis Vuitton" },
-    //TOSKO10: { type: "percentage", value: 10, appliesTo: "Toskovat" },
-    //FILIPPO10: {
-      //type: "percentage",
-      //value: 10,
-      //appliesTo: "Filippo Sorcinelli",
-    //},
-    // ADI10: { type: "percentage", value: 10, appliesTo: "Adi Ale Van" },
-  };
+  // 🛍️ Códigos disponibles
+const availableDiscounts = {
+  DIAPERFUME: { type: "percentage", value: 10, appliesTo: "DECANT" },
+};
 
   // 🛒 Añadir producto
   const addToCart = (product) => {
     setCartItems((prev) => {
+      // ✅ Normalizamos stock para asegurar booleano real
+      const normalizedProduct = {
+        ...product,
+        stock: product.stock === false,
+      };
+
       const existing = prev.find(
         (item) =>
-          item.id === product.id &&
-          item.tipoVenta === product.tipoVenta &&
+          item.id === normalizedProduct.id &&
+          item.tipoVenta === normalizedProduct.tipoVenta &&
           (item.tipoVenta === "botella"
             ? true
-            : item.mililitros === product.mililitros),
+            : item.mililitros === normalizedProduct.mililitros)
       );
 
       if (existing) {
         return prev.map((item) => {
-          if (item.id === product.id && item.tipoVenta === product.tipoVenta) {
+          if (
+            item.id === normalizedProduct.id &&
+            item.tipoVenta === normalizedProduct.tipoVenta
+          ) {
             if (item.tipoVenta === "botella") {
               if (item.cantidad + 1 > item.stockDisponible) return item;
 
@@ -53,14 +51,14 @@ export function CartProvider({ children }) {
                 cantidad: item.cantidad + 1,
               };
             } else {
-              return item; // decants no se acumulan automáticamente
+              return item;
             }
           }
           return item;
         });
       }
 
-      return [...prev, product];
+      return [...prev, normalizedProduct];
     });
   };
 
@@ -79,23 +77,25 @@ export function CartProvider({ children }) {
           }
         }
         return item;
-      }),
+      })
     );
   };
 
   // 🗑️ Eliminar producto
   const removeFromCart = (id, tipoVenta) => {
     setCartItems((prev) =>
-      prev.filter((item) => !(item.id === id && item.tipoVenta === tipoVenta)),
+      prev.filter(
+        (item) => !(item.id === id && item.tipoVenta === tipoVenta)
+      )
     );
   };
 
-  // ⚙️ Abrir / Cerrar carrito
+  // ⚙️ Carrito
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
-  // 🧮 Subtotal general
+  // 🧮 Subtotal
   const subtotal = cartItems.reduce((acc, item) => {
     if (item.tipoVenta === "botella") {
       return acc + item.precioUnitario * item.cantidad;
@@ -108,7 +108,7 @@ export function CartProvider({ children }) {
     return acc;
   }, 0);
 
-  // 🎟️ Aplicar descuento con validación de marca
+  // 🎟️ Aplicar descuento
   const applyDiscountCode = (code) => {
     const upperCode = code.trim().toUpperCase();
     const discount = availableDiscounts[upperCode];
@@ -119,35 +119,25 @@ export function CartProvider({ children }) {
       return;
     }
 
-    // Verificar si hay productos aplicables
-
-    // Verificar productos a los que puede aplicar el descuento
     const applicableItems = cartItems.filter((item) => {
-      // Descuento general
+      if (item.tipoVenta !== "decant") return false;
+
+      // 🔹 Luego reglas del código
       if (discount.appliesTo === "ALL") return true;
 
-      // Caso especial: PROMOLV10 → solo Louis Vuitton con menos de 30 ml
-      if (upperCode === "PROMOLV10") {
-        return item.casa === "Louis Vuitton" && item.mililitros < 11;
-      }
+      if (discount.appliesTo === "DECANT") return true;
 
-      // Si aplica a varias marcas
-      if (Array.isArray(discount.appliesTo))
-        return discount.appliesTo.includes(item.casa);
-
-      // Por defecto, aplica solo a una marca específica
       return item.casa === discount.appliesTo;
     });
 
     if (applicableItems.length === 0) {
       setErrorMessage(
-        `El código ${upperCode} no aplica a los productos en tu carrito.`,
+        `El código ${upperCode} no aplica a los productos con stock válido en tu carrito.`
       );
       setIsDiscountApplied(false);
       return;
     }
 
-    // Guardar información del descuento si aplica
     setDiscountCode(upperCode);
     setDiscountType(discount.type);
     setDiscountValue(discount.value);
@@ -156,27 +146,20 @@ export function CartProvider({ children }) {
     setErrorMessage("");
   };
 
-  // 🧾 Calcular total con descuento (solo sobre productos válidos)
-  // 🧾 Calcular total con descuento (corregido)
+  // 🧾 Calcular total con descuento
   const calculateDiscount = () => {
     if (!isDiscountApplied) return subtotal;
 
     let discountableTotal = 0;
 
     cartItems.forEach((item) => {
+      // 🔴 REGLA PRINCIPAL
+      if (item.tipoVenta !== "decant") return;
+
       let applies = false;
 
       if (discountTarget === "ALL") applies = true;
-      else if (Array.isArray(discountTarget))
-        applies = discountTarget.includes(item.casa);
-      else applies = item.casa === discountTarget;
-
-      if (
-        discountCode === "PROMOLV10" &&
-        !(item.casa === "Louis Vuitton" && item.mililitros < 11)
-      ) {
-        applies = false;
-      }
+else if (discountTarget === "DECANT") applies = true;
 
       if (applies) {
         if (item.tipoVenta === "botella") {
