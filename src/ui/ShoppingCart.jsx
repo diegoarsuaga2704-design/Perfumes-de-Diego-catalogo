@@ -59,27 +59,7 @@ export default function ShoppingCart() {
         </div>
 
         <div className="flex flex-col h-[calc(100%-70px)] overflow-y-auto">
-          {/* Campo de código postal */}
-          {/* <div className={`${cartItems.length === 0 ? "hidden" : ""}`}>
-            <div className="border-b p-4 flex flex-col gap-2">
-              <label
-                htmlFor="postalCode"
-                className="text-sm font-medium text-gray-700"
-              >
-                Ingresa tu código postal:
-              </label>
-              <input
-                id="postalCode"
-                type="text"
-                value={postalCode}
-                onChange={handlePostalCodeChange}
-                placeholder="Ej. 12345"
-                className="border bg-red-200 border-gray-300 rounded-md px-3 py-2 placeholder:text-black text-white text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
-                inputMode="numeric"
-                maxLength={5}
-              />
-            </div>
-          </div> */}
+        
 
           {/* Lista de productos */}
           <ShoppingCartProduct />

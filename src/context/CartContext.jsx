@@ -16,17 +16,17 @@ export function CartProvider({ children }) {
 
   // 🛍️ Códigos disponibles con restricciones
   const availableDiscounts = {
-    PTM10: { type: "percentage", value: 10, appliesTo: "ALL" },
-    CARLOS5: { type: "percentage", value: 5, appliesTo: "ALL" },
-    PAPU10: { type: "percentage", value: 10, appliesTo: "ALL" },
-    ANGEL5: { type: "percentage", value: 5, appliesTo: "ALL" },
+    DIAPERFUME: { type: "percentage", value: 10, appliesTo: "ALL" },
+    //CARLOS5: { type: "percentage", value: 5, appliesTo: "ALL" },
+    //PAPU10: { type: "percentage", value: 10, appliesTo: "ALL" },
+    //ANGEL5: { type: "percentage", value: 5, appliesTo: "ALL" },
     // PROMOLV10: { type: "percentage", value: 10, appliesTo: "Louis Vuitton" },
-    TOSKO10: { type: "percentage", value: 10, appliesTo: "Toskovat" },
-    FILIPPO10: {
-      type: "percentage",
-      value: 10,
-      appliesTo: "Filippo Sorcinelli",
-    },
+    //TOSKO10: { type: "percentage", value: 10, appliesTo: "Toskovat" },
+    //FILIPPO10: {
+      //type: "percentage",
+      //value: 10,
+      //appliesTo: "Filippo Sorcinelli",
+    //},
     // ADI10: { type: "percentage", value: 10, appliesTo: "Adi Ale Van" },
   };
 
