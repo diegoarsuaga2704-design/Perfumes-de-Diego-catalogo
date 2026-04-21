@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
-import getParfums from "../functions/getParfums";
+import { getParfumById } from "../functions/getParfums";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
 import { useCart } from "../context/CartContext";
@@ -12,7 +12,7 @@ export default function ProductDetail() {
   const [parfum, setParfum] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [mililitros, setMililitros] = useState(1);
+  const [mililitros, setMililitros] = useState(null);
   const [botellas, setBotellas] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const { addToCart } = useCart();
@@ -20,8 +20,7 @@ export default function ProductDetail() {
   useEffect(() => {
     async function fetchParfum() {
       try {
-        const data = await getParfums();
-        const found = data.find((item) => String(item.id) === String(id));
+        const found = await getParfumById(id);
 
         if (!found) {
           setError("Perfume no encontrado");
@@ -46,7 +45,7 @@ export default function ProductDetail() {
   //   }
   // }, [parfum]);
   useEffect(() => {
-    setMililitros(1);
+    setMililitros(null);
     setBotellas(1);
   }, [parfum]);
 
@@ -80,12 +79,15 @@ export default function ProductDetail() {
   //     : parfum.precio * mililitros;
   const totalPrice = esBotellaCompleta
     ? parfum.precio * botellas
-    : mililitros === 30 && parfum.casa === "Louis Vuitton"
-      ? parfum?.precio30ml
-      : parfum.precio * mililitros;
+    : mililitros == null
+      ? 0
+      : mililitros === 30 && parfum.casa === "Louis Vuitton"
+        ? parfum?.precio30ml
+        : parfum.precio * mililitros;
 
   const handleAddToCart = () => {
     if (!estaDisponible) return;
+    if (esDecant && !mililitros) return;
 
     const product = {
       id: parfum.id,
@@ -129,6 +131,7 @@ export default function ProductDetail() {
             <img
               src={parfum.image}
               alt={parfum.nombre}
+              loading="eager"
               className="max-h-60 sm:max-h-full mx-auto rounded-xl object-contain"
             />
           </div>
@@ -243,12 +246,15 @@ export default function ProductDetail() {
               {esDecant && (
                 <>
                   <SelectMililitros
-                    onChange={(valor) => setMililitros(valor)}
+                    value={mililitros}
+                    onChange={setMililitros}
                   />
 
-                  <div className="text-[#D4AF7A] mt-4 font-semibold">
-                    Total: ${totalPrice} por {mililitros}ml
-                  </div>
+                  {mililitros && (
+                    <div className="text-[#D4AF7A] mt-4 font-semibold">
+                      Total: ${totalPrice} por {mililitros}ml
+                    </div>
+                  )}
                 </>
               )}
 
@@ -256,9 +262,9 @@ export default function ProductDetail() {
               <div className="mt-4 flex gap-4 items-center">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!estaDisponible}
+                  disabled={!estaDisponible || (esDecant && !mililitros)}
                   className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm transition-all duration-300 ${
-                    estaDisponible
+                    estaDisponible && (!esDecant || mililitros)
                       ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}

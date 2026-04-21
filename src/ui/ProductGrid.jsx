@@ -47,7 +47,7 @@ export default function ProductGrid({
   const filteredParfums = useMemo(() => {
     if (!allParfums || allParfums.length === 0) return [];
 
-    // ===== BUSQUEDA DIRECTA =====
+    // ===== BUSQUEDA DIRECTA (eligió una sugerencia del autocomplete) =====
     if (searchResult && searchResult.nombre) {
       let result = allParfums.filter(
         (p) => p.nombre.toLowerCase() === searchResult.nombre.toLowerCase(),
@@ -56,6 +56,29 @@ export default function ProductGrid({
       if (stockFilter !== null) {
         result = result.filter((p) => p.stock === stockFilter);
       }
+
+      return result;
+    }
+
+    // ===== BUSQUEDA PARCIAL (escribió y presionó Enter) =====
+    if (searchResult && searchResult.query) {
+      const lowerQuery = searchResult.query.toLowerCase();
+      let result = allParfums.filter(
+        (p) =>
+          p.nombre.toLowerCase().includes(lowerQuery) ||
+          p.casa.toLowerCase().includes(lowerQuery),
+      );
+
+      if (stockFilter !== null) {
+        result = result.filter((p) => p.stock === stockFilter);
+      }
+
+      // Ordenar por casa A-Z, luego por nombre dentro de cada casa
+      result = result.sort((a, b) => {
+        const casaComparison = a.casa.localeCompare(b.casa);
+        if (casaComparison !== 0) return casaComparison;
+        return a.nombre.localeCompare(b.nombre);
+      });
 
       return result;
     }

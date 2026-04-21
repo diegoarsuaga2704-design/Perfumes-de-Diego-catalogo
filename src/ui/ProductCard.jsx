@@ -37,6 +37,7 @@ function ProductCard({ parfum }) {
       <img
         src={parfum.image}
         alt={parfum.nombre}
+        loading="lazy"
         className="w-full h-100 object-cover pt-2"
       />
       <div className="sm:p-5 px-2 py-5 flex flex-col justify-between">

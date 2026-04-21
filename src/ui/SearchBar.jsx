@@ -74,23 +74,45 @@ function SearchBar({ onSearchResult }) {
   }, []);
 
   const handleSelect = (nombre) => {
-    setQuery(nombre);
+    setQuery("");
     setShowSuggestions(false);
 
-    // Enviar el resultado completo al padre
     const selected = parfums.find(
       (p) => p.nombre.toLowerCase() === nombre.toLowerCase(),
     );
+
     if (selected) {
-      onSearchResult(selected);
-      navigate("/home");
+      // Construir el slug URL-friendly (igual que ProductCard)
+      const nombreURL = selected.nombre
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "");
+
+      navigate(`/product/${nombreURL}/${selected.id}`);
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleSelect(query);
+    if (!query.trim()) return;
+
+    // ¿Hay un perfume con ese nombre exacto?
+    const exactMatch = parfums.find(
+      (p) => p.nombre.toLowerCase() === query.toLowerCase(),
+    );
+
+    if (exactMatch) {
+      // Coincidencia exacta: comportamiento de siempre
+      onSearchResult(exactMatch);
+    } else {
+      // No hay exacta: búsqueda parcial
+      onSearchResult({ query: query.trim() });
+    }
+
     setShowSuggestions(false);
+    navigate("/home");
   };
 
   const handleClear = () => {

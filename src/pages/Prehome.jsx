@@ -13,6 +13,12 @@ function Prehome() {
         "Prueba tus perfumes favoritos antes de comprar el frasco completo.",
     },
     {
+      image:
+        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/bestseller.jpeg",
+      title: "Mejor vendidos",
+      description: "Los favoritos de nuestros clientes.",
+    },
+    {
       image: "https://fraguru.com/himg/o.gxxUAHYdeV7.jpg",
       title: "Botellas completas y parciales",
       description: "Perfumes sellados y parciales disponibles.",
@@ -29,6 +35,8 @@ function Prehome() {
       navigate("/home", { state: { mode: "stock" } });
     } else if (store === "Decants") {
       navigate("/home", { state: { mode: "decants" } });
+    } else if (store === "Mejor vendidos") {
+      navigate("/best-sellers");
     } else {
       navigate("/home");
     }
@@ -39,7 +47,7 @@ function Prehome() {
       <div className="text-[#A47E3B] text-center font-extrabold sm:text-3xl text-2xl px-14 py-4 subpixel-antialiased ">
         Compra tus perfumes favoritos.
       </div>
-      <div className="grid gap-6 md:grid-cols-2 sm:grid-cols-2 grid-cols-1 max-w-6xl mx-auto p-6">
+      <div className="grid gap-6 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 max-w-6xl mx-auto p-6">
         {collections.map((item, index) => (
           <div key={index} onClick={() => handleClick(item.title)}>
             <HomeBrand

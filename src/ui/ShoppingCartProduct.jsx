@@ -16,6 +16,7 @@ function ShoppingCartProduct() {
   } = useCart();
 
   const [editingItem, setEditingItem] = useState(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(null);
 
   const calculateItemTotal = (item) => {
     if (item.tipoVenta === "botella") {
@@ -100,6 +101,7 @@ function ShoppingCartProduct() {
               <img
                 src={item.image}
                 alt={item.nombre}
+                loading="lazy"
                 className="w-24 h-32 object-cover rounded-md"
               />
 
@@ -178,6 +180,25 @@ function ShoppingCartProduct() {
                       Guardar
                     </button>
                   </div>
+                ) : confirmingDelete === `${item.id}-${item.tipoVenta}` ? (
+                  <div className="flex gap-2 mt-2 items-center">
+                    <span className="text-xs text-gray-700">¿Eliminar?</span>
+                    <button
+                      onClick={() => {
+                        removeFromCart(item.id, item.tipoVenta);
+                        setConfirmingDelete(null);
+                      }}
+                      className="text-xs px-3 py-1 border rounded-md bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                    >
+                      Sí
+                    </button>
+                    <button
+                      onClick={() => setConfirmingDelete(null)}
+                      className="text-xs px-3 py-1 border rounded-md hover:bg-gray-100"
+                    >
+                      No
+                    </button>
+                  </div>
                 ) : (
                   <div className="flex gap-2 mt-2">
                     <button
@@ -187,7 +208,9 @@ function ShoppingCartProduct() {
                       Editar
                     </button>
                     <button
-                      onClick={() => removeFromCart(item.id, item.tipoVenta)}
+                      onClick={() =>
+                        setConfirmingDelete(`${item.id}-${item.tipoVenta}`)
+                      }
                       className="text-xs px-2 py-1 border rounded-md hover:bg-gray-100"
                     >
                       Eliminar
