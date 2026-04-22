@@ -3,6 +3,19 @@ import { useNavigate } from "react-router-dom";
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
 
+  // Etiqueta dinámica: MEJOR VENDIDO gana sobre NUEVO
+  const esMejorVendido = parfum.esBestSeller === true;
+  const esNuevo = (() => {
+    if (!parfum.created_at) return false;
+    const dias = (new Date() - new Date(parfum.created_at)) / (1000 * 60 * 60 * 24);
+    return dias <= 15;
+  })();
+  const etiqueta = esMejorVendido
+    ? { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" }
+    : esNuevo
+      ? { texto: "NUEVO", color: "bg-blue-600" }
+      : null;
+
   const handleCardClick = () => {
     // Convertir el nombre a formato URL-friendly
     const nombreURL = parfum.nombre
@@ -23,6 +36,16 @@ function ProductCard({ parfum }) {
         ${parfum.disponible === "Agotado" ? "shadow-red-600" : ""}
       ${parfum.disponible === "Próximamente" ? "shadow-yellow-600" : ""}`}
     >
+      {/* Etiqueta dinámica (esquina superior izquierda) */}
+      {etiqueta && (
+        <span
+          className={`absolute top-2 left-2 z-10 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-md ${etiqueta.color}`}
+        >
+          {etiqueta.texto}
+        </span>
+      )}
+
+      {/* Etiqueta de disponibilidad (esquina superior derecha) */}
       <span
         className={`absolute top-2 right-2 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md  ${
           parfum.disponible === "Agotado" ? "bg-red-600" : ""

@@ -5,6 +5,7 @@ import Footer from "./Footer";
 import WhatsAppFlotante from "./WhatsAppFlotante";
 import ShoppingCart from "./ShoppingCart";
 import TopBanner from "./TopBanner";
+import MainMenu from "./MainMenu";
 
 function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
@@ -12,6 +13,7 @@ function AppLayout() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <TopBanner />
       <Header onSearchResult={setSearchResult} />
+      <MainMenu />
       <main className="flex-1">
         <Outlet context={{ searchResult }} />
       </main>

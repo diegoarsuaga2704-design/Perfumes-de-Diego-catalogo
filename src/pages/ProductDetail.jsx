@@ -5,6 +5,7 @@ import { getParfumById } from "../functions/getParfums";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
+import BadgesConfianza from "../ui/BadgesConfianza";
 import { useCart } from "../context/CartContext";
 
 export default function ProductDetail() {
@@ -260,7 +261,10 @@ export default function ProductDetail() {
               )}
 
               {/* BOTÓN */}
+              <BadgesConfianza />
+
               <div className="mt-4 flex gap-4 items-center">
+
                 <button
                   onClick={handleAddToCart}
                   disabled={!estaDisponible || (esDecant && !mililitros)}
