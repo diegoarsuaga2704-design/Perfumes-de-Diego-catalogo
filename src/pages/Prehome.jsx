@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import ComoFunciona from "../ui/ComoFunciona";
 import HomeBrand from "../ui/HomeBrand";
+import CTAWhatsApp from "../ui/CTAWhatsApp";
 
 function Prehome() {
   const navigate = useNavigate();
@@ -58,6 +60,8 @@ function Prehome() {
           </div>
         ))}
       </div>
+      <ComoFunciona />
+      <CTAWhatsApp />
     </div>
   );
 }

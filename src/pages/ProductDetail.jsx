@@ -4,6 +4,7 @@ import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
+import CTAWhatsApp from "../ui/CTAWhatsApp";
 import { useCart } from "../context/CartContext";
 
 export default function ProductDetail() {
@@ -284,6 +285,12 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      <CTAWhatsApp
+        titulo={`¿Tienes dudas sobre ${parfum.nombre}?`}
+        mensaje="Cuéntame qué notas buscas o si necesitas comparar con otro perfume. Te respondo personalmente."
+        whatsappText={`Hola Diego, me interesa saber más sobre ${parfum.nombre} de ${parfum.casa}`}
+      />
 
       <style>
         {`
