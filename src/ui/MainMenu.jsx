@@ -12,12 +12,24 @@ function MainMenu() {
       accion: () => navigate("/home", { state: { mode: "decants" } }),
     },
     {
+      nombre: "Botellas",
+      accion: () => navigate("/home", { state: { mode: "stock" } }),
+    },
+    {
       nombre: "Mejor vendidos",
       accion: () => navigate("/best-sellers"),
     },
     {
-      nombre: "Botellas",
-      accion: () => navigate("/home", { state: { mode: "stock" } }),
+      nombre: "Paquetes",
+      accion: () => {
+        window.open(
+          "https://wa.me/5212212034647?text=" +
+            encodeURIComponent(
+              "Hola Diego, me interesan los paquetes de perfumes",
+            ),
+          "_blank",
+        );
+      },
     },
   ];
 

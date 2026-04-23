@@ -1,6 +1,7 @@
 import { useCart } from "../context/CartContext";
 import { X } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
+import EnvioGratisProgress from "./EnvioGratisProgress";
 import Checkout from "./Checkout";
 import { useState } from "react";
 
@@ -59,7 +60,7 @@ export default function ShoppingCart() {
         </div>
 
         <div className="flex flex-col h-[calc(100%-70px)] overflow-y-auto">
-        
+          <EnvioGratisProgress />
 
           {/* Lista de productos */}
           <ShoppingCartProduct />

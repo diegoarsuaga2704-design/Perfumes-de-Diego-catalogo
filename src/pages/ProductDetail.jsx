@@ -5,6 +5,7 @@ import { getParfumById } from "../functions/getParfums";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
+import PerfumesRelacionados from "../ui/PerfumesRelacionados";
 import BadgesConfianza from "../ui/BadgesConfianza";
 import { useCart } from "../context/CartContext";
 
@@ -289,6 +290,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      <PerfumesRelacionados casa={parfum.casa} excluirId={parfum.id} />
       <CTAWhatsApp
         titulo={`¿Tienes dudas sobre ${parfum.nombre}?`}
         mensaje="Cuéntame qué notas buscas o si necesitas comparar con otro perfume. Te respondo personalmente."

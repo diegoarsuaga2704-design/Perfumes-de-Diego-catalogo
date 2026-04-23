@@ -38,7 +38,7 @@ export function CartProvider({ children }) {
       type: "percentage",
       value: 10,
       appliesTo: "DECANT",
-      expira: "2026-04-22",
+      expira: "2026-04-23",
     },
   };
 

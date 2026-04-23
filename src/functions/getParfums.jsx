@@ -34,3 +34,18 @@ export async function getBestSellers() {
   }
   return data;
 }
+export async function getRelacionados(casa, excluirId) {
+  const { data, error } = await supabase
+    .from("parfums")
+    .select("*")
+    .eq("casa", casa)
+    .neq("id", excluirId)
+    .eq("disponible", "Disponible")
+    .limit(4);
+
+  if (error) {
+    console.error("Error fetching relacionados:", error);
+    return [];
+  }
+  return data;
+}
