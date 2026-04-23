@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./pages/Home";
 import FAQs from "./pages/FAQs";
 import BestSellers from "./pages/BestSellers";
+import VistoEnTikTok from "./pages/VistoEnTikTok";
 import AppLayout from "./ui/AppLayout";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: "/best-sellers",
         element: <BestSellers />,
+      },
+      {
+        path: "/tiktok",
+        element: <VistoEnTikTok />,
       },
       
       {

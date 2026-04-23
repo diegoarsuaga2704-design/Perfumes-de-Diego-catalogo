@@ -20,6 +20,11 @@ function MainMenu() {
       accion: () => navigate("/best-sellers"),
     },
     {
+      nombre: "Visto en TikTok",
+      accion: () => navigate("/tiktok"),
+    },
+
+    {
       nombre: "Paquetes",
       accion: () => {
         window.open(

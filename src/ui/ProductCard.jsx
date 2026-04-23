@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { FaTiktok } from "react-icons/fa";
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
@@ -80,6 +81,19 @@ function ProductCard({ parfum }) {
           <span className="hidden sm:block text-xs text-gray-600">
             {parfum.notas}
           </span>
+
+          {parfum.tiktokLink && (
+            <a
+              href={parfum.tiktokLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2 inline-flex items-center justify-center gap-1 text-[10px] sm:text-xs text-[#A47E3B] hover:text-[#D4AF7A] font-semibold border border-[#A47E3B] rounded-md py-1 px-2 w-fit"
+            >
+              <FaTiktok className="h-3 w-3" />
+              Ver video
+            </a>
+          )}
         </div>
       </div>
     </div>

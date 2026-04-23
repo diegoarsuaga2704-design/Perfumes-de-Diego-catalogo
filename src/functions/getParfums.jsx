@@ -49,3 +49,16 @@ export async function getRelacionados(casa, excluirId) {
   }
   return data;
 }
+export async function getPerfumesConTikTok() {
+  const { data, error } = await supabase
+    .from("parfums")
+    .select("*")
+    .not("tiktokLink", "is", null)
+    .neq("tiktokLink", "");
+
+  if (error) {
+    console.error("Error fetching perfumes con TikTok:", error);
+    return [];
+  }
+  return data;
+}
