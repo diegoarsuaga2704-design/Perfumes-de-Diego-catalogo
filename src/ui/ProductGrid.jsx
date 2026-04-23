@@ -1,6 +1,6 @@
 import ProductCard from "./ProductCard";
 import { useEffect, useState, useRef, useMemo } from "react";
-import getParfums from "../functions/getParfums";
+import getParfums from "../functions/getParfums.jsx";
 import LoadingSpinner from "./LoadingSpinner";
 import { useOrder } from "../context/OrderContext.jsx";
 import Pagination from "./Paginacion.jsx";
