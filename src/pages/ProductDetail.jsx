@@ -5,8 +5,9 @@ import { getParfumById } from "../functions/getParfums";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
-import PerfumesRelacionados from "../ui/PerfumesRelacionados";
 import BadgesConfianza from "../ui/BadgesConfianza";
+import BadgesEstatus from "../ui/BadgesEstatus";
+import PerfumesRelacionados from "../ui/PerfumesRelacionados";
 import { useCart } from "../context/CartContext";
 
 export default function ProductDetail() {
@@ -41,12 +42,6 @@ export default function ProductDetail() {
     fetchParfum();
   }, [id]);
 
-  /* Reinicia mililitros cuando cambia el producto */
-  // useEffect(() => {
-  //   if (parfum?.stock === true) {
-  //     setMililitros(1);
-  //   }
-  // }, [parfum]);
   useEffect(() => {
     setMililitros(null);
     setBotellas(1);
@@ -67,19 +62,10 @@ export default function ProductDetail() {
       </div>
     );
 
-  /* ===========================
-     LÓGICA DE TIPO DE VENTA
-  ============================ */
-
   const esBotellaCompleta = parfum.stock === true;
   const esDecant = parfum.stock === false;
   const estaDisponible = parfum.disponible === "Disponible";
 
-  // const totalPrice = esBotellaCompleta
-  //   ? parfum.precio
-  //   : mililitros === 30 && parfum.casa === "Louis Vuitton"
-  //     ? parfum?.precio30ml
-  //     : parfum.precio * mililitros;
   const totalPrice = esBotellaCompleta
     ? parfum.precio * botellas
     : mililitros == null
@@ -124,7 +110,6 @@ export default function ProductDetail() {
             <button
               onClick={() => {
                 navigate(-1);
-                setMililitros(1);
               }}
               className="text-sm text-gray-600 mb-4 hover:text-gray-900 flex"
             >
@@ -142,6 +127,7 @@ export default function ProductDetail() {
           {/* INFORMACIÓN */}
           <div className="flex-1 flex flex-col justify-between">
             <div>
+              <BadgesEstatus parfum={parfum} />
               <h1 className="text-2xl font-semibold mb-2">{parfum.nombre}</h1>
 
               <p className="text-gray-500 text-sm italic">
@@ -177,6 +163,7 @@ export default function ProductDetail() {
                   </>
                 )}
               </div>
+
               {/* SELECTOR PARA BOTELLAS */}
               {esBotellaCompleta && (
                 <div className="flex flex-col gap-1">
@@ -291,6 +278,7 @@ export default function ProductDetail() {
       </div>
 
       <PerfumesRelacionados casa={parfum.casa} excluirId={parfum.id} />
+
       <CTAWhatsApp
         titulo={`¿Tienes dudas sobre ${parfum.nombre}?`}
         mensaje="Cuéntame qué notas buscas o si necesitas comparar con otro perfume. Te respondo personalmente."
