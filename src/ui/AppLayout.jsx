@@ -6,11 +6,13 @@ import WhatsAppFlotante from "./WhatsAppFlotante";
 import ShoppingCart from "./ShoppingCart";
 import TopBanner from "./TopBanner";
 import MainMenu from "./MainMenu";
+import ScrollToTop from "./ScrollToTop";
 
 function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <ScrollToTop />
       <TopBanner />
       <Header onSearchResult={setSearchResult} />
       <MainMenu />

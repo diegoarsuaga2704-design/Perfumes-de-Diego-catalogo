@@ -32,9 +32,15 @@ export function CartProvider({ children }) {
   const [errorMessage, setErrorMessage] = useState("");
 
   // 🛍️ Códigos disponibles
-const availableDiscounts = {
-  DIAPERFUME: { type: "percentage", value: 10, appliesTo: "DECANT" },
-};
+  // Formato de expira: "YYYY-MM-DD" (ej: "2026-12-31"). Omitir = nunca expira.
+  const availableDiscounts = {
+    DIAPERFUME: {
+      type: "percentage",
+      value: 10,
+      appliesTo: "DECANT",
+      expira: "2026-04-22",
+    },
+  };
 
   // 🛒 Añadir producto
   const addToCart = (product) => {
@@ -134,6 +140,17 @@ const availableDiscounts = {
       setErrorMessage("El código ingresado no existe o no es válido.");
       setIsDiscountApplied(false);
       return;
+    }
+
+    // Validar fecha de expiración si existe
+    if (discount.expira) {
+      const fechaExpira = new Date(discount.expira + "T23:59:59");
+      const hoy = new Date();
+      if (hoy > fechaExpira) {
+        setErrorMessage(`El código ${upperCode} ya expiró.`);
+        setIsDiscountApplied(false);
+        return;
+      }
     }
 
     const applicableItems = cartItems.filter((item) => {

@@ -3,7 +3,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./pages/Home";
 import FAQs from "./pages/FAQs";
 import BestSellers from "./pages/BestSellers";
-import Promociones from "./pages/Promociones";
 import AppLayout from "./ui/AppLayout";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
@@ -29,10 +28,7 @@ const router = createBrowserRouter([
         path: "/best-sellers",
         element: <BestSellers />,
       },
-      {
-        path: "/promociones",
-        element: <Promociones />,
-      },
+      
       {
         path: "/product/:nombre/:id",
         element: <ProductDetail />,

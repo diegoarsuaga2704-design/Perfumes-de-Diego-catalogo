@@ -37,14 +37,7 @@ function Footer() {
                 Preguntas frecuentes
               </Link>
             </li>
-            <li>
-              <Link
-                to="/promociones"
-                className="hover:text-[#A47E3B] transition-colors"
-              >
-                Promociones
-              </Link>
-            </li>
+            
             <li>
               <Link
                 to="/best-sellers"
