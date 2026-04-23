@@ -261,14 +261,11 @@ export default function ProductDetail() {
               )}
 
               {/* BOTÓN */}
-              <BadgesConfianza />
-
-              <div className="mt-4 flex gap-4 items-center">
-
+              <div className="mt-4 flex gap-3 items-center">
                 <button
                   onClick={handleAddToCart}
                   disabled={!estaDisponible || (esDecant && !mililitros)}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm transition-all duration-300 ${
+                  className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
                     estaDisponible && (!esDecant || mililitros)
                       ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -285,6 +282,8 @@ export default function ProductDetail() {
                   </span>
                 )}
               </div>
+
+              <BadgesConfianza />
             </div>
           </div>
         </div>

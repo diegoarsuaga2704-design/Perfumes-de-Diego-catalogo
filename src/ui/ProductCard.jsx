@@ -7,6 +7,7 @@ function ProductCard({ parfum }) {
   const esMejorVendido = parfum.esBestSeller === true;
   const esNuevo = (() => {
     if (!parfum.created_at) return false;
+    if (parfum.disponible === "Próximamente") return false;
     const dias = (new Date() - new Date(parfum.created_at)) / (1000 * 60 * 60 * 24);
     return dias <= 15;
   })();

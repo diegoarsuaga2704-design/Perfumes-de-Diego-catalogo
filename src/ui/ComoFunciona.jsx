@@ -32,7 +32,7 @@ function ComoFunciona() {
             Así funciona
           </h2>
           <p className="text-gray-600 text-sm sm:text-base">
-            Comprar perfumes nicho nunca había sido tan simple
+            Prueba los mejores perfumes nicho y artesanales
           </p>
         </div>
 

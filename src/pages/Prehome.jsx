@@ -27,11 +27,6 @@ function Prehome() {
     },
   ];
 
-  //   const handleClick = (store) => {
-  //     handleSelectStore(store); // 🔹 Cambia la tienda seleccionada
-  //     navigate("/home"); // 🔹 Redirige a la vista Home
-  //   };
-
   const handleClick = (store) => {
     if (store === "Botellas completas y parciales") {
       navigate("/home", { state: { mode: "stock" } });
@@ -61,6 +56,19 @@ function Prehome() {
         ))}
       </div>
       <ComoFunciona />
+
+      <div className="bg-white py-8 px-6 text-center border-t border-gray-100">
+        <p className="text-gray-700 text-sm sm:text-base mb-2">
+          ¿Tienes dudas antes de comprar?
+        </p>
+        <a
+          href="/faqs"
+          className="inline-block text-[#A47E3B] font-semibold text-sm sm:text-base hover:underline"
+        >
+          Revisa nuestras preguntas frecuentes →
+        </a>
+      </div>
+
       <CTAWhatsApp />
     </div>
   );
