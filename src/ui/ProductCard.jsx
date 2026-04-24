@@ -5,7 +5,11 @@ function ProductCard({ parfum }) {
   const navigate = useNavigate();
 
   // Etiqueta dinámica: MEJOR VENDIDO gana sobre NUEVO
-  const esMejorVendido = parfum.esBestSeller === true;
+  // Pero no se muestra si está Próximamente o Agotado (prioridad a info crítica)
+  const esMejorVendido =
+    parfum.esBestSeller === true &&
+    parfum.disponible !== "Próximamente" &&
+    parfum.disponible !== "Agotado";
   const esNuevo = (() => {
     if (!parfum.created_at) return false;
     if (parfum.disponible === "Próximamente") return false;

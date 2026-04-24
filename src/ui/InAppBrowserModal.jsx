@@ -37,13 +37,13 @@ function InAppBrowserModal() {
 
   const instruccionesIOS = [
     "Toca los 3 puntitos (···) en la esquina superior derecha",
-    "Selecciona 'Abrir en Safari'",
+    "Selecciona 'Abrir en Navegador/Safari'",
     "¡Listo! Podrás comprar sin problemas",
   ];
 
   const instruccionesAndroid = [
     "Toca los 3 puntitos (⋮) en la esquina superior derecha",
-    "Selecciona 'Abrir en Chrome'",
+    "Selecciona 'Abrir en Navegador'",
     "¡Listo! Podrás comprar sin problemas",
   ];
 

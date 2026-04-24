@@ -44,7 +44,7 @@ function MainMenu() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm">
+    <nav className="sm:hidden bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* DESKTOP */}
         <div className="hidden sm:flex justify-center items-center gap-8 py-3">
