@@ -21,17 +21,25 @@ export default function ShoppingCart() {
   const [postalCode, setPostalCode] = useState("");
   const [inputCode, setInputCode] = useState("");
 
-  // Bloquear el scroll del body cuando el carrito está abierto
+  // Bloquear el scroll del body y html cuando el carrito está abierto
   useEffect(() => {
     if (isCartOpen) {
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
     } else {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
     }
 
-    // Cleanup: cuando el componente se desmonta, restaura el scroll
     return () => {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
     };
   }, [isCartOpen]);
 

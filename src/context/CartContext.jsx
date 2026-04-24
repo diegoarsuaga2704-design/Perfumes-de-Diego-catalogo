@@ -51,13 +51,12 @@ export function CartProvider({ children }) {
         stock: product.stock === false,
       };
 
+      // Buscar item existente del mismo perfume y mismo tipo de venta
+      // (para decants: mismo perfume independiente de los ml → los sumamos)
       const existing = prev.find(
         (item) =>
           item.id === normalizedProduct.id &&
-          item.tipoVenta === normalizedProduct.tipoVenta &&
-          (item.tipoVenta === "botella"
-            ? true
-            : item.mililitros === normalizedProduct.mililitros)
+          item.tipoVenta === normalizedProduct.tipoVenta,
       );
 
       if (existing) {
@@ -67,14 +66,26 @@ export function CartProvider({ children }) {
             item.tipoVenta === normalizedProduct.tipoVenta
           ) {
             if (item.tipoVenta === "botella") {
+              // Botellas: sumar cantidad de unidades
               if (item.cantidad + 1 > item.stockDisponible) return item;
-
               return {
                 ...item,
                 cantidad: item.cantidad + 1,
               };
             } else {
-              return item;
+              // Decants: sumar mililitros
+              const nuevosMl = item.mililitros + normalizedProduct.mililitros;
+              // Verificar stock disponible si existe
+              if (
+                item.stockDisponible &&
+                nuevosMl > item.stockDisponible
+              ) {
+                return item;
+              }
+              return {
+                ...item,
+                mililitros: nuevosMl,
+              };
             }
           }
           return item;
