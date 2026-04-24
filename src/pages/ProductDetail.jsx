@@ -165,7 +165,7 @@ export default function ProductDetail() {
               </div>
 
               {/* SELECTOR PARA BOTELLAS */}
-              {esBotellaCompleta && (
+              {esBotellaCompleta && estaDisponible && (
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700 mb-1">
                     Selecciona cantidad de piezas
@@ -233,7 +233,7 @@ export default function ProductDetail() {
               </div>
 
               {/* SELECTOR SOLO PARA DECANTS */}
-              {esDecant && (
+              {esDecant && estaDisponible && (
                 <>
                   <SelectMililitros
                     value={mililitros}
