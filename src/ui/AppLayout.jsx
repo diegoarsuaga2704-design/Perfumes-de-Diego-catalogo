@@ -7,14 +7,14 @@ import ShoppingCart from "./ShoppingCart";
 import TopBanner from "./TopBanner";
 import MainMenu from "./MainMenu";
 import ScrollToTop from "./ScrollToTop";
-import InAppBrowserBanner from "./InAppBrowserBanner";
+import InAppBrowserModal from "./InAppBrowserModal";
 
 function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <InAppBrowserModal />
       <ScrollToTop />
-      <InAppBrowserBanner />
       <TopBanner />
       <Header onSearchResult={setSearchResult} />
       <MainMenu />
