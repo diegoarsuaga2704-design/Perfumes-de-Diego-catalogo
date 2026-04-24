@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Desactivar seleccion de texto en elementos interactivos */
+button,
+a,
+.select-none-all,
+[role="button"] {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* En spans que funcionan como badges o contadores */
+span.badge,
+span.counter,
+.badge,
+.counter {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
