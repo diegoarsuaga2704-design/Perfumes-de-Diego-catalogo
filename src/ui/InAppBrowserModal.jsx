@@ -52,9 +52,9 @@ function InAppBrowserModal() {
 
   return (
     <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-fade-in-modal">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border-4 border-red-500 animate-shake">
-        {/* Header con fondo rojo */}
-        <div className="bg-red-500 text-white rounded-t-xl p-4 text-center">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border-4 border-[#A47E3B] animate-shake">
+        {/* Header dorado */}
+        <div className="bg-gradient-to-r from-[#A47E3B] to-[#D4AF7A] text-white rounded-t-xl p-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
             <AlertTriangle size={28} className="animate-pulse" />
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide">
@@ -62,7 +62,9 @@ function InAppBrowserModal() {
             </h2>
             <AlertTriangle size={28} className="animate-pulse" />
           </div>
-          <p className="text-sm font-semibold">No podrás comprar desde aquí</p>
+          <p className="text-sm font-semibold">
+            Para hacer tu pedido sigue los siguientes pasos
+          </p>
         </div>
 
         {/* Contenido */}
@@ -97,7 +99,7 @@ function InAppBrowserModal() {
             </div>
           </div>
 
-          {/* Botón para cerrar, más discreto para que la atención esté en las instrucciones */}
+          {/* Botón discreto para cerrar */}
           <button
             onClick={handleDismiss}
             className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
