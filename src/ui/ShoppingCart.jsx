@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
 import Checkout from "./Checkout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ShoppingCart() {
   const {
@@ -20,6 +20,20 @@ export default function ShoppingCart() {
 
   const [postalCode, setPostalCode] = useState("");
   const [inputCode, setInputCode] = useState("");
+
+  // Bloquear el scroll del body cuando el carrito está abierto
+  useEffect(() => {
+    if (isCartOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    // Cleanup: cuando el componente se desmonta, restaura el scroll
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isCartOpen]);
 
   if (!isCartOpen) return null;
 
