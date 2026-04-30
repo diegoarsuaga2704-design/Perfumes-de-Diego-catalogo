@@ -1,24 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* Desactivar seleccion de texto en elementos interactivos */
+/* Desactivar seleccion y long-press menu en toda la UI interactiva */
 button,
 a,
-.select-none-all,
-[role="button"] {
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+button *,
+a *,
+[role="button"],
+header,
+header *,
+nav,
+nav *,
+[class*="badge"],
+[class*="Badge"] {
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
 }
 
-/* En spans que funcionan como badges o contadores */
-span.badge,
-span.counter,
-.badge,
-.counter {
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  user-select: none;
+/* Permitir seleccion en el contenido principal (nombres, descripciones) */
+main p,
+main h1,
+main h2,
+main h3,
+main li {
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+  user-select: text;
 }

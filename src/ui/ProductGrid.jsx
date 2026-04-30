@@ -6,6 +6,9 @@ import { useOrder } from "../context/OrderContext.jsx";
 import Pagination from "./Paginacion.jsx";
 import { useNavigate } from "react-router-dom";
 
+// 🔒 Helper global para blindar strings
+const safeString = (value) => (value ?? "").toString();
+
 export default function ProductGrid({
   selectedCasa,
   selectedOcasion,
@@ -16,23 +19,32 @@ export default function ProductGrid({
 }) {
   const navigate = useNavigate();
 
-  // Estados para manejar datos, carga y errores
   const [allParfums, setAllParfums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { order } = useOrder();
 
-  // Estados para la paginacion
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 36;
   const gridRef = useRef(null);
 
-  // Llamada a la API cuando el componente se monta
+  // 🔧 Fetch + normalización de datos
   useEffect(() => {
     async function fetchData() {
       try {
         const data = await getParfums();
-        setAllParfums(data);
+
+        // 🔒 Normalizar desde origen (clave)
+        const cleanData = data.map((p) => ({
+          ...p,
+          nombre: p.nombre ?? "",
+          casa: p.casa ?? "",
+          precio: p.precio ?? 0,
+          disponible: p.disponible ?? "",
+          categoria: p.categoria ?? "",
+        }));
+
+        setAllParfums(cleanData);
       } catch (err) {
         console.error(err);
         setError("Error al cargar los perfumes");
@@ -43,14 +55,15 @@ export default function ProductGrid({
     fetchData();
   }, []);
 
-  // FILTRADO PRINCIPAL
   const filteredParfums = useMemo(() => {
     if (!allParfums || allParfums.length === 0) return [];
 
-    // ===== BUSQUEDA DIRECTA (eligió una sugerencia del autocomplete) =====
+    // ===== BUSQUEDA DIRECTA =====
     if (searchResult && searchResult.nombre) {
       let result = allParfums.filter(
-        (p) => p.nombre.toLowerCase() === searchResult.nombre.toLowerCase(),
+        (p) =>
+          safeString(p.nombre).toLowerCase() ===
+          safeString(searchResult.nombre).toLowerCase(),
       );
 
       if (stockFilter !== null) {
@@ -60,24 +73,29 @@ export default function ProductGrid({
       return result;
     }
 
-    // ===== BUSQUEDA PARCIAL (escribió y presionó Enter) =====
+    // ===== BUSQUEDA PARCIAL =====
     if (searchResult && searchResult.query) {
       const lowerQuery = searchResult.query.toLowerCase();
+
       let result = allParfums.filter(
         (p) =>
-          p.nombre.toLowerCase().includes(lowerQuery) ||
-          p.casa.toLowerCase().includes(lowerQuery),
+          safeString(p.nombre).toLowerCase().includes(lowerQuery) ||
+          safeString(p.casa).toLowerCase().includes(lowerQuery),
       );
 
       if (stockFilter !== null) {
         result = result.filter((p) => p.stock === stockFilter);
       }
 
-      // Ordenar por casa A-Z, luego por nombre dentro de cada casa
+      // 🔒 Sort blindado
       result = result.sort((a, b) => {
-        const casaComparison = a.casa.localeCompare(b.casa);
+        const casaA = safeString(a.casa);
+        const casaB = safeString(b.casa);
+
+        const casaComparison = casaA.localeCompare(casaB);
         if (casaComparison !== 0) return casaComparison;
-        return a.nombre.localeCompare(b.nombre);
+
+        return safeString(a.nombre).localeCompare(safeString(b.nombre));
       });
 
       return result;
@@ -86,34 +104,43 @@ export default function ProductGrid({
     // ===== FILTROS NORMALES =====
     let result = allParfums.filter((p) => {
       const casaMatch =
-        !selectedCasa || p.casa?.toLowerCase() === selectedCasa.toLowerCase();
+        !selectedCasa ||
+        safeString(p.casa).toLowerCase() === selectedCasa.toLowerCase();
 
       const ocasionMatch =
         !selectedOcasion ||
-        p.disponible?.toLowerCase() === selectedOcasion.toLowerCase();
+        safeString(p.disponible).toLowerCase() ===
+          selectedOcasion.toLowerCase();
 
       const categoriaMatch =
         !selectedCategoria ||
-        p.categoria?.toLowerCase() === selectedCategoria.toLowerCase();
+        safeString(p.categoria).toLowerCase() ===
+          selectedCategoria.toLowerCase();
 
-      // 🔹 FILTRO GLOBAL DE STOCK
       const stockMatch = stockFilter === null ? true : p.stock === stockFilter;
 
       return casaMatch && ocasionMatch && categoriaMatch && stockMatch;
     });
 
-    // ===== ORDENAMIENTO =====
+    // 🔒 Ordenamiento completamente blindado
     result = result.sort((a, b) => {
-      if (order === "nombre") return a.nombre.localeCompare(b.nombre);
+      const nombreA = safeString(a.nombre);
+      const nombreB = safeString(b.nombre);
+      const casaA = safeString(a.casa);
+      const casaB = safeString(b.casa);
 
-      if (order === "casa") {
-        const casaComparison = a.casa.localeCompare(b.casa);
-        if (casaComparison !== 0) return casaComparison;
-        return a.precio - b.precio;
+      if (order === "nombre") {
+        return nombreA.localeCompare(nombreB);
       }
 
-      if (order === "precio") return a.precio - b.precio;
-      if (order === "precioMayor") return b.precio - a.precio;
+      if (order === "casa") {
+        const casaComparison = casaA.localeCompare(casaB);
+        if (casaComparison !== 0) return casaComparison;
+        return (a.precio ?? 0) - (b.precio ?? 0);
+      }
+
+      if (order === "precio") return (a.precio ?? 0) - (b.precio ?? 0);
+      if (order === "precioMayor") return (b.precio ?? 0) - (a.precio ?? 0);
 
       return 0;
     });
@@ -129,20 +156,16 @@ export default function ProductGrid({
     stockFilter,
   ]);
 
-  // Reiniciar página cuando cambian filtros o modo stock
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCasa, selectedOcasion, selectedCategoria, stockFilter]);
 
-  // Estado de carga
   if (loading) return <LoadingSpinner />;
 
-  // Estado de error
   if (error) {
     return <div className="text-center text-red-500 mt-10">{error}</div>;
   }
 
-  // ===== PAGINACION =====
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentParfums = filteredParfums.slice(
@@ -155,7 +178,6 @@ export default function ProductGrid({
   return (
     <section className="bg-gray-100 py-12">
       <div className="max-w-12xl mx-auto sm:mx-8 lg:mx-12 px-6">
-        {/* Botón Limpiar filtros */}
         <div className="mb-4 text-right space-x-3">
           {(selectedCasa ||
             selectedOcasion ||
@@ -168,9 +190,8 @@ export default function ProductGrid({
               Limpiar filtros
             </button>
           )}
-
-          
         </div>
+
         {filteredParfums.length === 0 ? (
           <p className="text-center text-gray-500 mt-8">
             No hay perfumes que coincidan con los filtros seleccionados.

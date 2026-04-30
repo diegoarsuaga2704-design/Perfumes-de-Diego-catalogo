@@ -1,4 +1,9 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import {
+  calcularPrecioDecantCarrito,
+  getIncrementoMililitros,
+  getMililitrosMinimos,
+} from "../functions/pricingDecant";
 
 const CartContext = createContext();
 const CART_STORAGE_KEY = "perfumes-diego-cart";
@@ -52,7 +57,6 @@ export function CartProvider({ children }) {
       };
 
       // Buscar item existente del mismo perfume y mismo tipo de venta
-      // (para decants: mismo perfume independiente de los ml → los sumamos)
       const existing = prev.find(
         (item) =>
           item.id === normalizedProduct.id &&
@@ -66,16 +70,13 @@ export function CartProvider({ children }) {
             item.tipoVenta === normalizedProduct.tipoVenta
           ) {
             if (item.tipoVenta === "botella") {
-              // Botellas: sumar cantidad de unidades
               if (item.cantidad + 1 > item.stockDisponible) return item;
               return {
                 ...item,
                 cantidad: item.cantidad + 1,
               };
             } else {
-              // Decants: sumar mililitros
               const nuevosMl = item.mililitros + normalizedProduct.mililitros;
-              // Verificar stock disponible si existe
               if (
                 item.stockDisponible &&
                 nuevosMl > item.stockDisponible
@@ -111,7 +112,7 @@ export function CartProvider({ children }) {
           }
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -119,8 +120,8 @@ export function CartProvider({ children }) {
   const removeFromCart = (id, tipoVenta) => {
     setCartItems((prev) =>
       prev.filter(
-        (item) => !(item.id === id && item.tipoVenta === tipoVenta)
-      )
+        (item) => !(item.id === id && item.tipoVenta === tipoVenta),
+      ),
     );
   };
 
@@ -129,14 +130,14 @@ export function CartProvider({ children }) {
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
-  // 🧮 Subtotal
+  // 🧮 Subtotal (usa pricing centralizado para decants)
   const subtotal = cartItems.reduce((acc, item) => {
     if (item.tipoVenta === "botella") {
-      return acc + item.precioUnitario * item.cantidad;
+      return acc + (item.precioUnitario || 0) * (item.cantidad || 0);
     }
 
     if (item.tipoVenta === "decant") {
-      return acc + item.precioUnitario * item.mililitros;
+      return acc + calcularPrecioDecantCarrito(item);
     }
 
     return acc;
@@ -153,7 +154,6 @@ export function CartProvider({ children }) {
       return;
     }
 
-    // Validar fecha de expiración si existe
     if (discount.expira) {
       const fechaExpira = new Date(discount.expira + "T23:59:59");
       const hoy = new Date();
@@ -166,18 +166,14 @@ export function CartProvider({ children }) {
 
     const applicableItems = cartItems.filter((item) => {
       if (item.tipoVenta !== "decant") return false;
-
-      // 🔹 Luego reglas del código
       if (discount.appliesTo === "ALL") return true;
-
       if (discount.appliesTo === "DECANT") return true;
-
       return item.casa === discount.appliesTo;
     });
 
     if (applicableItems.length === 0) {
       setErrorMessage(
-        `El código ${upperCode} no aplica a los productos con stock válido en tu carrito.`
+        `El código ${upperCode} no aplica a los productos con stock válido en tu carrito.`,
       );
       setIsDiscountApplied(false);
       return;
@@ -191,27 +187,21 @@ export function CartProvider({ children }) {
     setErrorMessage("");
   };
 
-  // 🧾 Calcular total con descuento
+  // 🧾 Calcular total con descuento (usa pricing centralizado)
   const calculateDiscount = () => {
     if (!isDiscountApplied) return subtotal;
 
     let discountableTotal = 0;
 
     cartItems.forEach((item) => {
-      // 🔴 REGLA PRINCIPAL
       if (item.tipoVenta !== "decant") return;
 
       let applies = false;
-
       if (discountTarget === "ALL") applies = true;
-else if (discountTarget === "DECANT") applies = true;
+      else if (discountTarget === "DECANT") applies = true;
 
       if (applies) {
-        if (item.tipoVenta === "botella") {
-          discountableTotal += item.precioUnitario * item.cantidad;
-        } else if (item.tipoVenta === "decant") {
-          discountableTotal += item.precioUnitario * item.mililitros;
-        }
+        discountableTotal += calcularPrecioDecantCarrito(item);
       }
     });
 

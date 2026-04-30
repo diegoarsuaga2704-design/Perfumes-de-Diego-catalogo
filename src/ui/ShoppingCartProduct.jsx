@@ -1,9 +1,10 @@
-
-
-// export default ShoppingCartProduct;
-
 import { useCart } from "../context/CartContext";
 import { useState } from "react";
+import {
+  calcularPrecioDecantCarrito,
+  getIncrementoMililitros,
+  getMililitrosMinimos,
+} from "../functions/pricingDecant";
 
 function ShoppingCartProduct() {
   const {
@@ -23,41 +24,27 @@ function ShoppingCartProduct() {
       return (item.precioUnitario || 0) * (item.cantidad || 0);
     }
     if (item.tipoVenta === "decant") {
-      return (item.precioUnitario || 0) * (item.mililitros || 0);
+      return calcularPrecioDecantCarrito(item);
     }
     return 0;
   };
 
   const productHasDiscount = (item) => {
-  if (!isDiscountApplied) return false;
-
-  // 🔴 NUEVA REGLA: solo decants
-  return item.tipoVenta === "decant";
-};
-
-  // const getDiscountedPrice = (item) => {
-  //   const itemTotal = calculateItemTotal(item);
-  //   if (!productHasDiscount(item)) return itemTotal;
-  //   if (discountType === "percentage") {
-  //     return itemTotal - (itemTotal * discountValue) / 100;
-  //   }
-  //   if (discountType === "amount") {
-  //     return Math.max(0, itemTotal - discountValue);
-  //   }
-  //   return itemTotal;
-  // };
+    if (!isDiscountApplied) return false;
+    return item.tipoVenta === "decant";
+  };
 
   const getDiscountedPrice = (item) => {
-  const itemTotal = calculateItemTotal(item);
-  if (!productHasDiscount(item)) return itemTotal;
-  if (discountType === "percentage") {
-    return itemTotal - (itemTotal * discountValue) / 100;
-  }
-  if (discountType === "amount") {
-    return Math.max(0, itemTotal - discountValue);
-  }
-  return itemTotal;
-};
+    const itemTotal = calculateItemTotal(item);
+    if (!productHasDiscount(item)) return itemTotal;
+    if (discountType === "percentage") {
+      return itemTotal - (itemTotal * discountValue) / 100;
+    }
+    if (discountType === "amount") {
+      return Math.max(0, itemTotal - discountValue);
+    }
+    return itemTotal;
+  };
 
   const handleIncrease = (item) => {
     if (item.tipoVenta === "botella") {
@@ -67,7 +54,11 @@ function ShoppingCartProduct() {
     }
 
     if (item.tipoVenta === "decant") {
-      updateCartItem(item.id, "decant", item.mililitros + 1);
+      const incremento = getIncrementoMililitros(item);
+      const nuevosMl = item.mililitros + incremento;
+      // Validar stock si existe
+      if (item.stockDisponible && nuevosMl > item.stockDisponible) return;
+      updateCartItem(item.id, "decant", nuevosMl);
     }
   };
 
@@ -76,8 +67,13 @@ function ShoppingCartProduct() {
       updateCartItem(item.id, "botella", item.cantidad - 1);
     }
 
-    if (item.tipoVenta === "decant" && item.mililitros > 1) {
-      updateCartItem(item.id, "decant", item.mililitros - 1);
+    if (item.tipoVenta === "decant") {
+      const incremento = getIncrementoMililitros(item);
+      const minimo = getMililitrosMinimos(item);
+      const nuevosMl = item.mililitros - incremento;
+      if (nuevosMl >= minimo) {
+        updateCartItem(item.id, "decant", nuevosMl);
+      }
     }
   };
 

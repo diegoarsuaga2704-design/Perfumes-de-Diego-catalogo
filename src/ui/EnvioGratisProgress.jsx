@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
 
 const UMBRAL_ENVIO_GRATIS = 1750;
 
@@ -16,17 +17,7 @@ function EnvioGratisProgress() {
   // Calcular subtotal SOLO de decants (antes de descuento)
   const subtotalDecants = cartItems
     .filter((item) => item.tipoVenta === "decant")
-    .reduce((sum, item) => {
-      const mililitros = Number(item.mililitros) || 0;
-      const precioUnitario = Number(item.precioUnitario) || 0;
-      const precio30ml = Number(item.precio30ml) || 0;
-
-      // Caso especial: Louis Vuitton 30 ml (precio fijo)
-      if (mililitros === 30 && item.casa === "Louis Vuitton") {
-        return sum + precio30ml;
-      }
-      return sum + precioUnitario * mililitros;
-    }, 0);
+    .reduce((sum, item) => sum + calcularPrecioDecantCarrito(item), 0);
 
   // Aplicar descuento si es aplicable a decants
   let totalDecants = subtotalDecants;
@@ -37,7 +28,6 @@ function EnvioGratisProgress() {
     if (discountType === "percentage") {
       totalDecants = subtotalDecants * (1 - discountValue / 100);
     } else if (discountType === "amount") {
-      // El descuento en monto fijo se resta proporcionalmente de decants
       totalDecants = Math.max(0, subtotalDecants - discountValue);
     }
   }

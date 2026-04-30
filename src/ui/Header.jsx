@@ -59,10 +59,10 @@ function Header({ onSearchResult }) {
 
           <div className="relative">
             <button onClick={toggleCart}>
-              <ShoppingCart className="w-5 h-5 hover:text-[#A47E3B] cursor-pointer text-[#2C2C2C]" />
+              <ShoppingCart className="w-7 h-7 sm:w-6 sm:h-6 hover:text-[#A47E3B] cursor-pointer text-[#2C2C2C]" />
             </button>
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#A47E3B] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 bg-[#A47E3B] text-white text-[10px] sm:text-xs rounded-full w-5 h-5 sm:w-4 sm:h-4 flex items-center justify-center font-bold">
                 {totalItems}
               </span>
             )}

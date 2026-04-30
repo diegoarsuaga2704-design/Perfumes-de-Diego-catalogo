@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
+import { calcularPrecioDecant } from "../functions/pricingDecant";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
@@ -9,6 +10,7 @@ import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
 import PerfumesRelacionados from "../ui/PerfumesRelacionados";
 import { useCart } from "../context/CartContext";
+import CustomSelect from "../ui/CustomSelect";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -68,11 +70,7 @@ export default function ProductDetail() {
 
   const totalPrice = esBotellaCompleta
     ? parfum.precio * botellas
-    : mililitros == null
-      ? 0
-      : mililitros === 30 && parfum.casa === "Louis Vuitton"
-        ? parfum?.precio30ml
-        : parfum.precio * mililitros;
+    : calcularPrecioDecant(parfum, mililitros);
 
   const handleAddToCart = () => {
     if (!estaDisponible) return;
@@ -85,6 +83,7 @@ export default function ProductDetail() {
       casa: parfum.casa,
       tipoVenta: esBotellaCompleta ? "botella" : "decant",
       precioUnitario: parfum.precio,
+      precio30ml: parfum.precio30ml || null,
       mlBotella: esBotellaCompleta ? parfum.mlBotella : null,
       mililitros: esDecant ? mililitros : null,
       cantidad: esBotellaCompleta ? botellas : null,
@@ -167,24 +166,18 @@ export default function ProductDetail() {
               {/* SELECTOR PARA BOTELLAS */}
               {esBotellaCompleta && estaDisponible && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700 mb-1">
-                    Selecciona cantidad de piezas
-                  </label>
-
-                  <select
+                  <CustomSelect
+                    label="Selecciona cantidad de piezas"
                     value={botellas}
-                    onChange={(e) => setBotellas(parseInt(e.target.value))}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-gray-800 bg-white shadow-sm focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B]"
-                  >
-                    {Array.from(
+                    onChange={(val) => setBotellas(val)}
+                    options={Array.from(
                       { length: parfum.botellasDisponibles },
                       (_, i) => i + 1,
-                    ).map((num) => (
-                      <option key={num} value={num}>
-                        {num} pieza{num > 1 ? "s" : ""}
-                      </option>
-                    ))}
-                  </select>
+                    ).map((num) => ({
+                      value: num,
+                      label: `${num} pieza${num > 1 ? "s" : ""}`,
+                    }))}
+                  />
 
                   <div className="text-[#D4AF7A] mt-4 font-semibold">
                     Total: ${totalPrice} por {botellas} pieza
@@ -238,11 +231,12 @@ export default function ProductDetail() {
                   <SelectMililitros
                     value={mililitros}
                     onChange={setMililitros}
+                    parfum={parfum}
                   />
 
                   {mililitros && (
                     <div className="text-[#D4AF7A] mt-4 font-semibold">
-                      Total: ${totalPrice} por {mililitros}ml
+                      Total: ${totalPrice} por {mililitros} ml
                     </div>
                   )}
                 </>

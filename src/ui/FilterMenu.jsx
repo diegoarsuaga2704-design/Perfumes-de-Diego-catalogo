@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import supabase from "../services/supabase"; // Asegúrate de tener tu conexión lista
+import supabase from "../services/supabase";
 import MenuDesplegado from "./MenuDesplegado";
 
-////////////////////////////////////////////////////////////////////
-//OCASION - NOMBRE
-////////////////////////////////////////////////////////////////////
+// 🔒 Helper para evitar null/undefined
+const safeString = (v) => (v ?? "").toString();
 
 export default function FilterMenu({
   onSelectCasa,
@@ -16,7 +15,6 @@ export default function FilterMenu({
   const [ocasiones, setOcasiones] = useState([]);
   const [categorias, setCategorias] = useState([]);
 
-  // Lógica para obtener los datos desde Supabase
   useEffect(() => {
     async function fetchData() {
       const { data: casasData } = await supabase.from("parfums").select("casa");
@@ -29,47 +27,54 @@ export default function FilterMenu({
 
       setCasas(casasData || []);
       setOcasiones(ocasionesData || []);
-      setCategorias(categoriasData || []); // No se usa en el menú desplegable
+      setCategorias(categoriasData || []);
     }
     fetchData();
   }, []);
 
-  //CATEGORIAS UNICAS
-  const casasUnicas = [...new Set(casas.map((item) => item.casa))].sort(
-    (a, b) => a.localeCompare(b)
-  );
-  const ocasionesUnicas = [
-    ...new Set(ocasiones.map((item) => item.disponible)),
-  ].sort((a, b) => a.localeCompare(b));
-  const categoriasUnicas = [
-    ...new Set(categorias.map((item) => item.categoria)),
-  ].sort((a, b) => a.localeCompare(b));
+  // 🔒 LIMPIEZA + UNIQUE + SORT SEGURO
 
-  // Función para alternar menús
-  // const toggleMenu = (menu) => {
-  //   setOpenMenu(openMenu === menu ? null : menu);
-  // };
+  const casasUnicas = [...new Set(
+    casas
+      .map((item) => safeString(item.casa))
+      .filter((v) => v !== "")
+  )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
+
+  const ocasionesUnicas = [...new Set(
+    ocasiones
+      .map((item) => safeString(item.disponible))
+      .filter((v) => v !== "")
+  )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
+
+  const categoriasUnicas = [...new Set(
+    categorias
+      .map((item) => safeString(item.categoria))
+      .filter((v) => v !== "")
+  )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
+
   const toggleMenu = (menu) => {
-    setOpenMenu((prevOpenMenu) => (prevOpenMenu === menu ? null : menu));
+    setOpenMenu((prevOpenMenu) =>
+      prevOpenMenu === menu ? null : menu
+    );
   };
 
-  // Nueva función: cuando se selecciona una CASA - OCASION (NOMBRE) - CATEGORIA
   const handleSelectCasa = (nombreCasa) => {
-    onSelectCasa(nombreCasa); // comunica al componente padre
-    setOpenMenu(null); // cierra el menú
+    onSelectCasa(nombreCasa);
+    setOpenMenu(null);
   };
+
   const handleSelectOcasion = (nombreOcasion) => {
-    onSelectOcasion(nombreOcasion); // comunica al componente padre
-    setOpenMenu(null); // cierra el menú
+    onSelectOcasion(nombreOcasion);
+    setOpenMenu(null);
   };
+
   const handleSelectCategoria = (nombreCategoria) => {
-    onSelectCategoria(nombreCategoria); // comunica al componente padre
-    setOpenMenu(null); // cierra el menú
+    onSelectCategoria(nombreCategoria);
+    setOpenMenu(null);
   };
 
   return (
     <div className="relative flex flex-wrap justify-center sm:justify-start gap-1 sm:gap-4">
-      {/* Botón Casa */}
       <MenuDesplegado
         menuType="casa"
         toggleMenu={toggleMenu}
@@ -79,7 +84,6 @@ export default function FilterMenu({
         onSelectItem={handleSelectCasa}
       />
 
-      {/* Botón Ocasión */}
       <MenuDesplegado
         menuType="ocasion"
         toggleMenu={toggleMenu}
@@ -90,7 +94,6 @@ export default function FilterMenu({
         prioridad={{ Disponible: 1, Próximamente: 2, Agotado: 3 }}
       />
 
-      {/* Botón categoria */}
       <MenuDesplegado
         menuType="categoria"
         toggleMenu={toggleMenu}
