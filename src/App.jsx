@@ -10,6 +10,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Prehome from "./pages/Prehome";
 import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
+import AdminPerfumesList from "./pages/AdminPerfumesList";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 
 const router = createBrowserRouter([
@@ -48,7 +49,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // Rutas de admin (sin AppLayout — tienen su propio diseño)
+  // Rutas de admin (sin AppLayout)
   {
     path: "/admin/login",
     element: <AdminLogin />,
@@ -58,6 +59,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPanel />
+      </ProtectedAdminRoute>
+    ),
+  },
+  {
+    path: "/admin/perfumes",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPerfumesList />
       </ProtectedAdminRoute>
     ),
   },

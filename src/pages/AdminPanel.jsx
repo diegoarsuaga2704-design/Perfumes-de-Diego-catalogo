@@ -44,36 +44,36 @@ export default function AdminPanel() {
           </p>
         </div>
 
-        {/* Tarjetas de funciones (placeholders) */}
+        {/* Tarjetas de funciones */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 opacity-50">
+          <button
+            onClick={() => navigate("/admin/perfumes")}
+            className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+          >
             <Package className="text-[#A47E3B] mb-3" size={28} />
             <h3 className="font-semibold text-gray-900 mb-1">
               Ver y editar perfumes
             </h3>
             <p className="text-sm text-gray-600">
-              Próximamente — Fase 2
+              Lista completa del catálogo con buscador
             </p>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 opacity-50">
+          <button
+            onClick={() => navigate("/admin/perfumes/nuevo")}
+            className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+          >
             <Plus className="text-[#A47E3B] mb-3" size={28} />
             <h3 className="font-semibold text-gray-900 mb-1">
               Agregar perfume
             </h3>
-            <p className="text-sm text-gray-600">
-              Próximamente — Fase 4
-            </p>
-          </div>
+            <p className="text-sm text-gray-600">Próximamente — Fase 4</p>
+          </button>
 
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 opacity-50">
             <ImageIcon className="text-[#A47E3B] mb-3" size={28} />
-            <h3 className="font-semibold text-gray-900 mb-1">
-              Subir fotos
-            </h3>
-            <p className="text-sm text-gray-600">
-              Próximamente — Fase 5
-            </p>
+            <h3 className="font-semibold text-gray-900 mb-1">Subir fotos</h3>
+            <p className="text-sm text-gray-600">Próximamente — Fase 5</p>
           </div>
         </div>
       </main>
