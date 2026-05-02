@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import {
-  getParfumByIdAdmin,
-  updateParfumAdmin,
-} from "../functions/getParfumsAdmin";
-import LoadingSpinner from "../ui/LoadingSpinner";
+import { createParfumAdmin } from "../functions/getParfumsAdmin";
 
 const OPCIONES_CATEGORIA = ["Nicho", "Diseñador", "Árabe"];
 const OPCIONES_CONCENTRACION = [
@@ -19,36 +15,33 @@ const OPCIONES_CONCENTRACION = [
 ];
 const OPCIONES_DISPONIBLE = ["Disponible", "Agotado", "Próximamente"];
 
-export default function AdminPerfumeEdit() {
-  const { id } = useParams();
+// Valores default al crear un nuevo perfume
+const DEFAULT_FORM = {
+  nombre: "",
+  casa: "",
+  categoria: "Nicho",
+  concentracion: "Eau De Parfum",
+  disponible: "Próximamente",
+  stock: false, // Decant
+  notas: "",
+  precio: "",
+  precio30ml: null,
+  mlBotella: null,
+  botellasDisponibles: null,
+  image: "",
+  fraganticaLink: "",
+  tiktokLink: "",
+  esBestSeller: false,
+};
+
+export default function AdminPerfumeCreate() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [form, setForm] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    fetchParfum();
-  }, [id]);
-
-  const fetchParfum = async () => {
-    try {
-      setLoading(true);
-      const data = await getParfumByIdAdmin(id);
-      if (!data) {
-        setError("Perfume no encontrado");
-        return;
-      }
-      setForm(data);
-    } catch (err) {
-      setError("Error al cargar el perfume");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -58,74 +51,48 @@ export default function AdminPerfumeEdit() {
     e.preventDefault();
     setError(null);
 
+    // Validaciones mínimas
     if (!form.nombre?.trim() || !form.casa?.trim()) {
       setError("Nombre y casa son obligatorios.");
       return;
     }
-    if (form.precio == null || isNaN(Number(form.precio))) {
+    if (form.precio === "" || isNaN(Number(form.precio))) {
       setError("Precio inválido.");
       return;
     }
 
     setSaving(true);
     try {
-      const { id: _id, created_at, ...updates } = form;
+      // Construir objeto para insertar
+      const newParfum = {
+        ...form,
+        precio: Number(form.precio) || 0,
+        precio30ml:
+          form.precio30ml !== null && form.precio30ml !== ""
+            ? Number(form.precio30ml) || null
+            : null,
+        mlBotella:
+          form.mlBotella !== null && form.mlBotella !== ""
+            ? Number(form.mlBotella) || null
+            : null,
+        botellasDisponibles:
+          form.botellasDisponibles !== null && form.botellasDisponibles !== ""
+            ? Number(form.botellasDisponibles) || null
+            : null,
+      };
 
-      // Convertir números
-      updates.precio = Number(updates.precio) || 0;
-      if (updates.precio30ml !== null && updates.precio30ml !== "") {
-        updates.precio30ml = Number(updates.precio30ml) || null;
-      } else {
-        updates.precio30ml = null;
-      }
-      if (updates.mlBotella !== null && updates.mlBotella !== "") {
-        updates.mlBotella = Number(updates.mlBotella) || null;
-      } else {
-        updates.mlBotella = null;
-      }
-      if (
-        updates.botellasDisponibles !== null &&
-        updates.botellasDisponibles !== ""
-      ) {
-        updates.botellasDisponibles =
-          Number(updates.botellasDisponibles) || null;
-      } else {
-        updates.botellasDisponibles = null;
-      }
-
-      await updateParfumAdmin(id, updates);
+      await createParfumAdmin(newParfum);
       setSuccess(true);
 
       setTimeout(() => {
         navigate("/admin/perfumes");
       }, 800);
     } catch (err) {
-      setError("Error al guardar. Intenta de nuevo.");
+      setError("Error al crear el perfume. Intenta de nuevo.");
     } finally {
       setSaving(false);
     }
   };
-
-  if (loading) return <LoadingSpinner />;
-
-  if (error && !form) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8 text-center max-w-md">
-          <AlertCircle className="text-red-500 mx-auto mb-3" size={32} />
-          <p className="text-gray-700 mb-4">{error}</p>
-          <button
-            onClick={() => navigate("/admin/perfumes")}
-            className="bg-[#A47E3B] text-white px-4 py-2 rounded-md hover:bg-[#D4AF7A]"
-          >
-            Volver a la lista
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!form) return null;
 
   const esBotella = form.stock === true;
   const esDecant = form.stock === false;
@@ -143,10 +110,8 @@ export default function AdminPerfumeEdit() {
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-lg sm:text-xl font-bold">Editar perfume</h1>
-              <p className="text-xs text-gray-400 truncate max-w-[200px] sm:max-w-none">
-                {form.nombre}
-              </p>
+              <h1 className="text-lg sm:text-xl font-bold">Nuevo perfume</h1>
+              <p className="text-xs text-gray-400">{user?.email}</p>
             </div>
           </div>
           <button
@@ -160,7 +125,7 @@ export default function AdminPerfumeEdit() {
           >
             {success ? <CheckCircle size={16} /> : <Save size={16} />}
             <span className="hidden sm:inline">
-              {saving ? "Guardando..." : success ? "Guardado" : "Guardar"}
+              {saving ? "Creando..." : success ? "Creado" : "Crear"}
             </span>
           </button>
         </div>
@@ -177,7 +142,7 @@ export default function AdminPerfumeEdit() {
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-md mb-4 flex items-center gap-2">
             <CheckCircle size={20} />
-            Cambios guardados correctamente
+            Perfume creado correctamente
           </div>
         )}
 
@@ -194,6 +159,7 @@ export default function AdminPerfumeEdit() {
                   value={form.nombre || ""}
                   onChange={(e) => handleChange("nombre", e.target.value)}
                   className={inputClass}
+                  placeholder="Ej: Aventus"
                 />
               </Field>
 
@@ -203,6 +169,7 @@ export default function AdminPerfumeEdit() {
                   value={form.casa || ""}
                   onChange={(e) => handleChange("casa", e.target.value)}
                   className={inputClass}
+                  placeholder="Ej: Creed"
                 />
               </Field>
 
@@ -212,7 +179,6 @@ export default function AdminPerfumeEdit() {
                   onChange={(e) => handleChange("categoria", e.target.value)}
                   className={inputClass}
                 >
-                  <option value="">— Selecciona —</option>
                   {OPCIONES_CATEGORIA.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
@@ -229,7 +195,6 @@ export default function AdminPerfumeEdit() {
                   }
                   className={inputClass}
                 >
-                  <option value="">— Selecciona —</option>
                   {OPCIONES_CONCENTRACION.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
@@ -244,7 +209,6 @@ export default function AdminPerfumeEdit() {
                   onChange={(e) => handleChange("disponible", e.target.value)}
                   className={inputClass}
                 >
-                  <option value="">— Selecciona —</option>
                   {OPCIONES_DISPONIBLE.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
@@ -311,6 +275,7 @@ export default function AdminPerfumeEdit() {
                   value={form.precio ?? ""}
                   onChange={(e) => handleChange("precio", e.target.value)}
                   className={inputClass}
+                  placeholder={esDecant ? "Ej: 200" : "Ej: 4500"}
                 />
               </Field>
 
@@ -441,10 +406,10 @@ export default function AdminPerfumeEdit() {
               }`}
             >
               {saving
-                ? "Guardando..."
+                ? "Creando..."
                 : success
-                  ? "Guardado ✓"
-                  : "Guardar cambios"}
+                  ? "Creado ✓"
+                  : "Crear perfume"}
             </button>
           </div>
         </form>

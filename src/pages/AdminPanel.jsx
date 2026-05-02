@@ -67,7 +67,9 @@ export default function AdminPanel() {
             <h3 className="font-semibold text-gray-900 mb-1">
               Agregar perfume
             </h3>
-            <p className="text-sm text-gray-600">Próximamente — Fase 4</p>
+            <p className="text-sm text-gray-600">
+              Crear un perfume nuevo en el catálogo
+            </p>
           </button>
 
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 opacity-50">

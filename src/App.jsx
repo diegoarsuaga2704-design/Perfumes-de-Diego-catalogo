@@ -1,4 +1,3 @@
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./pages/Home";
 import FAQs from "./pages/FAQs";
@@ -12,6 +11,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
 import AdminPerfumesList from "./pages/AdminPerfumesList";
 import AdminPerfumeEdit from "./pages/AdminPerfumeEdit";
+import AdminPerfumeCreate from "./pages/AdminPerfumeCreate";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 
 const router = createBrowserRouter([
@@ -68,6 +68,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPerfumesList />
+      </ProtectedAdminRoute>
+    ),
+  },
+  {
+    path: "/admin/perfumes/nuevo",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPerfumeCreate />
       </ProtectedAdminRoute>
     ),
   },
