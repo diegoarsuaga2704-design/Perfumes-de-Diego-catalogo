@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { createParfumAdmin } from "../functions/getParfumsAdmin";
+import ImageUploader from "../ui/ImageUploader";
 
 const OPCIONES_CATEGORIA = ["Nicho", "Diseñador", "Árabe"];
 const OPCIONES_CONCENTRACION = [
@@ -15,14 +16,13 @@ const OPCIONES_CONCENTRACION = [
 ];
 const OPCIONES_DISPONIBLE = ["Disponible", "Agotado", "Próximamente"];
 
-// Valores default al crear un nuevo perfume
 const DEFAULT_FORM = {
   nombre: "",
   casa: "",
   categoria: "Nicho",
   concentracion: "Eau De Parfum",
   disponible: "Próximamente",
-  stock: false, // Decant
+  stock: false,
   notas: "",
   precio: "",
   precio30ml: null,
@@ -51,7 +51,6 @@ export default function AdminPerfumeCreate() {
     e.preventDefault();
     setError(null);
 
-    // Validaciones mínimas
     if (!form.nombre?.trim() || !form.casa?.trim()) {
       setError("Nombre y casa son obligatorios.");
       return;
@@ -63,7 +62,6 @@ export default function AdminPerfumeCreate() {
 
     setSaving(true);
     try {
-      // Construir objeto para insertar
       const newParfum = {
         ...form,
         precio: Number(form.precio) || 0,
@@ -265,9 +263,7 @@ export default function AdminPerfumeCreate() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field
-                label={
-                  esDecant ? "Precio por ml *" : "Precio por botella *"
-                }
+                label={esDecant ? "Precio por ml *" : "Precio por botella *"}
               >
                 <input
                   type="text"
@@ -328,29 +324,19 @@ export default function AdminPerfumeCreate() {
 
           <section className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Imagen y links
+              Imagen
             </h2>
 
-            <div className="space-y-4">
-              <Field label="URL de imagen">
-                <input
-                  type="text"
-                  value={form.image || ""}
-                  onChange={(e) => handleChange("image", e.target.value)}
-                  className={inputClass}
-                  placeholder="https://..."
-                />
-                {form.image && (
-                  <div className="mt-2">
-                    <img
-                      src={form.image}
-                      alt="preview"
-                      className="w-24 h-24 object-cover rounded-md border border-gray-200"
-                    />
-                  </div>
-                )}
-              </Field>
+            <ImageUploader
+              value={form.image || ""}
+              onChange={(newUrl) => handleChange("image", newUrl)}
+            />
+          </section>
 
+          <section className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Links</h2>
+
+            <div className="space-y-4">
               <Field label="Link de Fragrantica">
                 <input
                   type="text"

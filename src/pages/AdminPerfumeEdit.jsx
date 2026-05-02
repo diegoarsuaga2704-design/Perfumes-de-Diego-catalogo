@@ -7,6 +7,7 @@ import {
   updateParfumAdmin,
 } from "../functions/getParfumsAdmin";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import ImageUploader from "../ui/ImageUploader";
 
 const OPCIONES_CATEGORIA = ["Nicho", "Diseñador", "Árabe"];
 const OPCIONES_CONCENTRACION = [
@@ -71,7 +72,6 @@ export default function AdminPerfumeEdit() {
     try {
       const { id: _id, created_at, ...updates } = form;
 
-      // Convertir números
       updates.precio = Number(updates.precio) || 0;
       if (updates.precio30ml !== null && updates.precio30ml !== "") {
         updates.precio30ml = Number(updates.precio30ml) || null;
@@ -301,9 +301,7 @@ export default function AdminPerfumeEdit() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field
-                label={
-                  esDecant ? "Precio por ml *" : "Precio por botella *"
-                }
+                label={esDecant ? "Precio por ml *" : "Precio por botella *"}
               >
                 <input
                   type="text"
@@ -363,29 +361,19 @@ export default function AdminPerfumeEdit() {
 
           <section className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Imagen y links
+              Imagen
             </h2>
 
-            <div className="space-y-4">
-              <Field label="URL de imagen">
-                <input
-                  type="text"
-                  value={form.image || ""}
-                  onChange={(e) => handleChange("image", e.target.value)}
-                  className={inputClass}
-                  placeholder="https://..."
-                />
-                {form.image && (
-                  <div className="mt-2">
-                    <img
-                      src={form.image}
-                      alt="preview"
-                      className="w-24 h-24 object-cover rounded-md border border-gray-200"
-                    />
-                  </div>
-                )}
-              </Field>
+            <ImageUploader
+              value={form.image || ""}
+              onChange={(newUrl) => handleChange("image", newUrl)}
+            />
+          </section>
 
+          <section className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Links</h2>
+
+            <div className="space-y-4">
               <Field label="Link de Fragrantica">
                 <input
                   type="text"
