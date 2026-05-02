@@ -11,6 +11,7 @@ import Prehome from "./pages/Prehome";
 import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
 import AdminPerfumesList from "./pages/AdminPerfumesList";
+import AdminPerfumeEdit from "./pages/AdminPerfumeEdit";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 
 const router = createBrowserRouter([
@@ -67,6 +68,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPerfumesList />
+      </ProtectedAdminRoute>
+    ),
+  },
+  {
+    path: "/admin/perfumes/:id",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPerfumeEdit />
       </ProtectedAdminRoute>
     ),
   },

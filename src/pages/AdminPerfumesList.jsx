@@ -158,6 +158,9 @@ export default function AdminPerfumesList() {
                       Tipo
                     </th>
                     <th className="text-left text-xs font-semibold text-gray-700 uppercase px-4 py-3">
+                      Concentración
+                    </th>
+                    <th className="text-left text-xs font-semibold text-gray-700 uppercase px-4 py-3">
                       Precio
                     </th>
                     <th className="text-left text-xs font-semibold text-gray-700 uppercase px-4 py-3">
@@ -194,6 +197,9 @@ export default function AdminPerfumesList() {
                         <span className="text-xs text-gray-600">
                           {p.stock === true ? "Botella" : "Decant"}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-600 italic">
+                        {p.concentracion || "—"}
                       </td>
                       <td className="px-4 py-3 text-gray-900 font-medium">
                         ${p.precio}
