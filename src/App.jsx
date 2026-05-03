@@ -12,6 +12,9 @@ import AdminPanel from "./pages/AdminPanel";
 import AdminPerfumesList from "./pages/AdminPerfumesList";
 import AdminPerfumeEdit from "./pages/AdminPerfumeEdit";
 import AdminPerfumeCreate from "./pages/AdminPerfumeCreate";
+import AdminPaquetesList from "./pages/AdminPaquetesList";
+import AdminPaqueteCreate from "./pages/AdminPaqueteCreate";
+import AdminPaqueteEdit from "./pages/AdminPaqueteEdit";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 
 const router = createBrowserRouter([
@@ -19,34 +22,13 @@ const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      {
-        path: "/",
-        element: <Prehome />,
-      },
-      {
-        path: "/home",
-        element: <Home />,
-      },
-      {
-        path: "/faqs",
-        element: <FAQs />,
-      },
-      {
-        path: "/best-sellers",
-        element: <BestSellers />,
-      },
-      {
-        path: "/tiktok",
-        element: <VistoEnTikTok />,
-      },
-      {
-        path: "/product/:nombre/:id",
-        element: <ProductDetail />,
-      },
-      {
-        path: "*",
-        element: <NotFound />,
-      },
+      { path: "/", element: <Prehome /> },
+      { path: "/home", element: <Home /> },
+      { path: "/faqs", element: <FAQs /> },
+      { path: "/best-sellers", element: <BestSellers /> },
+      { path: "/tiktok", element: <VistoEnTikTok /> },
+      { path: "/product/:nombre/:id", element: <ProductDetail /> },
+      { path: "*", element: <NotFound /> },
     ],
   },
 
@@ -63,6 +45,8 @@ const router = createBrowserRouter([
       </ProtectedAdminRoute>
     ),
   },
+
+  // Perfumes
   {
     path: "/admin/perfumes",
     element: (
@@ -84,6 +68,32 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPerfumeEdit />
+      </ProtectedAdminRoute>
+    ),
+  },
+
+  // Paquetes
+  {
+    path: "/admin/paquetes",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPaquetesList />
+      </ProtectedAdminRoute>
+    ),
+  },
+  {
+    path: "/admin/paquetes/nuevo",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPaqueteCreate />
+      </ProtectedAdminRoute>
+    ),
+  },
+  {
+    path: "/admin/paquetes/:id",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPaqueteEdit />
       </ProtectedAdminRoute>
     ),
   },
