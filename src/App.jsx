@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import FAQs from "./pages/FAQs";
 import BestSellers from "./pages/BestSellers";
 import VistoEnTikTok from "./pages/VistoEnTikTok";
+import Paquetes from "./pages/Paquetes";
 import AppLayout from "./ui/AppLayout";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       { path: "/faqs", element: <FAQs /> },
       { path: "/best-sellers", element: <BestSellers /> },
       { path: "/tiktok", element: <VistoEnTikTok /> },
+      { path: "/paquetes", element: <Paquetes /> },
       { path: "/product/:nombre/:id", element: <ProductDetail /> },
       { path: "*", element: <NotFound /> },
     ],
@@ -46,7 +48,7 @@ const router = createBrowserRouter([
     ),
   },
 
-  // Perfumes
+  // Perfumes admin
   {
     path: "/admin/perfumes",
     element: (
@@ -72,7 +74,7 @@ const router = createBrowserRouter([
     ),
   },
 
-  // Paquetes
+  // Paquetes admin
   {
     path: "/admin/paquetes",
     element: (

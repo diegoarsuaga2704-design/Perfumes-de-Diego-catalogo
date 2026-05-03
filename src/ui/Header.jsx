@@ -27,16 +27,8 @@ function Header({ onSearchResult }) {
       accion: () => navigate("/tiktok"),
     },
     {
-      nombre: "Paquetes",
-      accion: () => {
-        window.open(
-          "https://wa.me/5212212034647?text=" +
-            encodeURIComponent(
-              "Hola Diego, me interesan los paquetes de perfumes",
-            ),
-          "_blank",
-        );
-      },
+      nombre: "Paquetes De Decants",
+      accion: () => navigate("/paquetes"),
     },
   ];
 

@@ -23,18 +23,9 @@ function MainMenu() {
       nombre: "Visto en TikTok",
       accion: () => navigate("/tiktok"),
     },
-
     {
       nombre: "Paquetes",
-      accion: () => {
-        window.open(
-          "https://wa.me/5212212034647?text=" +
-            encodeURIComponent(
-              "Hola Diego, me interesan los paquetes de perfumes",
-            ),
-          "_blank",
-        );
-      },
+      accion: () => navigate("/paquetes"),
     },
   ];
 
