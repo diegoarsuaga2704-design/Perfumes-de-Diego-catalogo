@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Package, ShoppingCart, Sparkles } from "lucide-react";
+import { Package, ShoppingCart, Sparkles, CheckCircle } from "lucide-react";
 import { getPaquetesPublicos } from "../functions/getPaquetesAdmin";
+import { useCart } from "../context/CartContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function Paquetes() {
   const navigate = useNavigate();
+  const { addToCart, openCart } = useCart();
   const [paquetes, setPaquetes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addedId, setAddedId] = useState(null);
 
   useEffect(() => {
     getPaquetesPublicos()
@@ -20,10 +23,32 @@ export default function Paquetes() {
   }, []);
 
   const handleAddToCart = (paquete) => {
-    // Placeholder - se conectará en sub-fase C
-    alert(
-      `"${paquete.nombre}" estará disponible para agregar al carrito muy pronto. Por ahora puedes contactarme por WhatsApp.`,
-    );
+    // Construir item del carrito
+    const cartItem = {
+      tipoVenta: "paquete",
+      paqueteId: paquete.id,
+      nombre: paquete.nombre,
+      imagen: paquete.imagen,
+      precio: Number(paquete.precio) || 0,
+      precioIndividual: paquete.precioIndividual
+        ? Number(paquete.precioIndividual)
+        : null,
+      // contenidoInfo: lista resumida para mostrar en el carrito y WhatsApp
+      contenidoInfo: (paquete.perfumesInfo || []).map((p) => ({
+        nombre: p.nombre,
+        casa: p.casa,
+        mililitros: p.mililitros,
+      })),
+    };
+
+    addToCart(cartItem);
+
+    // Feedback visual
+    setAddedId(paquete.id);
+    setTimeout(() => setAddedId(null), 1500);
+
+    // Abrir el carrito automáticamente
+    openCart();
   };
 
   if (loading) return <LoadingSpinner />;
@@ -31,7 +56,6 @@ export default function Paquetes() {
   return (
     <section className="bg-gray-100 min-h-screen py-10 sm:py-14">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Encabezado */}
         <div className="text-center mb-8 sm:mb-12">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-[#A47E3B] rounded-full mb-4">
             <Package className="text-white" size={28} />
@@ -40,12 +64,11 @@ export default function Paquetes() {
             Paquetes de Decants
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-            Selecciones de perfumes para descubrir varios perfumes a un mejor
+            Selecciones curadas para descubrir varios perfumes a un mejor
             precio. Cada paquete incluye decants listos para probar.
           </p>
         </div>
 
-        {/* Lista de paquetes */}
         {paquetes.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center max-w-xl mx-auto">
             <Package className="mx-auto mb-4 text-gray-300" size={48} />
@@ -70,6 +93,7 @@ export default function Paquetes() {
                 key={paquete.id}
                 paquete={paquete}
                 onAddToCart={handleAddToCart}
+                isAdded={addedId === paquete.id}
               />
             ))}
           </div>
@@ -79,7 +103,7 @@ export default function Paquetes() {
   );
 }
 
-function PaqueteCard({ paquete, onAddToCart }) {
+function PaqueteCard({ paquete, onAddToCart, isAdded }) {
   const precio = Number(paquete.precio) || 0;
   const precioIndividual = paquete.precioIndividual
     ? Number(paquete.precioIndividual)
@@ -92,7 +116,6 @@ function PaqueteCard({ paquete, onAddToCart }) {
 
   return (
     <article className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100">
-      {/* Imagen con badge de ahorro */}
       <div className="relative bg-gray-50">
         {paquete.imagen ? (
           <img
@@ -116,7 +139,6 @@ function PaqueteCard({ paquete, onAddToCart }) {
       </div>
 
       <div className="p-5 sm:p-6">
-        {/* Nombre y descripción */}
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
           {paquete.nombre}
         </h2>
@@ -124,7 +146,6 @@ function PaqueteCard({ paquete, onAddToCart }) {
           <p className="text-sm text-gray-600 mb-4">{paquete.descripcion}</p>
         )}
 
-        {/* Lista de perfumes incluidos */}
         {paquete.perfumesInfo && paquete.perfumesInfo.length > 0 && (
           <div className="bg-gray-50 rounded-lg p-3 mb-4">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
@@ -149,7 +170,6 @@ function PaqueteCard({ paquete, onAddToCart }) {
           </div>
         )}
 
-        {/* Precios */}
         <div className="flex items-end justify-between mb-4 flex-wrap gap-2">
           <div>
             {precioIndividual && precioIndividual > precio && (
@@ -163,13 +183,26 @@ function PaqueteCard({ paquete, onAddToCart }) {
           </div>
         </div>
 
-        {/* Botón */}
         <button
           onClick={() => onAddToCart(paquete)}
-          className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-3 rounded-md font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+          disabled={isAdded}
+          className={`w-full py-3 rounded-md font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
+            isAdded
+              ? "bg-green-600 text-white"
+              : "bg-[#A47E3B] hover:bg-[#D4AF7A] text-white"
+          }`}
         >
-          <ShoppingCart size={16} />
-          Agregar al carrito
+          {isAdded ? (
+            <>
+              <CheckCircle size={16} />
+              Agregado al carrito
+            </>
+          ) : (
+            <>
+              <ShoppingCart size={16} />
+              Agregar al carrito
+            </>
+          )}
         </button>
       </div>
     </article>

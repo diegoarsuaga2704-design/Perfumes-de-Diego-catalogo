@@ -37,7 +37,6 @@ export function CartProvider({ children }) {
   const [errorMessage, setErrorMessage] = useState("");
 
   // 🛍️ Códigos disponibles
-  // Formato de expira: "YYYY-MM-DD" (ej: "2026-12-31"). Omitir = nunca expira.
   const availableDiscounts = {
     DIAPERFUME: {
       type: "percentage",
@@ -47,16 +46,34 @@ export function CartProvider({ children }) {
     },
   };
 
-  // 🛒 Añadir producto
+  // 🛒 Añadir producto (decant, botella o paquete)
   const addToCart = (product) => {
     setCartItems((prev) => {
-      // ✅ Normalizamos stock para asegurar booleano real
+      // === PAQUETE ===
+      if (product.tipoVenta === "paquete") {
+        const existing = prev.find(
+          (item) =>
+            item.tipoVenta === "paquete" && item.paqueteId === product.paqueteId,
+        );
+
+        if (existing) {
+          return prev.map((item) =>
+            item.tipoVenta === "paquete" &&
+            item.paqueteId === product.paqueteId
+              ? { ...item, cantidad: (item.cantidad || 1) + 1 }
+              : item,
+          );
+        }
+
+        return [...prev, { ...product, cantidad: 1 }];
+      }
+
+      // === DECANT / BOTELLA (lógica original sin cambios) ===
       const normalizedProduct = {
         ...product,
         stock: product.stock === false,
       };
 
-      // Buscar item existente del mismo perfume y mismo tipo de venta
       const existing = prev.find(
         (item) =>
           item.id === normalizedProduct.id &&
@@ -77,10 +94,7 @@ export function CartProvider({ children }) {
               };
             } else {
               const nuevosMl = item.mililitros + normalizedProduct.mililitros;
-              if (
-                item.stockDisponible &&
-                nuevosMl > item.stockDisponible
-              ) {
+              if (item.stockDisponible && nuevosMl > item.stockDisponible) {
                 return item;
               }
               return {
@@ -101,6 +115,12 @@ export function CartProvider({ children }) {
   const updateCartItem = (id, tipoVenta, newValue) => {
     setCartItems((prev) =>
       prev.map((item) => {
+        // Paquetes: id == paqueteId, newValue es la cantidad de paquetes
+        if (tipoVenta === "paquete" && item.paqueteId === id) {
+          if (newValue < 1) return item;
+          return { ...item, cantidad: newValue };
+        }
+
         if (item.id === id && item.tipoVenta === tipoVenta) {
           if (tipoVenta === "botella") {
             if (newValue > item.stockDisponible) return item;
@@ -119,9 +139,12 @@ export function CartProvider({ children }) {
   // 🗑️ Eliminar producto
   const removeFromCart = (id, tipoVenta) => {
     setCartItems((prev) =>
-      prev.filter(
-        (item) => !(item.id === id && item.tipoVenta === tipoVenta),
-      ),
+      prev.filter((item) => {
+        if (tipoVenta === "paquete") {
+          return !(item.tipoVenta === "paquete" && item.paqueteId === id);
+        }
+        return !(item.id === id && item.tipoVenta === tipoVenta);
+      }),
     );
   };
 
@@ -130,7 +153,7 @@ export function CartProvider({ children }) {
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
-  // 🧮 Subtotal (usa pricing centralizado para decants)
+  // 🧮 Subtotal
   const subtotal = cartItems.reduce((acc, item) => {
     if (item.tipoVenta === "botella") {
       return acc + (item.precioUnitario || 0) * (item.cantidad || 0);
@@ -140,10 +163,14 @@ export function CartProvider({ children }) {
       return acc + calcularPrecioDecantCarrito(item);
     }
 
+    if (item.tipoVenta === "paquete") {
+      return acc + (Number(item.precio) || 0) * (item.cantidad || 1);
+    }
+
     return acc;
   }, 0);
 
-  // 🎟️ Aplicar descuento
+  // 🎟️ Aplicar descuento (NO aplica a paquetes; ya tienen su propio ahorro)
   const applyDiscountCode = (code) => {
     const upperCode = code.trim().toUpperCase();
     const discount = availableDiscounts[upperCode];
@@ -187,7 +214,7 @@ export function CartProvider({ children }) {
     setErrorMessage("");
   };
 
-  // 🧾 Calcular total con descuento (usa pricing centralizado)
+  // 🧾 Calcular total con descuento
   const calculateDiscount = () => {
     if (!isDiscountApplied) return subtotal;
 
