@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
 
 function InAppBrowserModal() {
   const [isOpen, setIsOpen] = useState(false);
