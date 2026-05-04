@@ -56,7 +56,6 @@ function InAppBrowserModal() {
         {/* Header dorado */}
         <div className="bg-gradient-to-r from-[#A47E3B] to-[#D4AF7A] text-white rounded-t-xl p-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <AlertTriangle size={28} className="animate-pulse" />
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide">
               IMPORTANTE
             </h2>
