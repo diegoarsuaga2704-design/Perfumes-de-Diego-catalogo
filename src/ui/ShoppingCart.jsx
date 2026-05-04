@@ -11,6 +11,7 @@ export default function ShoppingCart() {
     isCartOpen,
     closeCart,
     subtotal,
+    ahorroEnPaquetes,
     totalWithDiscount,
     discountCode,
     applyDiscountCode,
@@ -128,6 +129,13 @@ export default function ShoppingCart() {
               <span>Total:</span>
               <span>${totalWithDiscount.toFixed(2)}</span>
             </div>
+
+            {ahorroEnPaquetes > 0 && (
+              <div className="flex justify-between items-center text-green-700 text-sm font-medium mt-2 bg-green-50 rounded-md px-3 py-2">
+                <span>Ahorras por comprar en paquete:</span>
+                <span>${ahorroEnPaquetes.toFixed(2)}</span>
+              </div>
+            )}
 
             <div className={`${cartItems.length === 0 ? "hidden" : ""}`}>
               <div className="border-b p-4 flex flex-col gap-2">

@@ -58,7 +58,7 @@ function InAppBrowserModal() {
           <div className="flex items-center justify-center gap-2 mb-1">
             <AlertTriangle size={28} className="animate-pulse" />
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide">
-              ⚠️ IMPORTANTE
+              IMPORTANTE
             </h2>
             <AlertTriangle size={28} className="animate-pulse" />
           </div>
@@ -73,8 +73,7 @@ function InAppBrowserModal() {
             Estás usando el navegador de TikTok
           </p>
           <p className="text-sm text-gray-700 mb-5 text-center leading-relaxed">
-            Este navegador <strong>no permite abrir WhatsApp</strong> para
-            enviar tu pedido. Necesitas abrir el sitio en{" "}
+            para realizar tu pedido necesitas abrir el sitio en{" "}
             {platform === "ios" ? "Safari" : "Chrome"}.
           </p>
 

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import ComoFunciona from "../ui/ComoFunciona";
 import HomeBrand from "../ui/HomeBrand";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
@@ -61,12 +61,12 @@ function Prehome() {
         <p className="text-gray-700 text-sm sm:text-base mb-2">
           ¿Tienes dudas antes de comprar?
         </p>
-        <a
-          href="/faqs"
+        <Link
+          to="/faqs"
           className="inline-block text-[#A47E3B] font-semibold text-sm sm:text-base hover:underline"
         >
           Revisa nuestras preguntas frecuentes →
-        </a>
+        </Link>
       </div>
 
       <CTAWhatsApp />

@@ -170,6 +170,16 @@ export function CartProvider({ children }) {
     return acc;
   }, 0);
 
+  // 💰 Ahorro acumulado por paquetes (precioIndividual − precio) × cantidad
+  const ahorroEnPaquetes = cartItems.reduce((acc, item) => {
+    if (item.tipoVenta !== "paquete") return acc;
+    const precio = Number(item.precio) || 0;
+    const precioIndividual = Number(item.precioIndividual) || 0;
+    if (precioIndividual <= precio) return acc;
+    const ahorroUnitario = precioIndividual - precio;
+    return acc + ahorroUnitario * (item.cantidad || 1);
+  }, 0);
+
   // 🎟️ Aplicar descuento (NO aplica a paquetes; ya tienen su propio ahorro)
   const applyDiscountCode = (code) => {
     const upperCode = code.trim().toUpperCase();
@@ -257,6 +267,7 @@ export function CartProvider({ children }) {
         closeCart,
         toggleCart,
         subtotal,
+        ahorroEnPaquetes,
         totalWithDiscount,
         discountCode,
         discountType,
