@@ -16,9 +16,12 @@ function BestSellers() {
         const data = await getBestSellers();
         // Ordenar por casa A-Z, y dentro de cada casa por nombre
         const ordenados = [...data].sort((a, b) => {
-          const casaComparison = a.casa.localeCompare(b.casa);
+          const casaComparison = (a.casa || "").localeCompare(b.casa || "");
           if (casaComparison !== 0) return casaComparison;
-          return a.nombre.localeCompare(b.nombre);
+          const precioA = Number(a.precio) || 0;
+          const precioB = Number(b.precio) || 0;
+          if (precioA !== precioB) return precioA - precioB;
+          return (a.nombre || "").localeCompare(b.nombre || "");
         });
         setBestSellers(ordenados);
       } catch (err) {

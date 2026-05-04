@@ -14,20 +14,11 @@ function EnvioGratisProgress() {
   } = useCart();
   const [showTerms, setShowTerms] = useState(false);
 
-  // Subtotal de decants (puede recibir descuento)
+  // Solo decants cuentan para envío gratis (paquetes ya tienen su propio descuento)
   const subtotalDecants = cartItems
     .filter((item) => item.tipoVenta === "decant")
     .reduce((sum, item) => sum + calcularPrecioDecantCarrito(item), 0);
 
-  // Subtotal de paquetes (no reciben descuento de cupón)
-  const subtotalPaquetes = cartItems
-    .filter((item) => item.tipoVenta === "paquete")
-    .reduce(
-      (sum, item) => sum + (Number(item.precio) || 0) * (item.cantidad || 1),
-      0,
-    );
-
-  // Aplicar descuento solo a decants
   let totalDecants = subtotalDecants;
   if (
     isDiscountApplied &&
@@ -40,29 +31,23 @@ function EnvioGratisProgress() {
     }
   }
 
-  // Total que cuenta para envío gratis = decants (con descuento) + paquetes
-  const totalParaEnvio = totalDecants + subtotalPaquetes;
+  if (totalDecants === 0) return null;
 
-  if (totalParaEnvio === 0) return null;
-
-  const alcanzoEnvioGratis = totalParaEnvio >= UMBRAL_ENVIO_GRATIS;
-  const falta = UMBRAL_ENVIO_GRATIS - totalParaEnvio;
-  const porcentaje = Math.min(
-    (totalParaEnvio / UMBRAL_ENVIO_GRATIS) * 100,
-    100,
-  );
+  const alcanzoEnvioGratis = totalDecants >= UMBRAL_ENVIO_GRATIS;
+  const falta = UMBRAL_ENVIO_GRATIS - totalDecants;
+  const porcentaje = Math.min((totalDecants / UMBRAL_ENVIO_GRATIS) * 100, 100);
 
   return (
     <div className="px-6 py-3 bg-gradient-to-r from-amber-50 to-white border-b border-amber-100">
       {alcanzoEnvioGratis ? (
         <p className="text-sm text-green-700 font-semibold text-center mb-2">
-          🎉 ¡Tienes envío gratis en tu pedido!
+          🎉 ¡Tienes envío gratis en tus decants!
         </p>
       ) : (
         <p className="text-sm text-gray-700 text-center mb-2">
           Te faltan{" "}
           <span className="font-bold text-[#A47E3B]">${falta.toFixed(0)}</span>{" "}
-          para <span className="font-semibold">envío gratis</span>
+          en decants para <span className="font-semibold">envío gratis</span>
         </p>
       )}
 
@@ -91,10 +76,13 @@ function EnvioGratisProgress() {
           </p>
           <ul className="list-disc pl-4 space-y-1">
             <li>
-              Aplica en decants y paquetes de decants. No válido en botellas
-              completas o parciales.
+              Aplica únicamente en decants individuales. No válido en botellas
+              completas, parciales ni paquetes (los paquetes ya tienen un
+              descuento aplicado).
             </li>
-            <li>Monto mínimo: ${UMBRAL_ENVIO_GRATIS} (sin contar botellas).</li>
+            <li>
+              Monto mínimo: ${UMBRAL_ENVIO_GRATIS} en decants individuales.
+            </li>
             <li>
               Válido solo para <strong>zonas regulares de DHL</strong>. No
               aplica en zonas extendidas o de cobertura especial.

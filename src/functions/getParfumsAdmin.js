@@ -2,7 +2,7 @@ import supabase from "../services/supabase";
 
 /**
  * Trae TODOS los perfumes (sin filtrar por disponibilidad).
- * Solo para uso en el panel admin.
+ * Orden: casa A-Z, dentro de cada casa precio menor a mayor.
  *
  * @returns {Promise<Array>} array de perfumes con todos sus campos
  */
@@ -11,6 +11,7 @@ export async function getAllParfumsAdmin() {
     .from("parfums")
     .select("*")
     .order("casa", { ascending: true })
+    .order("precio", { ascending: true })
     .order("nombre", { ascending: true });
 
   if (error) {
@@ -41,9 +42,6 @@ export async function getParfumByIdAdmin(id) {
 
 /**
  * Actualiza un perfume existente.
- *
- * @param {number} id
- * @param {object} updates - solo los campos a actualizar
  */
 export async function updateParfumAdmin(id, updates) {
   const { data, error } = await supabase

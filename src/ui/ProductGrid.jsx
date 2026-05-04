@@ -87,13 +87,17 @@ export default function ProductGrid({
         result = result.filter((p) => p.stock === stockFilter);
       }
 
-      // 🔒 Sort blindado
+      // 🔒 Sort blindado: casa A-Z, precio menor a mayor, nombre A-Z como desempate
       result = result.sort((a, b) => {
         const casaA = safeString(a.casa);
         const casaB = safeString(b.casa);
 
         const casaComparison = casaA.localeCompare(casaB);
         if (casaComparison !== 0) return casaComparison;
+
+        const precioA = Number(a.precio) || 0;
+        const precioB = Number(b.precio) || 0;
+        if (precioA !== precioB) return precioA - precioB;
 
         return safeString(a.nombre).localeCompare(safeString(b.nombre));
       });

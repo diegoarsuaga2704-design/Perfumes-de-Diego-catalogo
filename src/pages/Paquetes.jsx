@@ -23,7 +23,6 @@ export default function Paquetes() {
   }, []);
 
   const handleAddToCart = (paquete) => {
-    // Construir item del carrito
     const cartItem = {
       tipoVenta: "paquete",
       paqueteId: paquete.id,
@@ -33,7 +32,6 @@ export default function Paquetes() {
       precioIndividual: paquete.precioIndividual
         ? Number(paquete.precioIndividual)
         : null,
-      // contenidoInfo: lista resumida para mostrar en el carrito y WhatsApp
       contenidoInfo: (paquete.perfumesInfo || []).map((p) => ({
         nombre: p.nombre,
         casa: p.casa,
@@ -42,13 +40,20 @@ export default function Paquetes() {
     };
 
     addToCart(cartItem);
-
-    // Feedback visual
     setAddedId(paquete.id);
     setTimeout(() => setAddedId(null), 1500);
-
-    // Abrir el carrito automáticamente
     openCart();
+  };
+
+  const handlePerfumeClick = (perfume) => {
+    // Slug del nombre para la URL (igual al patrón del proyecto)
+    const slug = (perfume.nombre || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    navigate(`/product/${slug}/${perfume.id}`);
   };
 
   if (loading) return <LoadingSpinner />;
@@ -93,6 +98,7 @@ export default function Paquetes() {
                 key={paquete.id}
                 paquete={paquete}
                 onAddToCart={handleAddToCart}
+                onPerfumeClick={handlePerfumeClick}
                 isAdded={addedId === paquete.id}
               />
             ))}
@@ -103,7 +109,7 @@ export default function Paquetes() {
   );
 }
 
-function PaqueteCard({ paquete, onAddToCart, isAdded }) {
+function PaqueteCard({ paquete, onAddToCart, onPerfumeClick, isAdded }) {
   const precio = Number(paquete.precio) || 0;
   const precioIndividual = paquete.precioIndividual
     ? Number(paquete.precioIndividual)
@@ -149,21 +155,29 @@ function PaqueteCard({ paquete, onAddToCart, isAdded }) {
         {paquete.perfumesInfo && paquete.perfumesInfo.length > 0 && (
           <div className="bg-gray-50 rounded-lg p-3 mb-4">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-              Incluye
+              Incluye{" "}
+              <span className="font-normal normal-case text-gray-400">
+                (click para ver detalles)
+              </span>
             </p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-1">
               {paquete.perfumesInfo.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-gray-800 truncate pr-2">
-                    <span className="font-medium">{p.nombre}</span>
-                    <span className="text-gray-500"> · {p.casa}</span>
-                  </span>
-                  <span className="text-gray-600 text-xs flex-shrink-0 font-medium">
-                    {p.mililitros} ml
-                  </span>
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPerfumeClick(p)}
+                    className="w-full flex items-center justify-between text-sm py-1.5 px-2 -mx-2 rounded hover:bg-white hover:shadow-sm transition-all text-left group"
+                  >
+                    <span className="truncate pr-2">
+                      <span className="font-medium text-gray-800 group-hover:text-[#A47E3B] transition-colors">
+                        {p.nombre}
+                      </span>
+                      <span className="text-gray-500"> · {p.casa}</span>
+                    </span>
+                    <span className="text-gray-600 text-xs flex-shrink-0 font-medium">
+                      {p.mililitros} ml
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>
