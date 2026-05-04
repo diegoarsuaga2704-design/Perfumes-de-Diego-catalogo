@@ -60,7 +60,6 @@ function InAppBrowserModal() {
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide">
               IMPORTANTE
             </h2>
-            <AlertTriangle size={28} className="animate-pulse" />
           </div>
           <p className="text-sm font-semibold">
             Para hacer tu pedido sigue los siguientes pasos
