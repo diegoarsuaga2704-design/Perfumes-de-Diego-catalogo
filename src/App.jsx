@@ -17,11 +17,13 @@ import AdminPaquetesList from "./pages/AdminPaquetesList";
 import AdminPaqueteCreate from "./pages/AdminPaqueteCreate";
 import AdminPaqueteEdit from "./pages/AdminPaqueteEdit";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
+import RouterErrorElement from "./ui/RouterErrorElement";
 
 const router = createBrowserRouter([
   // Rutas públicas con AppLayout
   {
     element: <AppLayout />,
+    errorElement: <RouterErrorElement />,
     children: [
       { path: "/", element: <Prehome /> },
       { path: "/home", element: <Home /> },
@@ -38,6 +40,7 @@ const router = createBrowserRouter([
   {
     path: "/admin/login",
     element: <AdminLogin />,
+    errorElement: <RouterErrorElement />,
   },
   {
     path: "/admin",
@@ -46,6 +49,7 @@ const router = createBrowserRouter([
         <AdminPanel />
       </ProtectedAdminRoute>
     ),
+    errorElement: <RouterErrorElement />,
   },
 
   // Perfumes admin
@@ -56,6 +60,7 @@ const router = createBrowserRouter([
         <AdminPerfumesList />
       </ProtectedAdminRoute>
     ),
+    errorElement: <RouterErrorElement />,
   },
   {
     path: "/admin/perfumes/nuevo",
@@ -64,6 +69,7 @@ const router = createBrowserRouter([
         <AdminPerfumeCreate />
       </ProtectedAdminRoute>
     ),
+    errorElement: <RouterErrorElement />,
   },
   {
     path: "/admin/perfumes/:id",
@@ -72,6 +78,7 @@ const router = createBrowserRouter([
         <AdminPerfumeEdit />
       </ProtectedAdminRoute>
     ),
+    errorElement: <RouterErrorElement />,
   },
 
   // Paquetes admin
@@ -82,6 +89,7 @@ const router = createBrowserRouter([
         <AdminPaquetesList />
       </ProtectedAdminRoute>
     ),
+    errorElement: <RouterErrorElement />,
   },
   {
     path: "/admin/paquetes/nuevo",
@@ -90,6 +98,7 @@ const router = createBrowserRouter([
         <AdminPaqueteCreate />
       </ProtectedAdminRoute>
     ),
+    errorElement: <RouterErrorElement />,
   },
   {
     path: "/admin/paquetes/:id",
@@ -98,6 +107,7 @@ const router = createBrowserRouter([
         <AdminPaqueteEdit />
       </ProtectedAdminRoute>
     ),
+    errorElement: <RouterErrorElement />,
   },
 ]);
 

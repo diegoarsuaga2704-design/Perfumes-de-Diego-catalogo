@@ -21,7 +21,7 @@ export default function ProductDetail() {
   const [mililitros, setMililitros] = useState(null);
   const [botellas, setBotellas] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { addToCart } = useCart();
+  const { addToCart, openCart } = useCart();
 
   useEffect(() => {
     async function fetchParfum() {
@@ -93,11 +93,7 @@ export default function ProductDetail() {
     };
 
     addToCart(product);
-
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
+    openCart();
   };
 
   return (

@@ -1,6 +1,7 @@
 import { useCart } from "../context/CartContext";
 import { useEffect, useState, useMemo } from "react";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
+import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 
 function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
   const {
@@ -11,13 +12,10 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
     discountCode = "",
   } = useCart() || {};
 
-  const [isTikTokBrowser, setIsTikTokBrowser] = useState(false);
+  const [inAppInfo, setInAppInfo] = useState({ isInApp: false, source: null });
 
   useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    if (/tiktok/i.test(userAgent)) {
-      setIsTikTokBrowser(true);
-    }
+    setInAppInfo(detectInAppBrowser());
   }, []);
 
   const safeSubtotal = Number(subtotal) || 0;
@@ -102,14 +100,14 @@ Gracias!`;
 
   return (
     <>
-      {isTikTokBrowser && (
+      {inAppInfo.isInApp && (
         <div className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center text-center p-6 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm shadow-lg">
             <h2 className="text-lg font-semibold mb-3">
               ⚠️ Abre esta página en tu navegador
             </h2>
             <p className="mb-4 text-gray-700">
-              TikTok no permite abrir WhatsApp desde su navegador interno.
+              {inAppInfo.source} no permite abrir WhatsApp desde su navegador interno.
               <br />
               <br />
               1️⃣ Toca los tres puntos arriba a la derecha. <br />
@@ -134,7 +132,7 @@ Gracias!`;
         target="_blank"
         rel="noopener noreferrer"
         className={`block ${
-          isTikTokBrowser ? "pointer-events-none opacity-50" : ""
+          inAppInfo.isInApp ? "pointer-events-none opacity-50" : ""
         }`}
       >
         <button

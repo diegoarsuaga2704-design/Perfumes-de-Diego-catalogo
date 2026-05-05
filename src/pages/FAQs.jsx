@@ -99,14 +99,18 @@ function FAQs() {
           <p className="text-gray-700 text-sm sm:text-base mb-3">
             ¿No encontraste lo que buscabas?
           </p>
-          <a
-            href="https://wa.me/5212212034647?text=Hola%20Diego%2C%20tengo%20una%20pregunta"
-            target="_blank"
-            rel="noopener noreferrer"
+            <button
+            onClick={() => {
+              window.open(
+                "https://wa.me/5212212034647?text=Hola%20Diego%2C%20tengo%20una%20pregunta",
+                "_blank",
+                "noopener,noreferrer"
+              );
+            }}
             className="inline-block px-6 py-2 bg-[#A47E3B] text-white rounded-md hover:bg-[#D4AF7A] transition-colors font-medium"
           >
             Escríbeme por WhatsApp
-          </a>
+          </button>
         </div>
       </div>
     </section>

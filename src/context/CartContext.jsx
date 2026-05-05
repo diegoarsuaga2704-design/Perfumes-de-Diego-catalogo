@@ -68,11 +68,8 @@ export function CartProvider({ children }) {
         return [...prev, { ...product, cantidad: 1 }];
       }
 
-      // === DECANT / BOTELLA (lógica original sin cambios) ===
-      const normalizedProduct = {
-        ...product,
-        stock: product.stock === false,
-      };
+      // === DECANT / BOTELLA ===
+      const normalizedProduct = { ...product };
 
       const existing = prev.find(
         (item) =>

@@ -68,7 +68,7 @@ export default function ShoppingCart() {
       ></div>
 
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-50 h-full w-full sm:w-[400px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
           isCartOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -151,7 +151,11 @@ export default function ShoppingCart() {
                   value={postalCode}
                   onChange={handlePostalCodeChange}
                   placeholder="Ej. 12345"
-                  className="border bg-red-200 border-gray-300 rounded-md px-3 py-2 placeholder:text-black text-black text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
+                  className={`border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none transition-colors ${
+                    isPostalCodeValid
+                      ? "bg-white border-gray-300 text-gray-800 placeholder:text-gray-400"
+                      : "bg-red-200 border-gray-300 text-white placeholder:text-black"
+                  }`}
                   inputMode="numeric"
                   maxLength={5}
                 />

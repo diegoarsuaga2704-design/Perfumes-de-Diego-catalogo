@@ -6,16 +6,19 @@ import App from "./App.jsx";
 import { OrderProvider } from "./context/OrderContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import ErrorBoundary from "./ui/ErrorBoundary.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthProvider>
-      <OrderProvider>
-        <CartProvider>
-          <App />
-          <Analytics />
-        </CartProvider>
-      </OrderProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <OrderProvider>
+          <CartProvider>
+            <App />
+            <Analytics />
+          </CartProvider>
+        </OrderProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

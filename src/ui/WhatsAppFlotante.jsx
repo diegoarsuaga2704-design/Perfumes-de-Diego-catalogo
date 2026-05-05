@@ -1,16 +1,25 @@
+import { useCart } from "../context/CartContext";
+
 export default function WhatsAppFlotante() {
-  const numero = "2212034647"; // Cambia por tu número con código de país
-  const mensaje = "Hola, quiero más información"; // Mensaje predeterminado
+  const { isCartOpen } = useCart();
+
+  const numero = "2212034647";
+  const mensaje = "Hola, quiero más información";
 
   const enlaceWhatsApp = `https://wa.me/${numero}?text=${encodeURIComponent(
     mensaje
   )}`;
 
+  const handleClick = () => {
+    window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
+  };
+
+  if (isCartOpen) return null;
+
   return (
-    <a
-      href={enlaceWhatsApp}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      onClick={handleClick}
+      aria-label="Abrir WhatsApp"
       className="fixed bottom-5 right-5 z-50"
     >
       <img
@@ -18,6 +27,6 @@ export default function WhatsAppFlotante() {
         alt="WhatsApp"
         className="sm:w-14 w-12 rounded-full shadow-sm hover:scale-110 transition-transform hover:shadow-md"
       />
-    </a>
+    </button>
   );
 }

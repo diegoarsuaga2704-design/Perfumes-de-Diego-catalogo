@@ -1,28 +1,19 @@
 import { useEffect, useState } from "react";
+import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 
 function InAppBrowserModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [platform, setPlatform] = useState("android");
+  const [source, setSource] = useState(null);
 
   useEffect(() => {
-    const ua = navigator.userAgent || navigator.vendor || "";
+    const { isInApp, platform: detectedPlatform, source: detectedSource } = detectInAppBrowser();
+    setPlatform(detectedPlatform);
+    setSource(detectedSource);
 
-    // Detectar plataforma
-    const esIOS = /iPad|iPhone|iPod/i.test(ua);
-    setPlatform(esIOS ? "ios" : "android");
-
-    // Detectar navegadores internos de TikTok, Instagram, Facebook
-    const esInApp =
-      /TikTok/i.test(ua) ||
-      /musical_ly/i.test(ua) ||
-      /BytedanceWebview/i.test(ua) ||
-      /Instagram/i.test(ua) ||
-      /FBAN|FBAV/i.test(ua);
-
-    // Verificar si el usuario ya descartó el modal en esta sesión
     const yaDescartado = sessionStorage.getItem("inAppModalDismissed");
 
-    if (esInApp && !yaDescartado) {
+    if (isInApp && !yaDescartado) {
       setIsOpen(true);
     }
   }, []);
@@ -67,7 +58,7 @@ function InAppBrowserModal() {
         {/* Contenido */}
         <div className="p-6">
           <p className="text-gray-900 text-base font-semibold mb-2 text-center">
-            Estás usando el navegador de TikTok
+            Estás usando el navegador de {source || "una app"}
           </p>
           <p className="text-sm text-gray-700 mb-5 text-center leading-relaxed">
             para realizar tu pedido necesitas abrir el sitio en{" "}
