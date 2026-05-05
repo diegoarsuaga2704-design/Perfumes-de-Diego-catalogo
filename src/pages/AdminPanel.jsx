@@ -7,6 +7,7 @@ import {
   PackagePlus,
   MessageSquareQuote,
   MessagesSquare,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -146,6 +147,27 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Crear un testimonio nuevo
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* Sección Casas */}
+        <div className="mt-6">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+            Casas
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => navigate("/admin/casas")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Building2 className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Editar casas
+              </h3>
+              <p className="text-sm text-gray-600">
+                Subir imagen y descripción de cada casa
               </p>
             </button>
           </div>

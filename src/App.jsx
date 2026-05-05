@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./pages/Home";
 import FAQs from "./pages/FAQs";
+import Testimonios from "./pages/Testimonios";
 import BestSellers from "./pages/BestSellers";
 import VistoEnTikTok from "./pages/VistoEnTikTok";
 import Paquetes from "./pages/Paquetes";
@@ -19,6 +20,9 @@ import AdminPaqueteEdit from "./pages/AdminPaqueteEdit";
 import AdminTestimoniosList from "./pages/AdminTestimoniosList";
 import AdminTestimonioCreate from "./pages/AdminTestimonioCreate";
 import AdminTestimonioEdit from "./pages/AdminTestimonioEdit";
+import AdminCasasList from "./pages/AdminCasasList";
+import AdminCasaEdit from "./pages/AdminCasaEdit";
+import Casas from "./pages/Casas";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 import RouterErrorElement from "./ui/RouterErrorElement";
 
@@ -31,6 +35,8 @@ const router = createBrowserRouter([
       { path: "/", element: <Prehome /> },
       { path: "/home", element: <Home /> },
       { path: "/faqs", element: <FAQs /> },
+      { path: "/testimonios", element: <Testimonios /> },
+      { path: "/casas", element: <Casas /> },
       { path: "/best-sellers", element: <BestSellers /> },
       { path: "/tiktok", element: <VistoEnTikTok /> },
       { path: "/paquetes", element: <Paquetes /> },
@@ -137,6 +143,26 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminTestimonioEdit />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+
+  // Casas admin
+  {
+    path: "/admin/casas",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminCasasList />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/casas/:id",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminCasaEdit />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,

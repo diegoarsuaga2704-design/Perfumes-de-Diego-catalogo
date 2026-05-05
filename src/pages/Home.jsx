@@ -30,7 +30,12 @@ function Home() {
     } else {
       setStockFilter(null);
     }
-  }, [mode]);
+
+    // Si llega selectedCasa desde la página /casas, lo aplica
+    if (location.state?.selectedCasa) {
+      setSelectedCasa(location.state.selectedCasa);
+    }
+  }, [mode, location.state]);
 
   const handleSelectCasa = (value) => {
     setSelectedCasa(value);

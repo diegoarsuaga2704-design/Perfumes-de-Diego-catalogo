@@ -1,0 +1,168 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { getCasaById, updateCasa } from "../functions/getCasas";
+import ImageUploader from "../ui/ImageUploader";
+
+export default function AdminCasaEdit() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [form, setForm] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await getCasaById(id);
+        setForm({
+          nombre: data.nombre || "",
+          imagen_hero: data.imagen_hero || "",
+          descripcion: data.descripcion || "",
+        });
+      } catch (err) {
+        setError("No se pudo cargar la casa.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [id]);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+
+    if (!form.nombre.trim()) {
+      setError("El nombre es obligatorio.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await updateCasa(id, {
+        nombre: form.nombre.trim(),
+        imagen_hero: form.imagen_hero.trim() || null,
+        descripcion: form.descripcion.trim() || null,
+      });
+      navigate("/admin/casas");
+    } catch (err) {
+      setError("Error al guardar los cambios.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-500">Cargando...</p>
+      </div>
+    );
+  }
+
+  if (!form) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-red-600">Casa no encontrada.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-[#2C2C2C] text-white shadow-md">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+          <button
+            onClick={() => navigate("/admin/casas")}
+            className="flex items-center gap-2 hover:text-[#D4AF7A] transition-colors"
+          >
+            <ArrowLeft size={18} />
+            <span className="text-sm">Volver</span>
+          </button>
+          <h1 className="text-lg sm:text-xl font-bold">Editar casa</h1>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-2xl shadow-md p-6 sm:p-8 space-y-5"
+        >
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Nombre de la casa
+            </label>
+            <input
+              type="text"
+              name="nombre"
+              value={form.nombre}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Descripción <span className="text-gray-400 font-normal">(opcional)</span>
+            </label>
+            <textarea
+              name="descripcion"
+              value={form.descripcion}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Breve descripción de la casa..."
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#A47E3B] focus:outline-none resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Imagen hero
+            </label>
+            <ImageUploader
+              value={form.imagen_hero}
+              onChange={(url) =>
+                setForm((prev) => ({ ...prev, imagen_hero: url }))
+              }
+              bucket="casasImages"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              Imagen cuadrada idealmente. Las casas sin imagen no aparecen en /casas.
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/casas")}
+              className="px-5 py-2 border border-gray-300 rounded-md text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-[#A47E3B] hover:bg-[#D4AF7A] text-white px-6 py-2 rounded-md text-sm font-semibold transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {saving ? "Guardando..." : "Guardar cambios"}
+            </button>
+          </div>
+        </form>
+      </main>
+    </div>
+  );
+}

@@ -20,6 +20,10 @@ function MainMenu() {
       accion: () => navigate("/best-sellers"),
     },
     {
+      nombre: "Casas",
+      accion: () => navigate("/casas"),
+    },
+    {
       nombre: "Visto en TikTok",
       accion: () => navigate("/tiktok"),
     },
