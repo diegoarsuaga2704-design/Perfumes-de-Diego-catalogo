@@ -19,7 +19,6 @@ export default function TestimoniosSeccion() {
     fetchData();
   }, []);
 
-  // Si no hay testimonios destacados o está cargando, no renderiza nada
   if (loading || testimonios.length === 0) return null;
 
   return (
@@ -40,27 +39,35 @@ export default function TestimoniosSeccion() {
               key={t.id}
               className="bg-gray-50 rounded-2xl p-6 border border-gray-200 hover:shadow-md transition-shadow flex flex-col"
             >
-              <div className="flex items-center gap-3 mb-4">
-                {t.foto_cliente ? (
-                  <img
-                    src={t.foto_cliente}
-                    alt={t.nombre}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-[#A47E3B]"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-[#A47E3B] text-white flex items-center justify-center font-bold text-lg">
-                    {t.nombre?.charAt(0)?.toUpperCase() || "?"}
-                  </div>
-                )}
-                <div>
-                  <p className="font-semibold text-gray-900">{t.nombre}</p>
+              {/* Header: avatar con iniciales + nombre */}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#A47E3B] to-[#D4AF7A] text-white flex items-center justify-center font-bold text-xl sm:text-2xl ring-2 ring-[#A47E3B] ring-offset-2 ring-offset-gray-50 flex-shrink-0">
+                  {t.nombre?.charAt(0)?.toUpperCase() || "?"}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-base sm:text-lg truncate">
+                    {t.nombre}
+                  </p>
                   <p className="text-xs text-gray-500">Cliente verificado</p>
                 </div>
               </div>
 
-              <p className="text-gray-700 text-sm leading-relaxed flex-1">
+              {/* Texto del testimonio */}
+              <p className="text-gray-700 text-sm leading-relaxed mb-4">
                 "{t.texto}"
               </p>
+
+              {/* Foto del pedido (opcional) */}
+              {t.foto_producto && (
+                <div className="mt-auto rounded-xl overflow-hidden border border-gray-200">
+                  <img
+                    src={t.foto_producto}
+                    alt={`Pedido de ${t.nombre}`}
+                    loading="lazy"
+                    className="w-full h-56 sm:h-64 object-cover"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

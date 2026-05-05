@@ -101,17 +101,9 @@ export default function AdminTestimoniosList() {
               >
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div className="flex items-center gap-3">
-                    {t.foto_cliente ? (
-                      <img
-                        src={t.foto_cliente}
-                        alt={t.nombre}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-[#A47E3B] text-white flex items-center justify-center font-semibold text-sm">
-                        {t.nombre?.charAt(0)?.toUpperCase() || "?"}
-                      </div>
-                    )}
+                    <div className="w-10 h-10 rounded-full bg-[#A47E3B] text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                      {t.nombre?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
                     <div>
                       <p className="font-semibold text-gray-900">{t.nombre}</p>
                       <p className="text-xs text-gray-500">
@@ -151,9 +143,17 @@ export default function AdminTestimoniosList() {
                   </div>
                 </div>
 
-                <p className="text-gray-700 text-sm leading-relaxed pl-13">
+                <p className="text-gray-700 text-sm leading-relaxed">
                   {t.texto}
                 </p>
+
+                {t.foto_producto && (
+                  <img
+                    src={t.foto_producto}
+                    alt="Pedido"
+                    className="mt-3 w-32 h-32 object-cover rounded-md border border-gray-200"
+                  />
+                )}
 
                 {confirmDelete === t.id && (
                   <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md flex items-center justify-between">

@@ -22,7 +22,7 @@ export default function AdminTestimonioEdit() {
         setForm({
           nombre: data.nombre || "",
           texto: data.texto || "",
-          foto_cliente: data.foto_cliente || "",
+          foto_producto: data.foto_producto || "",
           destacado: data.destacado || false,
         });
       } catch (err) {
@@ -56,7 +56,7 @@ export default function AdminTestimonioEdit() {
       await updateTestimonio(id, {
         nombre: form.nombre.trim(),
         texto: form.texto.trim(),
-        foto_cliente: form.foto_cliente.trim() || null,
+        foto_producto: form.foto_producto.trim() || null,
         destacado: form.destacado,
       });
       navigate("/admin/testimonios");
@@ -133,17 +133,17 @@ export default function AdminTestimonioEdit() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Foto del cliente <span className="text-gray-400 font-normal">(opcional)</span>
+              Foto del pedido <span className="text-gray-400 font-normal">(opcional)</span>
             </label>
             <ImageUploader
-              value={form.foto_cliente}
+              value={form.foto_producto}
               onChange={(url) =>
-                setForm((prev) => ({ ...prev, foto_cliente: url }))
+                setForm((prev) => ({ ...prev, foto_producto: url }))
               }
               bucket="testimoniosImages"
             />
             <p className="text-xs text-gray-500 mt-2">
-              Si está vacío, se usa avatar con la inicial del nombre.
+              Foto que el cliente te mandó del paquete o frasco recibido.
             </p>
           </div>
 
@@ -157,7 +157,7 @@ export default function AdminTestimonioEdit() {
               className="w-4 h-4 accent-[#A47E3B]"
             />
             <label htmlFor="destacado" className="text-sm text-gray-700">
-              Destacado (aparece en home)
+              Destacado (aparece en el sitio)
             </label>
           </div>
 

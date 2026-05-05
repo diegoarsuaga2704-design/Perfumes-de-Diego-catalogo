@@ -9,7 +9,7 @@ export default function AdminTestimonioCreate() {
   const [form, setForm] = useState({
     nombre: "",
     texto: "",
-    foto_cliente: "",
+    foto_producto: "",
     destacado: true,
   });
   const [saving, setSaving] = useState(false);
@@ -37,7 +37,7 @@ export default function AdminTestimonioCreate() {
       await createTestimonio({
         nombre: form.nombre.trim(),
         texto: form.texto.trim(),
-        foto_cliente: form.foto_cliente.trim() || null,
+        foto_producto: form.foto_producto.trim() || null,
         destacado: form.destacado,
       });
       navigate("/admin/testimonios");
@@ -82,7 +82,7 @@ export default function AdminTestimonioCreate() {
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Iniciales o primer nombre + inicial. Respeta su privacidad.
+              Solo se usará la inicial para el avatar dorado.
             </p>
           </div>
 
@@ -103,17 +103,17 @@ export default function AdminTestimonioCreate() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Foto del cliente <span className="text-gray-400 font-normal">(opcional)</span>
+              Foto del pedido <span className="text-gray-400 font-normal">(opcional)</span>
             </label>
             <ImageUploader
-              value={form.foto_cliente}
+              value={form.foto_producto}
               onChange={(url) =>
-                setForm((prev) => ({ ...prev, foto_cliente: url }))
+                setForm((prev) => ({ ...prev, foto_producto: url }))
               }
               bucket="testimoniosImages"
             />
             <p className="text-xs text-gray-500 mt-2">
-              Si está vacío, se usa avatar con la inicial del nombre.
+              Foto que el cliente te mandó del paquete o frasco recibido. Si no hay, se omite.
             </p>
           </div>
 
@@ -127,7 +127,7 @@ export default function AdminTestimonioCreate() {
               className="w-4 h-4 accent-[#A47E3B]"
             />
             <label htmlFor="destacado" className="text-sm text-gray-700">
-              Destacado (aparece en home)
+              Destacado (aparece en el sitio)
             </label>
           </div>
 
