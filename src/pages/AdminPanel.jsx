@@ -5,6 +5,8 @@ import {
   Plus,
   Boxes,
   PackagePlus,
+  MessageSquareQuote,
+  MessagesSquare,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -110,6 +112,40 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Crear un paquete nuevo
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* Sección Testimonios */}
+        <div className="mt-6">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+            Testimonios
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => navigate("/admin/testimonios")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <MessagesSquare className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Ver y editar testimonios
+              </h3>
+              <p className="text-sm text-gray-600">
+                Lista de testimonios reales de clientes
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/testimonios/nuevo")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <MessageSquareQuote className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Agregar testimonio
+              </h3>
+              <p className="text-sm text-gray-600">
+                Crear un testimonio nuevo
               </p>
             </button>
           </div>

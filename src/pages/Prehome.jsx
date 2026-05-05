@@ -2,6 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import ComoFunciona from "../ui/ComoFunciona";
 import HomeBrand from "../ui/HomeBrand";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
+import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 
 function Prehome() {
   const navigate = useNavigate();
@@ -56,6 +57,8 @@ function Prehome() {
         ))}
       </div>
       <ComoFunciona />
+
+      <TestimoniosSeccion />
 
       <div className="bg-white py-8 px-6 text-center border-t border-gray-100">
         <p className="text-gray-700 text-sm sm:text-base mb-2">

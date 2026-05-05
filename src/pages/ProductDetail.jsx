@@ -9,6 +9,7 @@ import CTAWhatsApp from "../ui/CTAWhatsApp";
 import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
 import PerfumesRelacionados from "../ui/PerfumesRelacionados";
+import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 import { useCart } from "../context/CartContext";
 import CustomSelect from "../ui/CustomSelect";
 
@@ -268,6 +269,8 @@ export default function ProductDetail() {
       </div>
 
       <PerfumesRelacionados casa={parfum.casa} excluirId={parfum.id} />
+
+      <TestimoniosSeccion />
 
       <CTAWhatsApp
         titulo={`¿Tienes dudas sobre ${parfum.nombre}?`}

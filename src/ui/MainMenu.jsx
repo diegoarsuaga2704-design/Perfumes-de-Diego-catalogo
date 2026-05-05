@@ -24,7 +24,7 @@ function MainMenu() {
       accion: () => navigate("/tiktok"),
     },
     {
-      nombre: "Paquetes",
+      nombre: "Paquetes De Decants",
       accion: () => navigate("/paquetes"),
     },
   ];

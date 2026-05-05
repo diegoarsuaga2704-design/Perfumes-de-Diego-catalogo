@@ -16,6 +16,9 @@ import AdminPerfumeCreate from "./pages/AdminPerfumeCreate";
 import AdminPaquetesList from "./pages/AdminPaquetesList";
 import AdminPaqueteCreate from "./pages/AdminPaqueteCreate";
 import AdminPaqueteEdit from "./pages/AdminPaqueteEdit";
+import AdminTestimoniosList from "./pages/AdminTestimoniosList";
+import AdminTestimonioCreate from "./pages/AdminTestimonioCreate";
+import AdminTestimonioEdit from "./pages/AdminTestimonioEdit";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 import RouterErrorElement from "./ui/RouterErrorElement";
 
@@ -105,6 +108,35 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPaqueteEdit />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+
+  // Testimonios admin
+  {
+    path: "/admin/testimonios",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminTestimoniosList />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/testimonios/nuevo",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminTestimonioCreate />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/testimonios/:id",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminTestimonioEdit />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,
