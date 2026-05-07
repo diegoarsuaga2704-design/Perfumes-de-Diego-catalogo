@@ -66,7 +66,7 @@ function Footer() {
 
         {/* Redes sociales */}
         <div>
-          <h3 className="font-semibold text-gray-900 mb-3">Síguenos en</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Sígueme en</h3>
           <div className="flex space-x-4">
             <a
               href="https://wa.me/2212034647"

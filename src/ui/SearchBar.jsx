@@ -12,7 +12,8 @@ function SearchBar({ onSearchResult }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
 
-  const containerRef = useRef(null); //
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Llamada a la API cuando el componente se monta
   useEffect(() => {
@@ -76,6 +77,7 @@ function SearchBar({ onSearchResult }) {
   const handleSelect = (nombre) => {
     setQuery("");
     setShowSuggestions(false);
+    inputRef.current?.blur();
 
     const selected = parfums.find(
       (p) => p.nombre.toLowerCase() === nombre.toLowerCase(),
@@ -112,6 +114,7 @@ function SearchBar({ onSearchResult }) {
     }
 
     setShowSuggestions(false);
+    inputRef.current?.blur();
     navigate("/home");
   };
 
@@ -134,6 +137,7 @@ function SearchBar({ onSearchResult }) {
       <form onSubmit={handleSubmit} className="flex items-center w-full">
         <div className="relative w-full">
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

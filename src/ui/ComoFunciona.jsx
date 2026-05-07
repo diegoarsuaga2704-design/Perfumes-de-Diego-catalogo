@@ -6,7 +6,7 @@ function ComoFunciona() {
       icono: Search,
       numero: "1",
       titulo: "Elige tu perfume",
-      descripcion: "Más de 150 opciones de casas nicho y exclusivas.",
+      descripcion: "Más de 170 opciones de casas nicho y exclusivas.",
     },
     {
       icono: TestTube,
