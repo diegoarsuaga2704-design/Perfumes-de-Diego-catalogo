@@ -74,26 +74,20 @@ function SearchBar({ onSearchResult }) {
     };
   }, []);
 
-  const handleSelect = (nombre) => {
+  const handleSelect = (item) => {
     setQuery("");
     setShowSuggestions(false);
     inputRef.current?.blur();
 
-    const selected = parfums.find(
-      (p) => p.nombre.toLowerCase() === nombre.toLowerCase(),
-    );
+    // Construir el slug URL-friendly (igual que ProductCard)
+    const nombreURL = item.nombre
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]+/g, "");
 
-    if (selected) {
-      // Construir el slug URL-friendly (igual que ProductCard)
-      const nombreURL = selected.nombre
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/[^\w-]+/g, "");
-
-      navigate(`/product/${nombreURL}/${selected.id}`);
-    }
+    navigate(`/product/${nombreURL}/${item.id}`);
   };
 
   const handleSubmit = (e) => {
@@ -174,7 +168,7 @@ function SearchBar({ onSearchResult }) {
               className="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-100"
               onMouseDown={(e) => {
                 e.preventDefault(); // evita que el input pierda foco antes del click
-                handleSelect(item.nombre);
+                handleSelect(item);
                 setTimeout(() => {
                   setShowSuggestions(false);
                 }, 0); // permite que React actualice antes de cerrar la lista
