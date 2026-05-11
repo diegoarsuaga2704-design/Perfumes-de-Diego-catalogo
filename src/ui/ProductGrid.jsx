@@ -1,8 +1,8 @@
 import ProductCard from "./ProductCard";
 import { useEffect, useState, useRef, useMemo } from "react";
-import getParfums from "../functions/getParfums.jsx";
 import LoadingSpinner from "./LoadingSpinner";
 import { useOrder } from "../context/OrderContext.jsx";
+import { useParfums } from "../context/ParfumsContext.jsx";
 import Pagination from "./Paginacion.jsx";
 import { useNavigate } from "react-router-dom";
 
@@ -19,41 +19,12 @@ export default function ProductGrid({
 }) {
   const navigate = useNavigate();
 
-  const [allParfums, setAllParfums] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { parfums: allParfums, loading, error } = useParfums();
   const { order } = useOrder();
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 36;
   const gridRef = useRef(null);
-
-  // 🔧 Fetch + normalización de datos
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await getParfums();
-
-        // 🔒 Normalizar desde origen (clave)
-        const cleanData = data.map((p) => ({
-          ...p,
-          nombre: p.nombre ?? "",
-          casa: p.casa ?? "",
-          precio: p.precio ?? 0,
-          disponible: p.disponible ?? "",
-          categoria: p.categoria ?? "",
-        }));
-
-        setAllParfums(cleanData);
-      } catch (err) {
-        console.error(err);
-        setError("Error al cargar los perfumes");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
 
   const filteredParfums = useMemo(() => {
     if (!allParfums || allParfums.length === 0) return [];

@@ -6,6 +6,7 @@ import App from "./App.jsx";
 import { OrderProvider } from "./context/OrderContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { ParfumsProvider } from "./context/ParfumsContext.jsx";
 import ErrorBoundary from "./ui/ErrorBoundary.jsx";
 
 createRoot(document.getElementById("root")).render(
@@ -14,8 +15,10 @@ createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <OrderProvider>
           <CartProvider>
-            <App />
-            <Analytics />
+            <ParfumsProvider>
+              <App />
+              <Analytics />
+            </ParfumsProvider>
           </CartProvider>
         </OrderProvider>
       </AuthProvider>

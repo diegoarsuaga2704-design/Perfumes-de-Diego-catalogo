@@ -21,7 +21,7 @@ function Home() {
   const [selectedOcasion, setSelectedOcasion] = useState(null);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
 
-  // Activar filtro de stock si se entra desde "Stock disponible"
+  // Activar filtros según lo que llegue desde otra página (Prehome, /casas, etc.)
   useEffect(() => {
     if (mode === "stock") {
       setStockFilter(true);
@@ -31,11 +31,14 @@ function Home() {
       setStockFilter(null);
     }
 
-    // Si llega selectedCasa desde la página /casas, lo aplica
+    // Aplicar filtro de casa si llega desde /casas
     if (location.state?.selectedCasa) {
       setSelectedCasa(location.state.selectedCasa);
+      // Limpiar otros filtros para que no se acumulen
+      setSelectedOcasion(null);
+      setSelectedCategoria(null);
     }
-  }, [mode, location.state]);
+  }, [mode, location.state, location.key]);
 
   const handleSelectCasa = (value) => {
     setSelectedCasa(value);

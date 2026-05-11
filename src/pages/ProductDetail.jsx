@@ -76,6 +76,7 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     if (!estaDisponible) return;
     if (esDecant && !mililitros) return;
+    if (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1)) return;
 
     const product = {
       id: parfum.id,
@@ -243,9 +244,15 @@ export default function ProductDetail() {
               <div className="mt-4 flex gap-3 items-center">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!estaDisponible || (esDecant && !mililitros)}
+                  disabled={
+                    !estaDisponible ||
+                    (esDecant && !mililitros) ||
+                    (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
+                  }
                   className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
-                    estaDisponible && (!esDecant || mililitros)
+                    estaDisponible &&
+                    (!esDecant || mililitros) &&
+                    (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
                       ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}

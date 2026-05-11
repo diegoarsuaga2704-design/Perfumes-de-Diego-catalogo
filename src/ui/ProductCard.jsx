@@ -4,18 +4,22 @@ import { FaTiktok } from "react-icons/fa";
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
 
-  // Etiqueta dinámica: MEJOR VENDIDO gana sobre NUEVO
-  // Pero no se muestra si está Próximamente o Agotado (prioridad a info crítica)
-  const esMejorVendido =
-    parfum.esBestSeller === true &&
-    parfum.disponible !== "Próximamente" &&
-    parfum.disponible !== "Agotado";
+  // Etiqueta dinámica: MEJOR VENDIDO gana sobre NUEVO.
+  // Ninguna se muestra si el perfume está Próximamente o Agotado
+  // (la info crítica de disponibilidad gana sobre la promocional).
+  const esDisponible =
+    parfum.disponible !== "Próximamente" && parfum.disponible !== "Agotado";
+
+  const esMejorVendido = parfum.esBestSeller === true && esDisponible;
+
   const esNuevo = (() => {
+    if (!esDisponible) return false;
     if (!parfum.created_at) return false;
-    if (parfum.disponible === "Próximamente") return false;
-    const dias = (new Date() - new Date(parfum.created_at)) / (1000 * 60 * 60 * 24);
+    const dias =
+      (new Date() - new Date(parfum.created_at)) / (1000 * 60 * 60 * 24);
     return dias <= 15;
   })();
+
   const etiqueta = esMejorVendido
     ? { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" }
     : esNuevo

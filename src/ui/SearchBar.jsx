@@ -1,34 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
-import getParfums from "../functions/getParfums";
+import { useParfums } from "../context/ParfumsContext";
 import { useNavigate } from "react-router-dom";
 
 function SearchBar({ onSearchResult }) {
-  // Estados para manejar datos, carga y errores
-  const [error, setError] = useState(null);
+  const { parfums, error } = useParfums();
   const [query, setQuery] = useState("");
-  const [parfums, setParfums] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);
-
-  // Llamada a la API cuando el componente se monta
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await getParfums();
-        // Ordenamos alfabéticamente por nombre
-        setParfums(data);
-      } catch (err) {
-        console.error(err);
-        setError("Error al cargar los perfumes");
-      }
-    }
-    fetchData();
-  }, []);
 
   useEffect(() => {
     if (query.trim() === "") {
