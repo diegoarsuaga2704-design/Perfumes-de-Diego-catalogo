@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import { useCart } from "../context/CartContext";
 
 function MainMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { isCartOpen } = useCart();
+
+  // Si se abre el carrito mientras el menú hamburguesa está abierto, cerrarlo
+  useEffect(() => {
+    if (isCartOpen && isOpen) {
+      setIsOpen(false);
+    }
+  }, [isCartOpen]);
 
   const categorias = [
     {

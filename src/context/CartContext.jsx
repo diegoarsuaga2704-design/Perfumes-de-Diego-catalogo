@@ -7,12 +7,31 @@ import {
 
 const CartContext = createContext();
 const CART_STORAGE_KEY = "perfumes-diego-cart";
+const CART_EXPIRY_DAYS = 10;
+const CART_EXPIRY_MS = CART_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+
+      const parsed = JSON.parse(stored);
+
+      // Formato viejo (sin timestamp): se descarta para que se rehidrate con el nuevo formato.
+      if (!parsed.savedAt || !Array.isArray(parsed.items)) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        return [];
+      }
+
+      // Verificar si el carrito caducó
+      const ageMs = Date.now() - parsed.savedAt;
+      if (ageMs > CART_EXPIRY_MS) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        return [];
+      }
+
+      return parsed.items;
     } catch {
       return [];
     }
@@ -22,7 +41,12 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+      // Guardar con timestamp para poder verificar caducidad
+      const payload = {
+        items: cartItems,
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(payload));
     } catch (err) {
       console.error("Error guardando carrito:", err);
     }
@@ -42,7 +66,7 @@ export function CartProvider({ children }) {
       type: "percentage",
       value: 10,
       appliesTo: "DECANT",
-      expira: "2026-04-23",
+      expira: "2026-05-23",
     },
   };
 
@@ -182,22 +206,23 @@ export function CartProvider({ children }) {
     const upperCode = code.trim().toUpperCase();
     const discount = availableDiscounts[upperCode];
 
+    // Si el código no existe: mostrar error y MANTENER el descuento activo si lo había.
     if (!discount) {
-      setErrorMessage("El código ingresado no existe o no es válido.");
-      setIsDiscountApplied(false);
+      setErrorMessage(`El código "${upperCode}" no es válido.`);
       return;
     }
 
+    // Si el código expiró: mismo comportamiento, mantenemos el descuento previo.
     if (discount.expira) {
       const fechaExpira = new Date(discount.expira + "T23:59:59");
       const hoy = new Date();
       if (hoy > fechaExpira) {
         setErrorMessage(`El código ${upperCode} ya expiró.`);
-        setIsDiscountApplied(false);
         return;
       }
     }
 
+    // Verificar que el código aplique al carrito actual.
     const applicableItems = cartItems.filter((item) => {
       if (item.tipoVenta !== "decant") return false;
       if (discount.appliesTo === "ALL") return true;
@@ -207,12 +232,12 @@ export function CartProvider({ children }) {
 
     if (applicableItems.length === 0) {
       setErrorMessage(
-        `El código ${upperCode} no aplica a los productos con stock válido en tu carrito.`,
+        `El código ${upperCode} no aplica a los productos de tu carrito.`,
       );
-      setIsDiscountApplied(false);
       return;
     }
 
+    // Código válido: reemplaza el descuento (si había uno previo) y limpia el error.
     setDiscountCode(upperCode);
     setDiscountType(discount.type);
     setDiscountValue(discount.value);
@@ -273,6 +298,7 @@ export function CartProvider({ children }) {
         isDiscountApplied,
         applyDiscountCode,
         errorMessage,
+        setErrorMessage,
       }}
     >
       {children}

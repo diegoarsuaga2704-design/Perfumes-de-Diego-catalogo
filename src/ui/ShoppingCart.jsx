@@ -17,6 +17,7 @@ export default function ShoppingCart() {
     applyDiscountCode,
     isDiscountApplied,
     errorMessage,
+    setErrorMessage,
   } = useCart();
 
   const [postalCode, setPostalCode] = useState("");
@@ -52,8 +53,15 @@ export default function ShoppingCart() {
   };
 
   const handleApplyCode = () => {
+    if (!inputCode.trim()) return;
     applyDiscountCode(inputCode);
     setInputCode("");
+  };
+
+  // Limpiar el mensaje de error cuando el usuario empieza a escribir un nuevo código
+  const handleInputChange = (e) => {
+    setInputCode(e.target.value);
+    if (errorMessage) setErrorMessage("");
   };
 
   const isPostalCodeValid = postalCode.length === 5;
@@ -97,7 +105,7 @@ export default function ShoppingCart() {
             <div className="flex items-center justify-between mb-3">
               <input
                 value={inputCode}
-                onChange={(e) => setInputCode(e.target.value)}
+                onChange={handleInputChange}
                 placeholder="Código de descuento"
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none w-[60%]"
               />
