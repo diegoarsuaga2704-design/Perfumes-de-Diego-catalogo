@@ -4,7 +4,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import { useOrder } from "../context/OrderContext.jsx";
 import { useParfums } from "../context/ParfumsContext.jsx";
 import Pagination from "./Paginacion.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 // 🔒 Helper global para blindar strings
 const safeString = (value) => (value ?? "").toString();
@@ -18,13 +18,32 @@ export default function ProductGrid({
   stockFilter,
 }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { parfums: allParfums, loading, error } = useParfums();
   const { order } = useOrder();
 
-  const [currentPage, setCurrentPage] = useState(1);
+  // Paginación leída desde la URL para que sobreviva navegaciones POP
+  const currentPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const itemsPerPage = 36;
   const gridRef = useRef(null);
+
+  // Cambio de página: actualiza URL con `replace` para no llenar el historial
+  const setCurrentPage = (pageNumber) => {
+    console.log("⚙️  setCurrentPage llamado con:", pageNumber, "STACK:", new Error().stack);
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        if (pageNumber <= 1) {
+          newParams.delete("page");
+        } else {
+          newParams.set("page", String(pageNumber));
+        }
+        return newParams;
+      },
+      { replace: true }
+    );
+  };
 
   const filteredParfums = useMemo(() => {
     if (!allParfums || allParfums.length === 0) return [];
@@ -131,8 +150,34 @@ export default function ProductGrid({
     stockFilter,
   ]);
 
+  // Cuando los filtros REALMENTE cambian (no en remontajes de StrictMode),
+  // volver a página 1. Comparamos contra los valores previos guardados en ref.
+  const prevFiltersRef = useRef({
+    selectedCasa,
+    selectedOcasion,
+    selectedCategoria,
+    stockFilter,
+  });
+
   useEffect(() => {
-    setCurrentPage(1);
+    const prev = prevFiltersRef.current;
+    const filtersChanged =
+      prev.selectedCasa !== selectedCasa ||
+      prev.selectedOcasion !== selectedOcasion ||
+      prev.selectedCategoria !== selectedCategoria ||
+      prev.stockFilter !== stockFilter;
+
+    prevFiltersRef.current = {
+      selectedCasa,
+      selectedOcasion,
+      selectedCategoria,
+      stockFilter,
+    };
+
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCasa, selectedOcasion, selectedCategoria, stockFilter]);
 
   if (loading) return <LoadingSpinner />;

@@ -21,7 +21,7 @@ function Home() {
   const [selectedOcasion, setSelectedOcasion] = useState(null);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
 
-  // Activar filtros según lo que llegue desde otra página (Prehome, /casas, etc.)
+  // Aplicar el modo (stock/decants) solo cuando realmente cambia, no en cada montaje
   useEffect(() => {
     if (mode === "stock") {
       setStockFilter(true);
@@ -30,15 +30,18 @@ function Home() {
     } else {
       setStockFilter(null);
     }
+  }, [mode]);
 
-    // Aplicar filtro de casa si llega desde /casas
+  // Aplicar filtro de casa solo cuando viene de /casas (selectedCasa en state).
+  // Usamos location.key para detectar navegaciones nuevas y location.state para el dato.
+  useEffect(() => {
     if (location.state?.selectedCasa) {
       setSelectedCasa(location.state.selectedCasa);
-      // Limpiar otros filtros para que no se acumulen
       setSelectedOcasion(null);
       setSelectedCategoria(null);
     }
-  }, [mode, location.state, location.key]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   const handleSelectCasa = (value) => {
     setSelectedCasa(value);
