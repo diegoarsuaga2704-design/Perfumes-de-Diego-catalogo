@@ -1,24 +1,46 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 function ScrollToTop() {
-  const { pathname, key } = useLocation();
+  const location = useLocation();
   const navigationType = useNavigationType();
 
+  // Guardar posición scroll al salir de cada página
   useEffect(() => {
-    // Dejar que el navegador NO restaure scroll automáticamente
-    // (lo controlamos nosotros con base en el tipo de navegación)
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
+    return () => {
+      sessionStorage.setItem(
+        `scroll-pos-${location.key}`,
+        window.scrollY.toString()
+      );
+    };
+  }, [location.key]);
+
+  // Restaurar (POP) o ir arriba (PUSH/REPLACE)
+  useLayoutEffect(() => {
+    if (navigationType === "POP") {
+      const saved = sessionStorage.getItem(`scroll-pos-${location.key}`);
+      if (saved !== null) {
+        const targetY = parseInt(saved, 10);
+        let attempts = 0;
+        const maxAttempts = 20; // 20 intentos × 50ms = 1 segundo máximo
+
+        const tryScroll = () => {
+          window.scrollTo({ top: targetY, left: 0, behavior: "instant" });
+          // Si no se logró (porque el contenido aún no carga), reintentar
+          if (Math.abs(window.scrollY - targetY) > 5 && attempts < maxAttempts) {
+            attempts++;
+            setTimeout(tryScroll, 50);
+          }
+        };
+
+        tryScroll();
+        return;
+      }
     }
 
-    // Si la navegación es POP (botón atrás del navegador o navigate(-1)),
-    // NO hacer scroll al top: respetamos la posición previa.
-    if (navigationType === "POP") return;
-
-    // Si es PUSH (nueva navegación) o REPLACE, sí scrolleamos arriba.
+    // PUSH/REPLACE o POP sin posición guardada: ir arriba
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  }, [pathname, key, navigationType]);
+  }, [location.key, navigationType]);
 
   return null;
 }
