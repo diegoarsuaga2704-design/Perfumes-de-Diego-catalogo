@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { createParfumAdmin } from "../functions/getParfumsAdmin";
+import { ensureCasaExists } from "../functions/getCasas";
 import ImageUploader from "../ui/ImageUploader";
 
 const OPCIONES_CATEGORIA = ["Nicho", "Diseñador", "Árabe"];
@@ -80,6 +81,7 @@ export default function AdminPerfumeCreate() {
       };
 
       await createParfumAdmin(newParfum);
+      ensureCasaExists(newParfum.casa).catch(() => {});
       setSuccess(true);
 
       setTimeout(() => {
@@ -330,6 +332,7 @@ export default function AdminPerfumeCreate() {
             <ImageUploader
               value={form.image || ""}
               onChange={(newUrl) => handleChange("image", newUrl)}
+              bucket="perfumsImages"
             />
           </section>
 

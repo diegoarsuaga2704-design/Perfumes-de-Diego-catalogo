@@ -86,11 +86,6 @@ export default function AdminPaqueteEdit() {
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-
-    // Si cambió el contenido, reactivar cálculo automático del precio individual
-    if (field === "contenido") {
-      setPrecioIndividualEditadoManual(false);
-    }
   };
 
   const handlePrecioIndividualChange = (value) => {
@@ -156,6 +151,10 @@ export default function AdminPaqueteEdit() {
           ? Number(updates.precioIndividual) || null
           : null;
       updates.orden = Number(updates.orden) || 0;
+      updates.contenido = (updates.contenido || []).map((item) => ({
+        ...item,
+        mililitros: Number(item.mililitros) || 0,
+      }));
 
       await updatePaqueteAdmin(id, updates);
       setSuccess(true);

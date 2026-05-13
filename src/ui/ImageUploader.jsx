@@ -16,7 +16,7 @@ import supabase from "../services/supabase";
 export default function ImageUploader({
   value,
   onChange,
-  bucket = "perfumsImages",
+  bucket,
 }) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);

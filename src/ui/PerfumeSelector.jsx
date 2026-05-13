@@ -85,10 +85,10 @@ export default function PerfumeSelector({ value = [], onChange }) {
   };
 
   const handleChangeMililitros = (parfumId, mililitros) => {
+    // Guardamos el valor crudo (puede ser string parcial como "0." mientras
+    // el usuario escribe). Al guardar el paquete se normaliza a Number.
     const newItems = (value || []).map((i) =>
-      i.parfumId === parfumId
-        ? { ...i, mililitros: Number(mililitros) || 0 }
-        : i,
+      i.parfumId === parfumId ? { ...i, mililitros: mililitros } : i,
     );
     onChange?.(newItems);
   };
@@ -242,6 +242,23 @@ export default function PerfumeSelector({ value = [], onChange }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Aviso si hay perfumes no disponibles en el paquete */}
+      {itemsConInfo.some(
+        (i) => i.parfum && i.parfum.disponible !== "Disponible",
+      ) && (
+        <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-md p-3 flex gap-2 text-sm">
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">Atención</p>
+            <p>
+              Este paquete tiene perfumes que no están "Disponible". Mientras
+              eso sea así, el paquete no aparecerá en /paquetes (se pausa
+              automáticamente).
+            </p>
+          </div>
         </div>
       )}
 

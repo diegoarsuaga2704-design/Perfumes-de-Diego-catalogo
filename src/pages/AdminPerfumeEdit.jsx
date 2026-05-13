@@ -6,6 +6,7 @@ import {
   getParfumByIdAdmin,
   updateParfumAdmin,
 } from "../functions/getParfumsAdmin";
+import { ensureCasaExists } from "../functions/getCasas";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ImageUploader from "../ui/ImageUploader";
 
@@ -94,6 +95,7 @@ export default function AdminPerfumeEdit() {
       }
 
       await updateParfumAdmin(id, updates);
+      ensureCasaExists(updates.casa).catch(() => {});
       setSuccess(true);
 
       setTimeout(() => {

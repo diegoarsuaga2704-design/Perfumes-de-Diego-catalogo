@@ -134,6 +134,10 @@ export default function AdminPaqueteCreate() {
             ? Number(form.precioIndividual) || null
             : null,
         orden: Number(form.orden) || 0,
+        contenido: (form.contenido || []).map((item) => ({
+          ...item,
+          mililitros: Number(item.mililitros) || 0,
+        })),
       };
 
       await createPaqueteAdmin(newPaquete);
