@@ -88,9 +88,7 @@ export default function ProductDetail() {
       mlBotella: esBotellaCompleta ? parfum.mlBotella : null,
       mililitros: esDecant ? mililitros : null,
       cantidad: esBotellaCompleta ? botellas : null,
-      stockDisponible: esBotellaCompleta
-        ? parfum.botellasDisponibles
-        : parfum.stockMililitros,
+      stockDisponible: esBotellaCompleta ? parfum.botellasDisponibles : null,
     };
 
     addToCart(product);
@@ -159,6 +157,16 @@ export default function ProductDetail() {
                   </>
                 )}
               </div>
+
+              {/* Aviso de precio especial 30 ml para Louis Vuitton */}
+              {esDecant &&
+                parfum.casa === "Louis Vuitton" &&
+                parfum.precio30ml && (
+                  <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4 inline-block">
+                    Precio especial para 30 ml:{" "}
+                    <span className="font-bold">${parfum.precio30ml}</span>
+                  </p>
+                )}
 
               {/* SELECTOR PARA BOTELLAS */}
               {esBotellaCompleta && estaDisponible && (

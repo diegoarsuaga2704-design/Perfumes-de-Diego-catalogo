@@ -38,7 +38,7 @@ function SearchBar({ onSearchResult }) {
     );
     // Combinar ambos, priorizando los que empiezan igual
     const orderedSuggestions = [...startsWithMatches, ...containsMatches];
-    // Mostrar máximo 5 sugerencias
+    // Mostrar máximo 20 sugerencias
     setSuggestions(orderedSuggestions.slice(0, 20));
     setShowSuggestions(true);
   }, [query, parfums, onSearchResult]);

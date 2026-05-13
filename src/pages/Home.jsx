@@ -10,13 +10,10 @@ function Home() {
 
   // Helper para resetear paginación cuando cambian filtros
   const resetPage = () => {
-    console.log("🔵 resetPage llamado");
     setSearchParams(
       (prev) => {
-        console.log("🔵 page antes:", prev.toString());
         const newParams = new URLSearchParams(prev);
         newParams.delete("page");
-        console.log("🔵 page después:", newParams.toString());
         return newParams;
       },
       { replace: true }
@@ -59,7 +56,6 @@ function Home() {
   }, [location.key]);
 
   const handleSelectCasa = (value) => {
-    console.log("🟡 handleSelectCasa:", value);
     setSelectedCasa(value);
     setSelectedOcasion(null);
     setSelectedCategoria(null);
@@ -67,7 +63,6 @@ function Home() {
   };
 
   const handleSelectOcasion = (value) => {
-    console.log("🟡 handleSelectOcasion:", value);
     setSelectedOcasion(value);
     setSelectedCasa(null);
     setSelectedCategoria(null);
@@ -75,7 +70,6 @@ function Home() {
   };
 
   const handleSelectCategoria = (value) => {
-    console.log("🟡 handleSelectCategoria:", value);
     setSelectedCategoria(value);
     setSelectedCasa(null);
     setSelectedOcasion(null);

@@ -93,19 +93,17 @@ export function CartProvider({ children }) {
       }
 
       // === DECANT / BOTELLA ===
-      const normalizedProduct = { ...product };
-
       const existing = prev.find(
         (item) =>
-          item.id === normalizedProduct.id &&
-          item.tipoVenta === normalizedProduct.tipoVenta,
+          item.id === product.id &&
+          item.tipoVenta === product.tipoVenta,
       );
 
       if (existing) {
         return prev.map((item) => {
           if (
-            item.id === normalizedProduct.id &&
-            item.tipoVenta === normalizedProduct.tipoVenta
+            item.id === product.id &&
+            item.tipoVenta === product.tipoVenta
           ) {
             if (item.tipoVenta === "botella") {
               if (item.cantidad + 1 > item.stockDisponible) return item;
@@ -114,10 +112,7 @@ export function CartProvider({ children }) {
                 cantidad: item.cantidad + 1,
               };
             } else {
-              const nuevosMl = item.mililitros + normalizedProduct.mililitros;
-              if (item.stockDisponible && nuevosMl > item.stockDisponible) {
-                return item;
-              }
+              const nuevosMl = item.mililitros + product.mililitros;
               return {
                 ...item,
                 mililitros: nuevosMl,
@@ -128,7 +123,7 @@ export function CartProvider({ children }) {
         });
       }
 
-      return [...prev, normalizedProduct];
+      return [...prev, { ...product }];
     });
   };
 

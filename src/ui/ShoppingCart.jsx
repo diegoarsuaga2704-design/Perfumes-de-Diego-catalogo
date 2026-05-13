@@ -23,18 +23,25 @@ export default function ShoppingCart() {
   const [postalCode, setPostalCode] = useState("");
   const [inputCode, setInputCode] = useState("");
 
-  // Bloquear el scroll del body y html cuando el carrito está abierto
+  // Bloquear scroll del body al abrir el carrito, preservando la posición
   useEffect(() => {
     if (isCartOpen) {
+      const scrollY = window.scrollY;
       document.body.style.overflow = "hidden";
       document.documentElement.style.overflow = "hidden";
       document.body.style.position = "fixed";
       document.body.style.width = "100%";
+      document.body.style.top = `-${scrollY}px`;
     } else {
+      const topValue = document.body.style.top;
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
       document.body.style.position = "";
       document.body.style.width = "";
+      document.body.style.top = "";
+      if (topValue) {
+        window.scrollTo(0, parseInt(topValue || "0", 10) * -1);
+      }
     }
 
     return () => {
@@ -42,6 +49,7 @@ export default function ShoppingCart() {
       document.documentElement.style.overflow = "";
       document.body.style.position = "";
       document.body.style.width = "";
+      document.body.style.top = "";
     };
   }, [isCartOpen]);
 
@@ -162,7 +170,7 @@ export default function ShoppingCart() {
                   className={`border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none transition-colors ${
                     isPostalCodeValid
                       ? "bg-white border-gray-300 text-gray-800 placeholder:text-gray-400"
-                      : "bg-red-200 border-gray-300 text-white placeholder:text-black"
+                      : "bg-red-50 border-red-300 text-gray-800 placeholder:text-gray-400"
                   }`}
                   inputMode="numeric"
                   maxLength={5}

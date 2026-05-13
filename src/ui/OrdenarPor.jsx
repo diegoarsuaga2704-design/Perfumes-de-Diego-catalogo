@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useOrder } from "../context/OrderContext.jsx";
 
-export let variableOrder = "nombre";
-
 function OrdenarPor() {
   const [openOrdenar, setOpenOrdenar] = useState(null);
   const { order, setOrder } = useOrder();

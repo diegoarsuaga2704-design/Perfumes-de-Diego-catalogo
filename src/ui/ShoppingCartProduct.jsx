@@ -60,7 +60,6 @@ function ShoppingCartProduct() {
     if (item.tipoVenta === "decant") {
       const incremento = getIncrementoMililitros(item);
       const nuevosMl = item.mililitros + incremento;
-      if (item.stockDisponible && nuevosMl > item.stockDisponible) return;
       updateCartItem(item.id, "decant", nuevosMl);
     }
 

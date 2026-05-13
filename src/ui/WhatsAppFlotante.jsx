@@ -3,7 +3,7 @@ import { useCart } from "../context/CartContext";
 export default function WhatsAppFlotante() {
   const { isCartOpen } = useCart();
 
-  const numero = "2212034647";
+  const numero = "5212212034647";
   const mensaje = "Hola, quiero más información";
 
   const enlaceWhatsApp = `https://wa.me/${numero}?text=${encodeURIComponent(

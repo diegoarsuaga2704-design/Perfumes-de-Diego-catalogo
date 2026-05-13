@@ -50,19 +50,6 @@ function MainMenu() {
   return (
     <nav className="sm:hidden bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* DESKTOP */}
-        <div className="hidden sm:flex justify-center items-center gap-8 py-3">
-          {categorias.map((cat, index) => (
-            <button
-              key={index}
-              onClick={cat.accion}
-              className="text-gray-700 hover:text-[#A47E3B] font-medium text-sm tracking-wide transition-colors"
-            >
-              {cat.nombre}
-            </button>
-          ))}
-        </div>
-
         {/* MÓVIL - botón hamburguesa */}
         <div className="sm:hidden flex justify-between items-center py-2">
           <button

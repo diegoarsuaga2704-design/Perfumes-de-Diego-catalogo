@@ -134,22 +134,17 @@ Gracias!`;
           </div>
         </div>
       )}
-
-      <a
-        href={cartItems.length ? enlaceWhatsApp : "#"}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`block ${
-          inAppInfo.isInApp ? "pointer-events-none opacity-50" : ""
-        }`}
-      >
         <button
-          className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-2 rounded-md font-medium transition-colors"
-          disabled={!cartItems.length || disabled}
-        >
-          Realizar pedido
-        </button>
-      </a>
+        type="button"
+        onClick={() => {
+          if (!cartItems.length || disabled || inAppInfo.isInApp) return;
+          window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
+        }}
+        disabled={!cartItems.length || disabled || inAppInfo.isInApp}
+        className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+      >
+        Realizar pedido
+      </button>
     </>
   );
 }
