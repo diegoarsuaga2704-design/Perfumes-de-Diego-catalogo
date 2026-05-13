@@ -142,11 +142,21 @@ export default function ProductGrid({
       if (order === "casa") {
         const casaComparison = casaA.localeCompare(casaB);
         if (casaComparison !== 0) return casaComparison;
-        return (a.precio ?? 0) - (b.precio ?? 0);
+        const precioComparison = (a.precio ?? 0) - (b.precio ?? 0);
+        if (precioComparison !== 0) return precioComparison;
+        return nombreA.localeCompare(nombreB);
       }
 
-      if (order === "precio") return (a.precio ?? 0) - (b.precio ?? 0);
-      if (order === "precioMayor") return (b.precio ?? 0) - (a.precio ?? 0);
+      if (order === "precio") {
+        const precioComparison = (a.precio ?? 0) - (b.precio ?? 0);
+        if (precioComparison !== 0) return precioComparison;
+        return nombreA.localeCompare(nombreB);
+      }
+      if (order === "precioMayor") {
+        const precioComparison = (b.precio ?? 0) - (a.precio ?? 0);
+        if (precioComparison !== 0) return precioComparison;
+        return nombreA.localeCompare(nombreB);
+      }
 
       return 0;
     });

@@ -4,6 +4,7 @@ import { Package, ShoppingCart, Sparkles, CheckCircle } from "lucide-react";
 import { getPaquetesPublicos } from "../functions/getPaquetesAdmin";
 import { useCart } from "../context/CartContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import { slugify } from "../functions/slugify";
 
 export default function Paquetes() {
   const navigate = useNavigate();
@@ -46,14 +47,7 @@ export default function Paquetes() {
   };
 
   const handlePerfumeClick = (perfume) => {
-    // Slug del nombre para la URL (igual al patrón del proyecto)
-    const slug = (perfume.nombre || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    navigate(`/product/${slug}/${perfume.id}`);
+    navigate(`/product/${slugify(perfume.nombre)}/${perfume.id}`);
   };
 
   if (loading) return <LoadingSpinner />;

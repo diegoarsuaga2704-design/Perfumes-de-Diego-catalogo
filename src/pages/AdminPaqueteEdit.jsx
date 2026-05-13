@@ -276,6 +276,7 @@ export default function AdminPaqueteEdit() {
             <ImageUploader
               value={form.imagen || ""}
               onChange={(newUrl) => handleChange("imagen", newUrl)}
+              bucket="perfumsImages"
             />
           </section>
 

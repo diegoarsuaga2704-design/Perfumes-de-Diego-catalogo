@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { FaTiktok } from "react-icons/fa";
+import { slugify } from "../functions/slugify";
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
@@ -27,15 +28,7 @@ function ProductCard({ parfum }) {
       : null;
 
   const handleCardClick = () => {
-    // Convertir el nombre a formato URL-friendly
-    const nombreURL = parfum.nombre
-      .toLowerCase()
-      .normalize("NFD") // elimina acentos
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, "-") // reemplaza espacios por guiones
-      .replace(/[^\w-]+/g, ""); // elimina caracteres especiales
-
-    navigate(`/product/${nombreURL}/${parfum.id}`);
+    navigate(`/product/${slugify(parfum.nombre)}/${parfum.id}`);
   };
 
   return (
@@ -71,7 +64,7 @@ function ProductCard({ parfum }) {
         src={parfum.image}
         alt={parfum.nombre}
         loading="lazy"
-        className="w-full h-100 object-cover pt-2"
+        className="w-full h-80 object-cover pt-2"
       />
       <div className="sm:p-5 px-2 py-5 flex flex-col justify-between">
         <h3 className="sm:text-lg text-sm font-semibold text-gray-900 mb-2 2xl:flex-row">

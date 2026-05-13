@@ -369,6 +369,7 @@ export default function AdminPerfumeEdit() {
             <ImageUploader
               value={form.image || ""}
               onChange={(newUrl) => handleChange("image", newUrl)}
+              bucket="perfumsImages"
             />
           </section>
 

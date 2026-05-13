@@ -1,97 +1,108 @@
 import { useEffect, useState } from "react";
+import { useCart } from "../context/CartContext";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 
 function InAppBrowserModal() {
+  const { cartItems } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [platform, setPlatform] = useState("android");
   const [source, setSource] = useState(null);
+  const [isInApp, setIsInApp] = useState(false);
+  const [copied, setCopied] = useState(false);
 
+  // Detectar in-app browser una sola vez al montar.
   useEffect(() => {
-    const { isInApp, platform: detectedPlatform, source: detectedSource } = detectInAppBrowser();
+    const {
+      isInApp: detectedInApp,
+      platform: detectedPlatform,
+      source: detectedSource,
+    } = detectInAppBrowser();
+    setIsInApp(detectedInApp);
     setPlatform(detectedPlatform);
     setSource(detectedSource);
+  }, []);
+
+  // Disparar el modal cuando el cliente tiene al menos un producto en el carrito,
+  // está en un navegador in-app, y no descartó el modal en esta sesión.
+  useEffect(() => {
+    if (!isInApp) return;
+    if (cartItems.length === 0) return;
 
     const yaDescartado = sessionStorage.getItem("inAppModalDismissed");
+    if (yaDescartado) return;
 
-    if (isInApp && !yaDescartado) {
-      setIsOpen(true);
-    }
-  }, []);
+    setIsOpen(true);
+  }, [isInApp, cartItems.length]);
 
   const handleDismiss = () => {
     setIsOpen(false);
     sessionStorage.setItem("inAppModalDismissed", "true");
   };
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (!isOpen) return null;
 
-  const instruccionesIOS = [
-    "Toca los 3 puntitos (···) en la esquina superior derecha",
-    "Selecciona 'Abrir en Navegador/Safari'",
-    "¡Listo! Podrás comprar sin problemas",
-  ];
-
-  const instruccionesAndroid = [
-    "Toca los 3 puntitos (⋮) en la esquina superior derecha",
-    "Selecciona 'Abrir en Navegador'",
-    "¡Listo! Podrás comprar sin problemas",
-  ];
-
-  const instrucciones =
-    platform === "ios" ? instruccionesIOS : instruccionesAndroid;
+  const navegadorObjetivo = platform === "ios" ? "Safari" : "Chrome";
 
   return (
     <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-fade-in-modal">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border-4 border-[#A47E3B] animate-shake">
         {/* Header dorado */}
         <div className="bg-gradient-to-r from-[#A47E3B] to-[#D4AF7A] text-white rounded-t-xl p-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide">
-              IMPORTANTE
-            </h2>
-          </div>
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide mb-1">
+            IMPORTANTE
+          </h2>
           <p className="text-sm font-semibold">
-            Para hacer tu pedido sigue los siguientes pasos
+            Para realizar tu pedido tienes que abrir el sitio en {navegadorObjetivo}
           </p>
         </div>
 
         {/* Contenido */}
         <div className="p-6">
-          <p className="text-gray-900 text-base font-semibold mb-2 text-center">
-            Estás usando el navegador de {source || "una app"}
-          </p>
-          <p className="text-sm text-gray-700 mb-5 text-center leading-relaxed">
-            para realizar tu pedido necesitas abrir el sitio en{" "}
-            {platform === "ios" ? "Safari" : "Chrome"}.
+          <p className="text-sm text-gray-700 mb-4 text-center leading-relaxed">
+            Estás viendo este sitio dentro de {source || "una app"}, y desde
+            ahí no se puede abrir WhatsApp para enviar tu pedido.
           </p>
 
-          {/* Instrucciones destacadas */}
-          <div className="bg-amber-50 rounded-xl p-4 mb-5 border-2 border-amber-300">
+          {/* Instrucciones */}
+          <div className="bg-amber-50 rounded-xl p-4 mb-4 border-2 border-amber-300">
             <p className="text-sm font-bold text-gray-900 mb-3 text-center">
-              {platform === "ios"
-                ? "📱 Cómo abrirlo en iPhone:"
-                : "📱 Cómo abrirlo en Android:"}
+              {platform === "ios" ? "📱 En iPhone:" : "📱 En Android:"}
             </p>
-            <div className="space-y-3">
-              {instrucciones.map((paso, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <span className="flex-shrink-0 bg-[#A47E3B] text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm">
-                    {index + 1}
-                  </span>
-                  <p className="text-sm text-gray-800 leading-relaxed pt-0.5">
-                    {paso}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <ol className="space-y-2 list-decimal pl-5 text-sm text-gray-800">
+              <li>Toca los 3 puntitos {platform === "ios" ? "(···)" : "(⋮)"} arriba</li>
+              <li>Selecciona "Abrir en {navegadorObjetivo}"</li>
+            </ol>
           </div>
 
-          {/* Botón discreto para cerrar */}
+          {/* Aviso del carrito */}
+          <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-5 text-xs text-gray-700">
+            <p>
+              <strong>Importante:</strong> tu carrito puede vaciarse al cambiar
+              de navegador. Si pasa, son solo unos clicks volver a armarlo.
+            </p>
+          </div>
+
+          {/* Acciones */}
           <button
-            onClick={handleDismiss}
-            className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
+            type="button"
+            onClick={handleCopyLink}
+            className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-3 rounded-lg font-semibold mb-2 transition-colors"
           >
-            Entendido, seguir aquí de todos modos
+            {copied ? "Enlace copiado ✓" : "📋 Copiar enlace del sitio"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
+          >
+            Sigo aquí por ahora
           </button>
         </div>
       </div>

@@ -40,14 +40,23 @@ export async function getRelacionados(casa, excluirId) {
     .select("*")
     .eq("casa", casa)
     .neq("id", excluirId)
-    .eq("disponible", "Disponible")
-    .limit(4);
+    .eq("disponible", "Disponible");
 
   if (error) {
     console.error("Error fetching relacionados:", error);
     return [];
   }
-  return data;
+
+  if (!data || data.length === 0) return [];
+
+  // Shuffle (Fisher-Yates) y limita a 4
+  const shuffled = [...data];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.slice(0, 4);
 }
 export async function getPerfumesConTikTok() {
   const { data, error } = await supabase

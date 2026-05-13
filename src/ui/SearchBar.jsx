@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { useParfums } from "../context/ParfumsContext";
 import { useNavigate } from "react-router-dom";
+import { slugify } from "../functions/slugify";
 
 function SearchBar({ onSearchResult }) {
   const { parfums, error } = useParfums();
@@ -62,16 +63,7 @@ function SearchBar({ onSearchResult }) {
     setQuery("");
     setShowSuggestions(false);
     inputRef.current?.blur();
-
-    // Construir el slug URL-friendly (igual que ProductCard)
-    const nombreURL = item.nombre
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]+/g, "");
-
-    navigate(`/product/${nombreURL}/${item.id}`);
+    navigate(`/product/${slugify(item.nombre)}/${item.id}`);
   };
 
   const handleSubmit = (e) => {
@@ -100,7 +92,7 @@ function SearchBar({ onSearchResult }) {
     setQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
-    onSearchResult(parfums);
+    onSearchResult(null);
   };
 
   if (error) {

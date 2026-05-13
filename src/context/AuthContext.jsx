@@ -29,11 +29,19 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // 1. Recuperar sesión inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      checkIfAdmin(currentUser?.id).finally(() => setLoading(false));
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        checkIfAdmin(currentUser?.id).finally(() => setLoading(false));
+      })
+      .catch((err) => {
+        console.error("Error obteniendo sesión inicial:", err);
+        setUser(null);
+        setIsAdmin(false);
+        setLoading(false);
+      });
 
     // 2. Suscribirse a cambios de auth
     const {
