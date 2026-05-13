@@ -1,11 +1,27 @@
 import { useState, useEffect } from "react";
-import { useOutletContext, useLocation } from "react-router-dom";
+import { useOutletContext, useLocation, useSearchParams } from "react-router-dom";
 import Navbar from "../ui/Navbar";
 import ProductGrid from "../ui/ProductGrid";
 
 function Home() {
   const { searchResult } = useOutletContext();
   const location = useLocation();
+  const [, setSearchParams] = useSearchParams();
+
+  // Helper para resetear paginación cuando cambian filtros
+  const resetPage = () => {
+    console.log("🔵 resetPage llamado");
+    setSearchParams(
+      (prev) => {
+        console.log("🔵 page antes:", prev.toString());
+        const newParams = new URLSearchParams(prev);
+        newParams.delete("page");
+        console.log("🔵 page después:", newParams.toString());
+        return newParams;
+      },
+      { replace: true }
+    );
+  };
 
   // Detecta el modo enviado desde Prehome
   const mode = location.state?.mode || "normal";
@@ -33,7 +49,6 @@ function Home() {
   }, [mode]);
 
   // Aplicar filtro de casa solo cuando viene de /casas (selectedCasa en state).
-  // Usamos location.key para detectar navegaciones nuevas y location.state para el dato.
   useEffect(() => {
     if (location.state?.selectedCasa) {
       setSelectedCasa(location.state.selectedCasa);
@@ -44,21 +59,27 @@ function Home() {
   }, [location.key]);
 
   const handleSelectCasa = (value) => {
+    console.log("🟡 handleSelectCasa:", value);
     setSelectedCasa(value);
     setSelectedOcasion(null);
     setSelectedCategoria(null);
+    resetPage();
   };
 
   const handleSelectOcasion = (value) => {
+    console.log("🟡 handleSelectOcasion:", value);
     setSelectedOcasion(value);
     setSelectedCasa(null);
     setSelectedCategoria(null);
+    resetPage();
   };
 
   const handleSelectCategoria = (value) => {
+    console.log("🟡 handleSelectCategoria:", value);
     setSelectedCategoria(value);
     setSelectedCasa(null);
     setSelectedOcasion(null);
+    resetPage();
   };
 
   const handleSelectLimpiar = () => {
@@ -66,6 +87,7 @@ function Home() {
     setSelectedCasa(null);
     setSelectedOcasion(null);
     setStockFilter(null);
+    resetPage();
   };
 
   return (

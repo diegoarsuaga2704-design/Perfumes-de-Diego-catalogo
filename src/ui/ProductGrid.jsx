@@ -30,7 +30,6 @@ export default function ProductGrid({
 
   // Cambio de página: actualiza URL con `replace` para no llenar el historial
   const setCurrentPage = (pageNumber) => {
-    console.log("⚙️  setCurrentPage llamado con:", pageNumber, "STACK:", new Error().stack);
     setSearchParams(
       (prev) => {
         const newParams = new URLSearchParams(prev);
@@ -44,6 +43,19 @@ export default function ProductGrid({
       { replace: true }
     );
   };
+
+  // Cuando el usuario cambia el orden, volver a página 1.
+  // Robusto contra StrictMode: comparamos contra el valor previo del orden.
+  const prevOrderRef = useRef(order);
+  useEffect(() => {
+    if (prevOrderRef.current !== order) {
+      prevOrderRef.current = order;
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order]);
 
   const filteredParfums = useMemo(() => {
     if (!allParfums || allParfums.length === 0) return [];
@@ -149,36 +161,6 @@ export default function ProductGrid({
     searchResult,
     stockFilter,
   ]);
-
-  // Cuando los filtros REALMENTE cambian (no en remontajes de StrictMode),
-  // volver a página 1. Comparamos contra los valores previos guardados en ref.
-  const prevFiltersRef = useRef({
-    selectedCasa,
-    selectedOcasion,
-    selectedCategoria,
-    stockFilter,
-  });
-
-  useEffect(() => {
-    const prev = prevFiltersRef.current;
-    const filtersChanged =
-      prev.selectedCasa !== selectedCasa ||
-      prev.selectedOcasion !== selectedOcasion ||
-      prev.selectedCategoria !== selectedCategoria ||
-      prev.stockFilter !== stockFilter;
-
-    prevFiltersRef.current = {
-      selectedCasa,
-      selectedOcasion,
-      selectedCategoria,
-      stockFilter,
-    };
-
-    if (filtersChanged && currentPage !== 1) {
-      setCurrentPage(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCasa, selectedOcasion, selectedCategoria, stockFilter]);
 
   if (loading) return <LoadingSpinner />;
 
