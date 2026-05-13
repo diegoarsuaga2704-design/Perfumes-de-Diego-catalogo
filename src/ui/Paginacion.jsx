@@ -48,13 +48,14 @@ export default function Pagination({
       {/* Flecha anterior */}
       <button
         onClick={() => handlePageChange(currentPage - 1)}
+        disabled={currentPage === 1}
         className={`px-3 py-1 bg-transparent 
             ${
-              currentPage === totalPages
+              currentPage === 1
                 ? " text-gray-400 cursor-not-allowed"
                 : " text-gray-800 hover:text-[#A47E3B]"
             }
-        ${currentPage === startPage || totalPages <= 1 ? "hidden" : ""}`}
+        ${totalPages <= 1 ? "hidden" : ""}`}
       >
         {"<"}
       </button>
@@ -79,13 +80,14 @@ export default function Pagination({
       {/* Flecha siguiente */}
       <button
         onClick={() => handlePageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
         className={`px-3 py-1 bg-transparent 
             ${
               currentPage === totalPages
                 ? " text-gray-400 cursor-not-allowed"
-                : "e text-gray-800 hover:text-[#A47E3B]"
+                : " text-gray-800 hover:text-[#A47E3B]"
             }
-        ${currentPage === endPage || totalPages <= 1 ? "hidden" : ""}`}
+        ${totalPages <= 1 ? "hidden" : ""}`}
       >
         {">"}
       </button>
