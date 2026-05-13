@@ -22,18 +22,19 @@ function SearchBar({ onSearchResult }) {
     }
 
     const lowerQuery = query.toLowerCase();
+    const safeLower = (v) => (v ?? "").toString().toLowerCase();
     // Separar en dos grupos:
     // 1️⃣ los que empiezan con el texto
     const startsWithMatches = parfums.filter(
       (p) =>
-        p.nombre.toLowerCase().startsWith(lowerQuery) ||
-        p.casa.toLowerCase().startsWith(lowerQuery),
+        safeLower(p.nombre).startsWith(lowerQuery) ||
+        safeLower(p.casa).startsWith(lowerQuery),
     );
     // 2️⃣ los que contienen el texto pero no empiezan con él
     const containsMatches = parfums.filter(
       (p) =>
-        !p.nombre.toLowerCase().startsWith(lowerQuery) &&
-        p.nombre.toLowerCase().includes(lowerQuery),
+        !safeLower(p.nombre).startsWith(lowerQuery) &&
+        safeLower(p.nombre).includes(lowerQuery),
     );
     // Combinar ambos, priorizando los que empiezan igual
     const orderedSuggestions = [...startsWithMatches, ...containsMatches];
@@ -79,7 +80,7 @@ function SearchBar({ onSearchResult }) {
 
     // ¿Hay un perfume con ese nombre exacto?
     const exactMatch = parfums.find(
-      (p) => p.nombre.toLowerCase() === query.toLowerCase(),
+      (p) => (p.nombre ?? "").toString().toLowerCase() === query.toLowerCase(),
     );
 
     if (exactMatch) {

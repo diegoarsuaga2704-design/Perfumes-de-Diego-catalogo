@@ -10,6 +10,7 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
     subtotal = 0,
     totalWithDiscount = 0,
     discountCode = "",
+    ahorroEnPaquetes = 0,
   } = useCart() || {};
 
   const [inAppInfo, setInAppInfo] = useState({ isInApp: false, source: null });
@@ -21,6 +22,7 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
   const safeSubtotal = Number(subtotal) || 0;
   const safeTotalWithDiscount = Number(totalWithDiscount) || 0;
   const safeTotalCartPrice = Number(totalCartPrice) || 0;
+  const safeAhorroEnPaquetes = Number(ahorroEnPaquetes) || 0;
 
   const mensajePedido = useMemo(() => {
     if (!cartItems.length) return "";
@@ -76,11 +78,16 @@ Descuento aplicado (${discountCode}): −$${(
 Total con descuento: $${safeTotalWithDiscount.toFixed(2)}`
       : `Total del pedido: $${safeTotalCartPrice.toFixed(2)}`;
 
+    const lineaAhorro =
+      safeAhorroEnPaquetes > 0
+        ? `\nAhorro por comprar en paquete: $${safeAhorroEnPaquetes.toFixed(2)}`
+        : "";
+
     return `Hola Diego, me gustaría realizar mi pedido:
 
 ${productos}
 
-${resumenPrecio}
+${resumenPrecio}${lineaAhorro}
 
 Para calcular el costo de envío, este es mi CP: ${postalCode}
 Gracias!`;
@@ -90,6 +97,7 @@ Gracias!`;
     safeSubtotal,
     safeTotalWithDiscount,
     safeTotalCartPrice,
+    safeAhorroEnPaquetes,
     discountCode,
     postalCode,
   ]);

@@ -45,7 +45,7 @@ export async function createPaqueteAdmin(newPaquete) {
     .from("paquetes")
     .insert(newPaquete)
     .select()
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error("Error creating paquete:", error);
@@ -64,7 +64,7 @@ export async function updatePaqueteAdmin(id, updates) {
     .update(updates)
     .eq("id", id)
     .select()
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error("Error updating paquete:", error);

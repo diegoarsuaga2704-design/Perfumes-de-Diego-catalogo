@@ -49,7 +49,7 @@ export async function updateParfumAdmin(id, updates) {
     .update(updates)
     .eq("id", id)
     .select()
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error("Error updating parfum:", error);
@@ -67,7 +67,7 @@ export async function createParfumAdmin(newParfum) {
     .from("parfums")
     .insert(newParfum)
     .select()
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error("Error creating parfum:", error);

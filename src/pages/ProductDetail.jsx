@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
+import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -21,7 +21,6 @@ export default function ProductDetail() {
   const [error, setError] = useState(null);
   const [mililitros, setMililitros] = useState(null);
   const [botellas, setBotellas] = useState(1);
-  const [showSuccess, setShowSuccess] = useState(false);
   const { addToCart, openCart } = useCart();
 
   useEffect(() => {
@@ -260,13 +259,6 @@ export default function ProductDetail() {
                   <ShoppingCart size={18} />
                   Añadir al carrito
                 </button>
-
-                {showSuccess && (
-                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium animate-fade-in">
-                    <CheckCircle size={16} />
-                    Agregado con éxito
-                  </span>
-                )}
               </div>
 
               <BadgesConfianza />
@@ -285,17 +277,6 @@ export default function ProductDetail() {
         whatsappText={`Hola Diego, me interesa saber más sobre ${parfum.nombre} de ${parfum.casa}`}
       />
 
-      <style>
-        {`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.3s ease-in-out;
-          }
-        `}
-      </style>
-    </>
+      </>
   );
 }
