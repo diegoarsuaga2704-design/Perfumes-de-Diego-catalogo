@@ -86,8 +86,12 @@ export default function AdminPaqueteEdit() {
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
 
+    // Si cambió el contenido, reactivar cálculo automático del precio individual
+    if (field === "contenido") {
+      setPrecioIndividualEditadoManual(false);
+    }
+  };
   const handlePrecioIndividualChange = (value) => {
     setPrecioIndividualEditadoManual(true);
     handleChange("precioIndividual", value);
