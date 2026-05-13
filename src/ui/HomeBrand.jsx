@@ -1,14 +1,9 @@
-// import { useNavigate } from "react-router-dom";
-
-function HomeBrand({ image, title, description }) {
-  //   const navigate = useNavigate();
-
-  //   const handleNavigate = () => {
-  //     navigate("/home");
-  //   };
-
+function HomeBrand({ image, title, description, onClick }) {
   return (
-    <div className="relative rounded-lg overflow-hidden shadow-lg group">
+    <div
+      onClick={onClick}
+      className="relative rounded-lg overflow-hidden shadow-lg group cursor-pointer"
+    >
       {/* Imagen de fondo */}
       <img
         src={image}
@@ -21,13 +16,10 @@ function HomeBrand({ image, title, description }) {
       <div className="absolute bottom-0 p-6 text-white text-center w-full">
         <h2 className="text-xl font-bold mb-2">{title}</h2>
         <p className="text-sm mb-4">{description}</p>
-        {/* <button
-          onClick={handleNavigate}
+        <button
+          type="button"
           className="bg-white text-black font-semibold py-2 px-4 rounded hover:bg-gray-200 transition"
         >
-          Ir a comprar
-        </button> */}
-        <button className="bg-white text-black font-semibold py-2 px-4 rounded hover:bg-gray-200 transition">
           Ir a comprar
         </button>
       </div>

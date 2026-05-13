@@ -11,6 +11,7 @@ function Footer() {
           <div className="flex items-center mb-4 justify-center md:justify-start">
             <img
               src="https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/perfumes-de-diego-letras-horizontal.png"
+              alt="Perfumes de Diego"
               className="sm:max-h-32 max-h-20"
             />
           </div>
@@ -90,7 +91,7 @@ function Footer() {
 
       {/* Línea inferior */}
       <div className="mt-10 border-t pt-6 text-center text-xs text-gray-500 italic">
-        © 2025 Perfumes de Diego. Todos los derechos reservados.
+        © {new Date().getFullYear()} Perfumes de Diego. Todos los derechos reservados.
       </div>
     </footer>
   );

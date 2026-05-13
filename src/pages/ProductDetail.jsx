@@ -128,9 +128,23 @@ export default function ProductDetail() {
                 {parfum.concentracion}
               </p>
 
-              <p className="text-gray-500 text-sm font-semibold mb-3">
+              <p className="text-gray-500 text-sm font-semibold mb-1">
                 {parfum.casa}
               </p>
+
+              {parfum.casa && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate("/home", {
+                      state: { selectedCasa: parfum.casa },
+                    })
+                  }
+                  className="text-xs text-[#A47E3B] hover:text-[#D4AF7A] font-semibold mb-3 inline-flex items-center gap-1 hover:underline"
+                >
+                  Ver todos los {parfum.casa} →
+                </button>
+              )}
 
               {/* PRECIO */}
               <div className="flex items-center gap-4 my-5 flex-wrap">

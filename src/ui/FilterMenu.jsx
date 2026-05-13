@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import supabase from "../services/supabase";
+import { useState, useMemo } from "react";
+import { useParfums } from "../context/ParfumsContext";
 import MenuDesplegado from "./MenuDesplegado";
 
 // 🔒 Helper para evitar null/undefined
@@ -11,46 +11,32 @@ export default function FilterMenu({
   onSelectCategoria,
 }) {
   const [openMenu, setOpenMenu] = useState(null);
-  const [casas, setCasas] = useState([]);
-  const [ocasiones, setOcasiones] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  const { parfums } = useParfums();
 
-  useEffect(() => {
-    async function fetchData() {
-      const { data: casasData } = await supabase.from("parfums").select("casa");
-      const { data: ocasionesData } = await supabase
-        .from("parfums")
-        .select("disponible");
-      const { data: categoriasData } = await supabase
-        .from("parfums")
-        .select("categoria");
+  // 🔒 LIMPIEZA + UNIQUE + SORT SEGURO (a partir del catálogo ya cargado)
+  const casasUnicas = useMemo(() => {
+    return [...new Set(
+      parfums
+        .map((item) => safeString(item.casa))
+        .filter((v) => v !== "")
+    )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
+  }, [parfums]);
 
-      setCasas(casasData || []);
-      setOcasiones(ocasionesData || []);
-      setCategorias(categoriasData || []);
-    }
-    fetchData();
-  }, []);
+  const ocasionesUnicas = useMemo(() => {
+    return [...new Set(
+      parfums
+        .map((item) => safeString(item.disponible))
+        .filter((v) => v !== "")
+    )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
+  }, [parfums]);
 
-  // 🔒 LIMPIEZA + UNIQUE + SORT SEGURO
-
-  const casasUnicas = [...new Set(
-    casas
-      .map((item) => safeString(item.casa))
-      .filter((v) => v !== "")
-  )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
-
-  const ocasionesUnicas = [...new Set(
-    ocasiones
-      .map((item) => safeString(item.disponible))
-      .filter((v) => v !== "")
-  )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
-
-  const categoriasUnicas = [...new Set(
-    categorias
-      .map((item) => safeString(item.categoria))
-      .filter((v) => v !== "")
-  )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
+  const categoriasUnicas = useMemo(() => {
+    return [...new Set(
+      parfums
+        .map((item) => safeString(item.categoria))
+        .filter((v) => v !== "")
+    )].sort((a, b) => safeString(a).localeCompare(safeString(b)));
+  }, [parfums]);
 
   const toggleMenu = (menu) => {
     setOpenMenu((prevOpenMenu) =>

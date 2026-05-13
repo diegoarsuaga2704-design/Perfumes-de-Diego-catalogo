@@ -65,37 +65,47 @@ function InAppBrowserModal() {
         {/* Contenido */}
         <div className="p-6">
           <p className="text-sm text-gray-700 mb-4 text-center leading-relaxed">
-            Estás viendo este sitio dentro de {source || "una app"}, y desde
-            ahí no se puede abrir WhatsApp para enviar tu pedido.
+            Estás viendo el sitio dentro de {source || "una app"}, y desde aquí
+            no se puede abrir WhatsApp para enviar tu pedido.
           </p>
 
-          {/* Instrucciones */}
-          <div className="bg-amber-50 rounded-xl p-4 mb-4 border-2 border-amber-300">
-            <p className="text-sm font-bold text-gray-900 mb-3 text-center">
-              {platform === "ios" ? "📱 En iPhone:" : "📱 En Android:"}
+          {/* Opción 1: 3 puntitos */}
+          <div className="bg-amber-50 rounded-xl p-4 mb-3 border-2 border-amber-300">
+            <p className="text-sm font-bold text-gray-900 mb-2">
+              Opción 1 (fácil):
             </p>
-            <ol className="space-y-2 list-decimal pl-5 text-sm text-gray-800">
-              <li>Toca los 3 puntitos {platform === "ios" ? "(···)" : "(⋮)"} arriba</li>
+            <ol className="space-y-1.5 list-decimal pl-5 text-sm text-gray-800">
+              <li>Toca los 3 puntitos {platform === "ios" ? "(···)" : "(⋮)"} arriba a la derecha</li>
               <li>Selecciona "Abrir en {navegadorObjetivo}"</li>
             </ol>
           </div>
 
-          {/* Aviso del carrito */}
-          <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-5 text-xs text-gray-700">
-            <p>
-              <strong>Importante:</strong> tu carrito puede vaciarse al cambiar
-              de navegador. Si pasa, son solo unos clicks volver a armarlo.
+          {/* Opción 2: copiar enlace */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
+            <p className="text-sm font-bold text-gray-900 mb-2">
+              Opción 2 (si la 1 no aparece):
             </p>
+            <ol className="space-y-1.5 list-decimal pl-5 text-sm text-gray-800 mb-3">
+              <li>Copia el enlace con el botón de abajo</li>
+              <li>Abre {navegadorObjetivo} desde tu pantalla de inicio</li>
+              <li>Pega el enlace en la barra de direcciones</li>
+            </ol>
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-2.5 rounded-lg font-semibold text-sm transition-colors"
+            >
+              {copied ? "✓ Enlace copiado" : "📋 Copiar enlace"}
+            </button>
           </div>
 
-          {/* Acciones */}
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-3 rounded-lg font-semibold mb-2 transition-colors"
-          >
-            {copied ? "Enlace copiado ✓" : "📋 Copiar enlace del sitio"}
-          </button>
+          {/* Aviso del carrito */}
+          <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-4 text-xs text-gray-700">
+            <p>
+              <strong>Nota:</strong> tu carrito puede vaciarse al cambiar de
+              navegador. Si pasa, son solo unos clicks volver a armarlo.
+            </p>
+          </div>
 
           <button
             type="button"

@@ -47,13 +47,13 @@ function Prehome() {
       </div>
       <div className="grid gap-6 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 max-w-6xl mx-auto p-6">
         {collections.map((item, index) => (
-          <div key={index} onClick={() => handleClick(item.title)}>
-            <HomeBrand
-              image={item.image}
-              title={item.title}
-              description={item.description}
-            />
-          </div>
+          <HomeBrand
+            key={index}
+            image={item.image}
+            title={item.title}
+            description={item.description}
+            onClick={() => handleClick(item.title)}
+          />
         ))}
       </div>
       <ComoFunciona />
