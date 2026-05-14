@@ -30,9 +30,9 @@ function Prehome() {
 
   const handleClick = (store) => {
     if (store === "Botellas completas y parciales") {
-      navigate("/home", { state: { mode: "stock" } });
+      navigate("/botellas");
     } else if (store === "Decants") {
-      navigate("/home", { state: { mode: "decants" } });
+      navigate("/decants");
     } else if (store === "Mejor vendidos") {
       navigate("/best-sellers");
     } else {

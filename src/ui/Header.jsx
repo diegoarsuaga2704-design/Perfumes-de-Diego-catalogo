@@ -12,11 +12,11 @@ function Header({ onSearchResult }) {
   const categorias = [
     {
       nombre: "Decants",
-      accion: () => navigate("/home", { state: { mode: "decants" } }),
+      accion: () => navigate("/decants"),
     },
     {
       nombre: "Botellas",
-      accion: () => navigate("/home", { state: { mode: "stock" } }),
+      accion: () => navigate("/botellas"),
     },
     {
       nombre: "Mejor vendidos",
