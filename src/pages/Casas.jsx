@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { slugify } from "../functions/slugify";
 import { ArrowLeft } from "lucide-react";
 import {
   getCasasConImagen,
@@ -31,7 +32,7 @@ export default function Casas() {
   }, []);
 
   function handleClickCasa(nombreCasa) {
-    navigate("/home", { state: { selectedCasa: nombreCasa } });
+    navigate(`/casa/${slugify(nombreCasa)}`);
   }
 
   return (

@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
-import { useOutletContext, useLocation, useSearchParams } from "react-router-dom";
+import { useOutletContext, useLocation, useSearchParams, useParams } from "react-router-dom";
 import Navbar from "../ui/Navbar";
 import ProductGrid from "../ui/ProductGrid";
+import { useParfums } from "../context/ParfumsContext";
+import { slugify } from "../functions/slugify";
 
-function Home() {
+function Home({ forcedMode }) {
   const { searchResult } = useOutletContext();
   const location = useLocation();
   const [, setSearchParams] = useSearchParams();
+  const { slug } = useParams();
+  const { parfums } = useParfums();
 
   // Helper para resetear paginación cuando cambian filtros
   const resetPage = () => {
@@ -20,8 +24,11 @@ function Home() {
     );
   };
 
-  // Detecta el modo enviado desde Prehome
-  const mode = location.state?.mode || "normal";
+  // Detecta el modo. Prioridad:
+  // 1. forcedMode (prop) — viene de las rutas /botellas y /decants
+  // 2. location.state.mode (legacy, por compatibilidad)
+  // 3. "normal" — catálogo completo
+  const mode = forcedMode || location.state?.mode || "normal";
 
   // Estado para activar filtro exclusivo de stock
   const [stockFilter, setStockFilter] = useState(null);
@@ -45,15 +52,24 @@ function Home() {
     }
   }, [mode]);
 
-  // Aplicar filtro de casa solo cuando viene de /casas (selectedCasa en state).
+  // Aplicar filtro de casa cuando viene de /casa/:slug.
+  // Resuelve el slug contra las casas reales del catálogo.
   useEffect(() => {
-    if (location.state?.selectedCasa) {
-      setSelectedCasa(location.state.selectedCasa);
+    if (!slug) return;
+    if (parfums.length === 0) return;
+
+    const casasUnicas = [
+      ...new Set(parfums.map((p) => p.casa).filter(Boolean)),
+    ];
+    const casaReal = casasUnicas.find((casa) => slugify(casa) === slug);
+
+    if (casaReal) {
+      setSelectedCasa(casaReal);
       setSelectedOcasion(null);
       setSelectedCategoria(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key]);
+  }, [slug, parfums]);
 
   const handleSelectCasa = (value) => {
     setSelectedCasa(value);
@@ -78,9 +94,16 @@ function Home() {
 
   const handleSelectLimpiar = () => {
     setSelectedCategoria(null);
-    setSelectedCasa(null);
     setSelectedOcasion(null);
-    setStockFilter(null);
+    // Si la ruta fuerza casa (/casa/:slug), mantener selectedCasa para
+    // que siga coherente con la URL.
+    if (!slug) {
+      setSelectedCasa(null);
+    }
+    // Si la ruta fuerza un modo (/botellas, /decants), mantener su stockFilter.
+    if (!forcedMode) {
+      setStockFilter(null);
+    }
     resetPage();
   };
 

@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { slugify } from "../functions/slugify";
 import { useEffect, useState } from "react";
 import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
@@ -135,11 +136,7 @@ export default function ProductDetail() {
               {parfum.casa && (
                 <button
                   type="button"
-                  onClick={() =>
-                    navigate("/home", {
-                      state: { selectedCasa: parfum.casa },
-                    })
-                  }
+                  onClick={() => navigate(`/casa/${slugify(parfum.casa)}`)}
                   className="text-xs text-[#A47E3B] hover:text-[#D4AF7A] font-semibold mb-3 inline-flex items-center gap-1 hover:underline"
                 >
                   Ver todos los {parfum.casa} →
