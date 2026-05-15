@@ -6,7 +6,7 @@ function BadgesEstatus({ parfum }) {
   if (parfum.disponible === "Agotado") {
     badge = { texto: "AGOTADO", color: "bg-red-600" };
   } else if (parfum.disponible === "Próximamente") {
-    badge = { texto: "PRÓXIMAMENTE", color: "bg-yellow-500" };
+    badge = { texto: "PRÓXIMAMENTE", color: "bg-sky-600" };
   } else if (parfum.esBestSeller === true) {
     badge = { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" };
   } else if (parfum.created_at) {

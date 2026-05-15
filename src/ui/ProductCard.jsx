@@ -39,10 +39,10 @@ function ProductCard({ parfum }) {
         ${parfum.disponible === "Agotado" ? "shadow-red-600" : ""}
       ${parfum.disponible === "Próximamente" ? "shadow-sky-600" : ""}`}
     >
-      {/* Etiqueta dinámica (esquina superior izquierda) */}
+      {/* Etiqueta dinámica (esquina superior derecha) */}
       {etiqueta && (
         <span
-          className={`absolute top-2 left-2 z-10 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-md ${etiqueta.color}`}
+          className={`absolute top-2 right-2 z-10 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md ${etiqueta.color}`}
         >
           {etiqueta.texto}
         </span>
@@ -50,7 +50,7 @@ function ProductCard({ parfum }) {
 
       {/* Etiqueta de disponibilidad (esquina superior derecha) */}
       <span
-        className={`absolute top-2 right-2 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md  ${
+        className={`absolute top-2 right-2 z-10 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md ${
           parfum.disponible === "Agotado" ? "bg-red-600" : ""
         }
       ${parfum.disponible === "Próximamente" ? "bg-sky-600" : ""} ${

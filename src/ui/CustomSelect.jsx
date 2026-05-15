@@ -21,6 +21,7 @@ export default function CustomSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Cerrar al hacer click fuera del componente
   useEffect(() => {
@@ -37,6 +38,21 @@ export default function CustomSelect({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
     };
+  }, [isOpen]);
+
+  // Centrar el dropdown en pantalla al abrirlo (útil en móvil cuando el botón
+  // queda cerca del fondo del viewport).
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      // Pequeño delay para que el dropdown se renderice antes de scrollear.
+      const timer = setTimeout(() => {
+        dropdownRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
   }, [isOpen]);
 
   const selectedOption = options.find((opt) => opt.value === value);
@@ -74,7 +90,10 @@ export default function CustomSelect({
       {/* Dropdown con opciones */}
       {isOpen && (
         <div className="relative">
-          <div className="absolute top-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-xl max-h-80 overflow-y-auto">
+          <div
+            ref={dropdownRef}
+            className="absolute top-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-xl max-h-80 overflow-y-auto"
+          >
             {options.map((opt) => {
               const isSelected = opt.value === value;
               return (
