@@ -87,6 +87,7 @@ export default function AvisameFormulario({ parfum }) {
         <input
           type="tel"
           inputMode="numeric"
+          autoComplete="tel"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
           placeholder="Ej: 222 123 4567"
@@ -101,6 +102,7 @@ export default function AvisameFormulario({ parfum }) {
         </label>
         <input
           type="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="tu@email.com"
