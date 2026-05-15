@@ -37,6 +37,19 @@ function MenuDesplegado({
     };
   }, [openMenu, toggleMenu]);
 
+  // Centrar el dropdown en pantalla al abrirlo (útil en móvil)
+  useEffect(() => {
+    if (openMenu === menuType && menuRef.current) {
+      const timer = setTimeout(() => {
+        menuRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [openMenu, menuType]);
+
   return (
     <div className="relative">
       <button

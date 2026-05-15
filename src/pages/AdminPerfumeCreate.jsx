@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { createParfumAdmin } from "../functions/getParfumsAdmin";
 import { ensureCasaExists } from "../functions/getCasas";
 import ImageUploader from "../ui/ImageUploader";
+import CasaAutocomplete from "../ui/CasaAutocomplete";
 
 const OPCIONES_CATEGORIA = ["Nicho", "Diseñador", "Árabe"];
 const OPCIONES_CONCENTRACION = [
@@ -164,10 +165,9 @@ export default function AdminPerfumeCreate() {
               </Field>
 
               <Field label="Casa *">
-                <input
-                  type="text"
+                <CasaAutocomplete
                   value={form.casa || ""}
-                  onChange={(e) => handleChange("casa", e.target.value)}
+                  onChange={(val) => handleChange("casa", val)}
                   className={inputClass}
                   placeholder="Ej: Creed"
                 />

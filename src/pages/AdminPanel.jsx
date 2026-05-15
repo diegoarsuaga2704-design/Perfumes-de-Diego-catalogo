@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LogOut,
@@ -11,10 +12,16 @@ import {
   Bell,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { getCountAvisosNuevos } from "../functions/getAvisosStock";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [conteoNuevos, setConteoNuevos] = useState(0);
+
+  useEffect(() => {
+    getCountAvisosNuevos().then(setConteoNuevos);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -182,11 +189,24 @@ export default function AdminPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               onClick={() => navigate("/admin/avisos")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+              className="relative bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
             >
-              <Bell className="text-[#A47E3B] mb-3" size={28} />
+              {conteoNuevos > 0 && (
+                <span className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold rounded-full min-w-[24px] h-6 flex items-center justify-center px-2 shadow-md">
+                  {conteoNuevos}
+                </span>
+              )}
+              <Bell
+                className={conteoNuevos > 0 ? "text-red-600 mb-3" : "text-[#A47E3B] mb-3"}
+                size={28}
+              />
               <h3 className="font-semibold text-gray-900 mb-1">
                 Avisos pendientes
+                {conteoNuevos > 0 && (
+                  <span className="ml-2 text-red-600 text-xs font-bold uppercase">
+                    · {conteoNuevos === 1 ? "1 nuevo" : `${conteoNuevos} nuevos`}
+                  </span>
+                )}
               </h3>
               <p className="text-sm text-gray-600">
                 Clientes que pidieron aviso cuando llegue un perfume Próximamente

@@ -6,15 +6,24 @@ import {
   CheckCircle,
   Trash2,
   MessageCircle,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
   getAvisosStock,
   marcarAvisoNotificado,
   desmarcarAvisoNotificado,
+  marcarAvisoLeido,
   deleteAvisoStock,
 } from "../functions/getAvisosStock";
 import LoadingSpinner from "../ui/LoadingSpinner";
+
+// Helper para derivar el estado de un aviso
+function getEstado(aviso) {
+  if (aviso.notificado_en) return "notificado";
+  if (aviso.leido_en) return "leido";
+  return "nuevo";
+}
 
 export default function AdminAvisos() {
   const navigate = useNavigate();
@@ -39,6 +48,15 @@ export default function AdminAvisos() {
     if (filter === "notificados") return a.notificado_en !== null;
     return true;
   });
+
+  const handleMarcarLeido = async (id) => {
+    try {
+      await marcarAvisoLeido(id);
+      await fetchAvisos();
+    } catch {
+      alert("Error al marcar como leído.");
+    }
+  };
 
   const handleMarcarNotificado = async (id) => {
     try {
@@ -70,7 +88,6 @@ export default function AdminAvisos() {
 
   const handleOpenWhatsApp = (aviso) => {
     const numeroLimpio = aviso.whatsapp.replace(/\D/g, "");
-    // Si el número ya viene con 52, no lo duplicamos
     const numeroConPrefijo = numeroLimpio.startsWith("52")
       ? numeroLimpio
       : `52${numeroLimpio}`;
@@ -91,8 +108,38 @@ export default function AdminAvisos() {
     });
   };
 
-  const conteoPendientes = avisos.filter((a) => a.notificado_en === null).length;
-  const conteoNotificados = avisos.filter((a) => a.notificado_en !== null).length;
+  // Conteos por filtro
+  const conteoPendientes = avisos.filter(
+    (a) => a.notificado_en === null,
+  ).length;
+  const conteoNotificados = avisos.filter(
+    (a) => a.notificado_en !== null,
+  ).length;
+  const conteoNuevos = avisos.filter(
+    (a) => a.notificado_en === null && a.leido_en === null,
+  ).length;
+
+  // Colores y etiquetas por estado
+  const estiloEstado = {
+    nuevo: {
+      borde: "border-red-500",
+      badgeBg: "bg-red-100",
+      badgeText: "text-red-800",
+      label: "Nuevo",
+    },
+    leido: {
+      borde: "border-sky-500",
+      badgeBg: "bg-sky-100",
+      badgeText: "text-sky-800",
+      label: "Leído",
+    },
+    notificado: {
+      borde: "border-green-500",
+      badgeBg: "bg-green-100",
+      badgeText: "text-green-800",
+      label: "Notificado",
+    },
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -112,11 +159,26 @@ export default function AdminAvisos() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        {/* Aviso de cuántos nuevos */}
+        {conteoNuevos > 0 && filter !== "notificados" && (
+          <div className="bg-red-50 border-l-4 border-red-500 rounded-md p-3 mb-4 flex items-center gap-3">
+            <Bell className="text-red-600" size={20} />
+            <div className="text-sm text-red-900">
+              Tienes <strong>{conteoNuevos}</strong>{" "}
+              {conteoNuevos === 1 ? "aviso nuevo sin leer" : "avisos nuevos sin leer"}.
+            </div>
+          </div>
+        )}
+
         {/* Filtros */}
         <div className="flex flex-wrap gap-2 mb-4">
           {[
             { value: "pendientes", label: "Pendientes", count: conteoPendientes },
-            { value: "notificados", label: "Notificados", count: conteoNotificados },
+            {
+              value: "notificados",
+              label: "Notificados",
+              count: conteoNotificados,
+            },
             { value: "todos", label: "Todos", count: avisos.length },
           ].map((opt) => (
             <button
@@ -144,30 +206,30 @@ export default function AdminAvisos() {
         ) : (
           <div className="space-y-3">
             {avisosFiltrados.map((aviso) => {
-              const esNotificado = aviso.notificado_en !== null;
+              const estado = getEstado(aviso);
+              const estilo = estiloEstado[estado];
               return (
                 <div
                   key={aviso.id}
-                  className={`bg-white rounded-lg shadow-sm p-4 border-l-4 ${
-                    esNotificado ? "border-green-500" : "border-sky-500"
-                  }`}
+                  className={`bg-white rounded-lg shadow-sm p-4 border-l-4 ${estilo.borde}`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span
-                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
-                            esNotificado
-                              ? "bg-green-100 text-green-800"
-                              : "bg-sky-100 text-sky-800"
-                          }`}
+                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${estilo.badgeBg} ${estilo.badgeText}`}
                         >
-                          {esNotificado ? "Notificado" : "Pendiente"}
+                          {estilo.label}
                         </span>
                         <span className="text-xs text-gray-500">
                           Solicitado: {formatFecha(aviso.created_at)}
                         </span>
-                        {esNotificado && (
+                        {aviso.leido_en && !aviso.notificado_en && (
+                          <span className="text-xs text-gray-500">
+                            · Leído: {formatFecha(aviso.leido_en)}
+                          </span>
+                        )}
+                        {aviso.notificado_en && (
                           <span className="text-xs text-gray-500">
                             · Notificado: {formatFecha(aviso.notificado_en)}
                           </span>
@@ -181,12 +243,11 @@ export default function AdminAvisos() {
                           {aviso.parfum_casa}
                         </p>
                       )}
-                      <div className="mt-2 text-sm text-gray-700 space-y-0.5">
+                      <div className="mt-2 text-sm text-gray-700">
                         <p>
                           📱 WhatsApp:{" "}
                           <span className="font-mono">{aviso.whatsapp}</span>
                         </p>
-                        {aviso.email && <p>✉️ Email: {aviso.email}</p>}
                       </div>
                     </div>
 
@@ -199,7 +260,19 @@ export default function AdminAvisos() {
                         <MessageCircle size={14} />
                         WhatsApp
                       </button>
-                      {!esNotificado ? (
+
+                      {estado === "nuevo" && (
+                        <button
+                          type="button"
+                          onClick={() => handleMarcarLeido(aviso.id)}
+                          className="flex items-center gap-1 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md"
+                        >
+                          <Eye size={14} />
+                          Marcar leído
+                        </button>
+                      )}
+
+                      {(estado === "nuevo" || estado === "leido") && (
                         <button
                           type="button"
                           onClick={() => handleMarcarNotificado(aviso.id)}
@@ -208,7 +281,9 @@ export default function AdminAvisos() {
                           <CheckCircle size={14} />
                           Marcar notificado
                         </button>
-                      ) : (
+                      )}
+
+                      {estado === "notificado" && (
                         <button
                           type="button"
                           onClick={() => handleDesmarcarNotificado(aviso.id)}
@@ -217,6 +292,7 @@ export default function AdminAvisos() {
                           Pasar a pendiente
                         </button>
                       )}
+
                       <button
                         type="button"
                         onClick={() => handleDelete(aviso.id)}

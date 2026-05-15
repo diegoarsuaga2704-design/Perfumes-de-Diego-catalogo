@@ -5,17 +5,13 @@ import supabase from "../services/supabase";
  * Llamado desde el form en ProductDetail.
  */
 export async function createAvisoStock(aviso) {
-  const { data, error } = await supabase
-    .from("avisos_stock")
-    .insert(aviso)
-    .select()
-    .single();
+  const { error } = await supabase.from("avisos_stock").insert(aviso);
 
   if (error) {
     console.error("Error creating aviso:", error);
     throw error;
   }
-  return data;
+  return true;
 }
 
 /**
@@ -90,4 +86,58 @@ export async function deleteAvisoStock(id) {
     console.error("Error borrando aviso:", error);
     throw error;
   }
+}
+
+/**
+ * Marca un aviso como leído (Diego lo vio pero todavía no ha contactado al cliente).
+ */
+export async function marcarAvisoLeido(id) {
+  const { data, error } = await supabase
+    .from("avisos_stock")
+    .update({ leido_en: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error marcando aviso como leído:", error);
+    throw error;
+  }
+  return data;
+}
+
+/**
+ * Devuelve un aviso al estado "Nuevo" (sin leer).
+ */
+export async function desmarcarAvisoLeido(id) {
+  const { data, error } = await supabase
+    .from("avisos_stock")
+    .update({ leido_en: null })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error desmarcando como leído:", error);
+    throw error;
+  }
+  return data;
+}
+
+/**
+ * Cuenta cuántos avisos están en estado "Nuevo" (sin leer ni notificar).
+ * Se usa en el AdminPanel para mostrar el badge.
+ */
+export async function getCountAvisosNuevos() {
+  const { count, error } = await supabase
+    .from("avisos_stock")
+    .select("*", { count: "exact", head: true })
+    .is("leido_en", null)
+    .is("notificado_en", null);
+
+  if (error) {
+    console.error("Error contando avisos nuevos:", error);
+    return 0;
+  }
+  return count || 0;
 }

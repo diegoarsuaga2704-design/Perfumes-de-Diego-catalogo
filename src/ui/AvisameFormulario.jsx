@@ -4,7 +4,6 @@ import { createAvisoStock } from "../functions/getAvisosStock";
 
 export default function AvisameFormulario({ parfum }) {
   const [whatsapp, setWhatsapp] = useState("");
-  const [email, setEmail] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);
   const [error, setError] = useState(null);
@@ -13,17 +12,10 @@ export default function AvisameFormulario({ parfum }) {
     e.preventDefault();
     setError(null);
 
-    // Limpiar WhatsApp: dejamos solo dígitos
     const whatsappLimpio = whatsapp.replace(/\D/g, "");
 
     if (whatsappLimpio.length < 10) {
       setError("Ingresa un número de WhatsApp válido (mínimo 10 dígitos).");
-      return;
-    }
-
-    // Validar email si lo ingresó
-    if (email.trim() && !/\S+@\S+\.\S+/.test(email.trim())) {
-      setError("El email no es válido.");
       return;
     }
 
@@ -34,7 +26,6 @@ export default function AvisameFormulario({ parfum }) {
         parfum_nombre: parfum.nombre,
         parfum_casa: parfum.casa || null,
         whatsapp: whatsappLimpio,
-        email: email.trim() || null,
       });
       setExito(true);
     } catch (err) {
@@ -44,7 +35,6 @@ export default function AvisameFormulario({ parfum }) {
     }
   };
 
-  // Vista de éxito
   if (exito) {
     return (
       <div className="bg-green-50 border border-green-300 rounded-lg p-4 flex items-start gap-3">
@@ -62,7 +52,6 @@ export default function AvisameFormulario({ parfum }) {
     );
   }
 
-  // Formulario
   return (
     <form
       onSubmit={handleSubmit}
@@ -92,20 +81,6 @@ export default function AvisameFormulario({ parfum }) {
           onChange={(e) => setWhatsapp(e.target.value)}
           placeholder="Ej: 222 123 4567"
           required
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:outline-none"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">
-          Email <span className="text-gray-400 font-normal">(opcional)</span>
-        </label>
-        <input
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="tu@email.com"
           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:outline-none"
         />
       </div>
