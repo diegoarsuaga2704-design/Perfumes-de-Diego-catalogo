@@ -6,7 +6,7 @@
 
 ## 1. El proyecto en una línea
 
-Perfumería nicho y artesanal en México, con opción de probar antes de comprar (decants), curada personalmente por Diego.
+Perfumería nicho y artesanal en México, con opción de probar antes de comprar (decants), elegida personalmente por Diego.
 
 ---
 

@@ -63,7 +63,7 @@ export default function Paquetes() {
             Paquetes de Decants
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-            Selecciones curadas para descubrir varios perfumes a un mejor
+            Selecciones especialmente elegidas para descubrir varios perfumes a un mejor
             precio. Cada paquete incluye decants listos para probar.
           </p>
         </div>

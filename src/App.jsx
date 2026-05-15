@@ -22,6 +22,7 @@ import AdminTestimonioCreate from "./pages/AdminTestimonioCreate";
 import AdminTestimonioEdit from "./pages/AdminTestimonioEdit";
 import AdminCasasList from "./pages/AdminCasasList";
 import AdminCasaEdit from "./pages/AdminCasaEdit";
+import AdminAvisos from "./pages/AdminAvisos";
 import Casas from "./pages/Casas";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 import RouterErrorElement from "./ui/RouterErrorElement";
@@ -166,6 +167,17 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminCasaEdit />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+
+  // Avisos de stock admin
+  {
+    path: "/admin/avisos",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminAvisos />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,

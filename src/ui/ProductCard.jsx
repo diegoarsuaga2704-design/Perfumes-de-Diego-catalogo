@@ -37,7 +37,7 @@ function ProductCard({ parfum }) {
       onClick={handleCardClick}
       className={`cursor-pointer bg-white relative shadow-md rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300
         ${parfum.disponible === "Agotado" ? "shadow-red-600" : ""}
-      ${parfum.disponible === "Próximamente" ? "shadow-yellow-600" : ""}`}
+      ${parfum.disponible === "Próximamente" ? "shadow-sky-600" : ""}`}
     >
       {/* Etiqueta dinámica (esquina superior izquierda) */}
       {etiqueta && (
@@ -53,7 +53,7 @@ function ProductCard({ parfum }) {
         className={`absolute top-2 right-2 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md  ${
           parfum.disponible === "Agotado" ? "bg-red-600" : ""
         }
-      ${parfum.disponible === "Próximamente" ? "bg-yellow-500" : ""} ${
+      ${parfum.disponible === "Próximamente" ? "bg-sky-600" : ""} ${
         parfum.disponible === "Disponible" ? "hidden" : ""
       }`}
       >

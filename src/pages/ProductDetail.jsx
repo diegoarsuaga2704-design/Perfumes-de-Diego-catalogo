@@ -9,6 +9,7 @@ import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
 import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
+import AvisameFormulario from "../ui/AvisameFormulario";
 import PerfumesRelacionados from "../ui/PerfumesRelacionados";
 import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 import { useCart } from "../context/CartContext";
@@ -258,27 +259,33 @@ export default function ProductDetail() {
                 </>
               )}
 
-              {/* BOTÓN */}
-              <div className="mt-4 flex gap-3 items-center">
-                <button
-                  onClick={handleAddToCart}
-                  disabled={
-                    !estaDisponible ||
-                    (esDecant && !mililitros) ||
-                    (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
-                  }
-                  className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
-                    estaDisponible &&
-                    (!esDecant || mililitros) &&
-                    (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
-                      ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                >
-                  <ShoppingCart size={18} />
-                  Añadir al carrito
-                </button>
-              </div>
+              {/* BOTÓN o FORMULARIO AVÍSAME (si está Próximamente) */}
+              {parfum.disponible === "Próximamente" ? (
+                <div className="mt-4">
+                  <AvisameFormulario parfum={parfum} />
+                </div>
+              ) : (
+                <div className="mt-4 flex gap-3 items-center">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={
+                      !estaDisponible ||
+                      (esDecant && !mililitros) ||
+                      (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
+                    }
+                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
+                      estaDisponible &&
+                      (!esDecant || mililitros) &&
+                      (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
+                        ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    <ShoppingCart size={18} />
+                    Añadir al carrito
+                  </button>
+                </div>
+              )}
 
               <BadgesConfianza />
             </div>
