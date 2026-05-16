@@ -259,8 +259,8 @@ export default function ProductDetail() {
                 </>
               )}
 
-              {/* BOTÓN o FORMULARIO AVÍSAME (si está Próximamente) */}
-              {parfum.disponible === "Próximamente" ? (
+              {/* FORMULARIO AVÍSAME (si no está Disponible) o BOTÓN añadir */}
+              {!estaDisponible ? (
                 <div className="mt-4">
                   <AvisameFormulario parfum={parfum} />
                 </div>
@@ -269,12 +269,10 @@ export default function ProductDetail() {
                   <button
                     onClick={handleAddToCart}
                     disabled={
-                      !estaDisponible ||
                       (esDecant && !mililitros) ||
                       (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
                     }
                     className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
-                      estaDisponible &&
                       (!esDecant || mililitros) &&
                       (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
                         ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
@@ -302,6 +300,35 @@ export default function ProductDetail() {
         mensaje="Cuéntame qué notas buscas o si necesitas comparar con otro perfume. Te respondo personalmente."
         whatsappText={`Hola Diego, me interesa saber más sobre ${parfum.nombre} de ${parfum.casa}`}
       />
+
+      {/* Sticky CTA solo en mobile cuando el perfume está disponible */}
+      {estaDisponible && (
+        <>
+          {/* Spacer para que el sticky no tape el contenido */}
+          <div className="sm:hidden h-20" aria-hidden="true" />
+
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-lg p-3">
+            <button
+              onClick={handleAddToCart}
+              disabled={
+                (esDecant && !mililitros) ||
+                (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
+              }
+              className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                (!esDecant || mililitros) &&
+                (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
+                  ? "bg-[#A47E3B] text-white active:bg-[#8B6A30]"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              <ShoppingCart size={18} />
+              {esDecant && !mililitros
+                ? "Selecciona los ml primero"
+                : "Añadir al carrito"}
+            </button>
+          </div>
+        </>
+      )}
 
       </>
   );
