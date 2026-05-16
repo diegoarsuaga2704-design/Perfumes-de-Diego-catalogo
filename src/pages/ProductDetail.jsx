@@ -14,6 +14,7 @@ import PerfumesRelacionados from "../ui/PerfumesRelacionados";
 import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 import { useCart } from "../context/CartContext";
 import CustomSelect from "../ui/CustomSelect";
+import SEO from "../ui/SEO";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -97,8 +98,23 @@ export default function ProductDetail() {
     openCart();
   };
 
+  // Texto SEO específico del producto
+  const seoTitle = `${parfum.nombre}${parfum.casa ? ` de ${parfum.casa}` : ""}`;
+  const seoDescription = parfum.notas
+    ? `${parfum.nombre} (${parfum.concentracion || "Eau de Parfum"})${parfum.casa ? ` de ${parfum.casa}` : ""}. Notas: ${parfum.notas}. Disponible en decant o botella.`
+    : `${parfum.nombre}${parfum.casa ? ` de ${parfum.casa}` : ""}. Disponible para comprar en decant o botella.`;
+  const seoImage = parfum.image;
+  const seoUrl = `https://perfumes-de-diego-catalogo.vercel.app/product/${parfum.id}`;
+
   return (
     <>
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        image={seoImage}
+        url={seoUrl}
+        type="product"
+      />
       <div className="flex flex-col lg:flex-row gap-10 bg-white p-6 rounded-2xl shadow-md max-w-6xl mx-auto my-10 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* IMAGEN */}

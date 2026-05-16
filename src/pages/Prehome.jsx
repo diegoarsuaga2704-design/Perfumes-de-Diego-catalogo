@@ -3,6 +3,7 @@ import ComoFunciona from "../ui/ComoFunciona";
 import HomeBrand from "../ui/HomeBrand";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
 import TestimoniosSeccion from "../ui/TestimoniosSeccion";
+import SEO from "../ui/SEO";
 
 function Prehome() {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ function Prehome() {
 
   return (
     <div className="bg-gray-100">
+      <SEO />
       <div className="text-[#A47E3B] text-center font-extrabold sm:text-3xl text-2xl px-14 py-4 subpixel-antialiased ">
         Compra tus perfumes favoritos.
       </div>

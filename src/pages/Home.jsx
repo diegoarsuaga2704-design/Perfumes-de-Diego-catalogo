@@ -4,6 +4,7 @@ import Navbar from "../ui/Navbar";
 import ProductGrid from "../ui/ProductGrid";
 import { useParfums } from "../context/ParfumsContext";
 import { slugify } from "../functions/slugify";
+import SEO from "../ui/SEO";
 
 function Home({ forcedMode }) {
   const { searchResult } = useOutletContext();
@@ -107,8 +108,26 @@ function Home({ forcedMode }) {
     resetPage();
   };
 
+  // Título dinámico según la ruta
+  const seoTitle = forcedMode === "stock"
+    ? "Botellas completas y parciales"
+    : forcedMode === "decants"
+      ? "Decants de perfumes"
+      : slug
+        ? `Perfumes de ${selectedCasa || slug}`
+        : "Catálogo de perfumes";
+
+  const seoDescription = forcedMode === "stock"
+    ? "Perfumes sellados y parciales disponibles para enviar a todo México."
+    : forcedMode === "decants"
+      ? "Decants para que pruebes tus perfumes favoritos antes de comprar el frasco completo."
+      : slug
+        ? `Catálogo de perfumes de la casa ${selectedCasa || slug}. Decants y botellas disponibles.`
+        : "Explora nuestro catálogo completo de decants y botellas de perfumes de nicho y de diseñador.";
+
   return (
     <div>
+      <SEO title={seoTitle} description={seoDescription} />
       <Navbar
         onSelectCasa={handleSelectCasa}
         onSelectOcasion={handleSelectOcasion}
