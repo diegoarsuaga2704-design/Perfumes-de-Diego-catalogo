@@ -3,6 +3,7 @@ import { getPerfumesConTikTok } from "../functions/getParfums";
 import ProductCard from "../ui/ProductCard";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import { FaTiktok } from "react-icons/fa";
+import SEO from "../ui/SEO";
 
 function VistoEnTikTok() {
   const [parfums, setParfums] = useState([]);
@@ -41,6 +42,10 @@ function VistoEnTikTok() {
 
   return (
     <section className="bg-gray-100 py-12 min-h-screen">
+      <SEO
+        title="Visto en TikTok"
+        description="Los perfumes de los que he hablado en mis videos de TikTok @perfumes_de_diego. Decants y botellas disponibles."
+      />
       <div className="max-w-12xl mx-auto sm:mx-8 lg:mx-12 px-6">
         {/* Encabezado */}
         <div className="text-center mb-8">

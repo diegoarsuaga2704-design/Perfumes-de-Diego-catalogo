@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
+import SEO from "../ui/SEO";
 
 const faqs = [
   {
@@ -55,6 +56,10 @@ function FAQs() {
 
   return (
     <section className="bg-gray-100 py-12 min-h-screen">
+      <SEO
+        title="Preguntas frecuentes"
+        description="¿Qué es un decant? ¿Son originales? ¿Cuánto tarda el envío? Todas las dudas frecuentes resueltas."
+      />
       <div className="max-w-4xl mx-auto px-6">
         <div className="text-center mb-8">
           <h1 className="text-[#A47E3B] text-3xl sm:text-4xl font-extrabold mb-2">

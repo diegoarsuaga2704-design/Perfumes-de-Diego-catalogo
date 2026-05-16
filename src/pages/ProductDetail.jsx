@@ -106,6 +106,30 @@ export default function ProductDetail() {
   const seoImage = parfum.image;
   const seoUrl = `https://perfumes-de-diego-catalogo.vercel.app/product/${parfum.id}`;
 
+  // Schema.org Product: Google muestra precio y disponibilidad en resultados
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: parfum.nombre,
+    description: seoDescription,
+    image: parfum.image,
+    brand: parfum.casa
+      ? { "@type": "Brand", name: parfum.casa }
+      : undefined,
+    offers: {
+      "@type": "Offer",
+      url: seoUrl,
+      priceCurrency: "MXN",
+      price: parfum.precio,
+      availability:
+        parfum.disponible === "Disponible"
+          ? "https://schema.org/InStock"
+          : parfum.disponible === "Próximamente"
+            ? "https://schema.org/PreOrder"
+            : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <>
       <SEO
@@ -114,6 +138,7 @@ export default function ProductDetail() {
         image={seoImage}
         url={seoUrl}
         type="product"
+        schema={productSchema}
       />
       <div className="flex flex-col lg:flex-row gap-10 bg-white p-6 rounded-2xl shadow-md max-w-6xl mx-auto my-10 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

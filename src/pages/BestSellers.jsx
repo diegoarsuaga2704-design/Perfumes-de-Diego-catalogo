@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getBestSellers } from "../functions/getParfums";
 import ProductCard from "../ui/ProductCard";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import SEO from "../ui/SEO";
 
 function BestSellers() {
   const navigate = useNavigate();
@@ -42,6 +43,10 @@ function BestSellers() {
 
   return (
     <section className="bg-gray-100 py-12 min-h-screen">
+      <SEO
+        title="Perfumes más vendidos"
+        description="Los perfumes favoritos de nuestros clientes. Decants y botellas de los más vendidos en Perfumes de Diego."
+      />
       <div className="max-w-12xl mx-auto sm:mx-8 lg:mx-12 px-6">
         {/* Encabezado */}
         <div className="text-center mb-8">

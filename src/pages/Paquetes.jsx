@@ -5,6 +5,7 @@ import { getPaquetesPublicos } from "../functions/getPaquetesAdmin";
 import { useCart } from "../context/CartContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import { slugify } from "../functions/slugify";
+import SEO from "../ui/SEO";
 
 export default function Paquetes() {
   const navigate = useNavigate();
@@ -54,6 +55,10 @@ export default function Paquetes() {
 
   return (
     <section className="bg-gray-100 min-h-screen py-10 sm:py-14">
+      <SEO
+        title="Paquetes de decants"
+        description="Selecciones especiales de decants a mejor precio. Descubre varios perfumes en un solo paquete con ahorro."
+      />
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-8 sm:mb-12">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-[#A47E3B] rounded-full mb-4">

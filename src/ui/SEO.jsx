@@ -18,6 +18,7 @@ export default function SEO({
   url,
   type = "website",
   noindex = false,
+  schema = null,
 }) {
   // Si la página pasa un título propio, lo combinamos con el nombre del sitio.
   // Si no, usamos el default.
@@ -48,6 +49,11 @@ export default function SEO({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={fullDescription} />
       <meta name="twitter:image" content={fullImage} />
+
+      {/* JSON-LD para datos estructurados (Schema.org) */}
+      {schema && (
+        <script type="application/ld+json">{JSON.stringify(schema)}</script>
+      )}
     </Helmet>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { getTestimoniosDestacados } from "../functions/getTestimonios";
+import SEO from "../ui/SEO";
 
 export default function Testimonios() {
   const navigate = useNavigate();
@@ -25,6 +26,10 @@ export default function Testimonios() {
 
   return (
     <section className="bg-gray-100 min-h-screen py-10 sm:py-14">
+      <SEO
+        title="Reseñas y testimonios reales"
+        description="Lo que dicen los clientes que ya recibieron sus decants y botellas. Testimonios verificados de Perfumes de Diego."
+      />
       <div className="max-w-6xl mx-auto px-6">
         {/* Botón volver */}
         <button
