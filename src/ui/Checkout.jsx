@@ -108,33 +108,7 @@ Gracias!`;
 
   return (
     <>
-      {inAppInfo.isInApp && (
-        <div className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center text-center p-6 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-sm shadow-lg">
-            <h2 className="text-lg font-semibold mb-3">
-              ⚠️ Abre esta página en tu navegador
-            </h2>
-            <p className="mb-4 text-gray-700">
-              {inAppInfo.source} no permite abrir WhatsApp desde su navegador interno.
-              <br />
-              <br />
-              1️⃣ Toca los tres puntos arriba a la derecha. <br />
-              2️⃣ Selecciona <strong>Abrir en navegador</strong>. <br />
-              3️⃣ Luego vuelve a presionar el botón para enviar tu pedido.
-            </p>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                alert("Enlace copiado correctamente.");
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors"
-            >
-              Copiar enlace
-            </button>
-          </div>
-        </div>
-      )}
-        <button
+      <button
         type="button"
         onClick={() => {
           if (!cartItems.length || disabled || inAppInfo.isInApp) return;

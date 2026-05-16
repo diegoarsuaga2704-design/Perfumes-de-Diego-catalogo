@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Pencil, ImageOff, Image as ImageIcon } from "lucide-react";
-import { getAllCasas } from "../functions/getCasas";
+import { ArrowLeft, Pencil, Trash2, ImageOff } from "lucide-react";
+import {
+  getAllCasas,
+  getConteoProductosPorCasa,
+  deleteCasa,
+} from "../functions/getCasas";
 
 export default function AdminCasasList() {
   const navigate = useNavigate();
   const [casas, setCasas] = useState([]);
+  const [conteo, setConteo] = useState({});
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState("todas"); // todas | con-imagen | sin-imagen
+  const [filtro, setFiltro] = useState("todas");
+  const [eliminando, setEliminando] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -15,8 +21,13 @@ export default function AdminCasasList() {
 
   async function fetchData() {
     try {
-      const data = await getAllCasas();
-      setCasas(data);
+      setLoading(true);
+      const [casasData, conteoData] = await Promise.all([
+        getAllCasas(),
+        getConteoProductosPorCasa(),
+      ]);
+      setCasas(casasData);
+      setConteo(conteoData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -24,14 +35,32 @@ export default function AdminCasasList() {
     }
   }
 
+  async function handleEliminar(casa) {
+    const confirmar = window.confirm(
+      `¿Borrar la casa "${casa.nombre}"? No tiene perfumes asociados.`,
+    );
+    if (!confirmar) return;
+    try {
+      setEliminando(casa.id);
+      await deleteCasa(casa.id);
+      await fetchData();
+    } catch {
+      alert("Error al borrar la casa.");
+    } finally {
+      setEliminando(null);
+    }
+  }
+
   const casasFiltradas = casas.filter((c) => {
     if (filtro === "con-imagen") return !!c.imagen_hero;
     if (filtro === "sin-imagen") return !c.imagen_hero;
+    if (filtro === "sin-perfumes") return !conteo[c.nombre];
     return true;
   });
 
   const conImagen = casas.filter((c) => c.imagen_hero).length;
   const sinImagen = casas.length - conImagen;
+  const sinPerfumes = casas.filter((c) => !conteo[c.nombre]).length;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -83,6 +112,16 @@ export default function AdminCasasList() {
           >
             Sin imagen ({sinImagen})
           </button>
+          <button
+            onClick={() => setFiltro("sin-perfumes")}
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+              filtro === "sin-perfumes"
+                ? "bg-red-600 text-white"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+            }`}
+          >
+            Sin perfumes ({sinPerfumes})
+          </button>
         </div>
 
         {loading ? (
@@ -93,41 +132,58 @@ export default function AdminCasasList() {
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {casasFiltradas.map((casa) => (
-              <div
-                key={casa.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex"
-              >
-                <div className="w-24 h-24 flex-shrink-0 bg-gray-100 flex items-center justify-center">
-                  {casa.imagen_hero ? (
-                    <img
-                      src={casa.imagen_hero}
-                      alt={casa.nombre}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <ImageOff className="text-gray-400" size={32} />
-                  )}
-                </div>
-                <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-                  <div>
-                    <p className="font-semibold text-gray-900 truncate">
-                      {casa.nombre}
-                    </p>
-                    <p className="text-xs text-gray-500 line-clamp-2">
-                      {casa.descripcion || "Sin descripción"}
-                    </p>
+            {casasFiltradas.map((casa) => {
+              const numPerfumes = conteo[casa.nombre] || 0;
+              const sinPerfumesAsociados = numPerfumes === 0;
+              return (
+                <div
+                  key={casa.id}
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex"
+                >
+                  <div className="w-24 h-24 flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                    {casa.imagen_hero ? (
+                      <img
+                        src={casa.imagen_hero}
+                        alt={casa.nombre}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageOff className="text-gray-400" size={32} />
+                    )}
                   </div>
-                  <button
-                    onClick={() => navigate(`/admin/casas/${casa.id}`)}
-                    className="self-end flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold hover:bg-blue-200 transition-colors"
-                  >
-                    <Pencil size={12} />
-                    Editar
-                  </button>
+                  <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                    <div>
+                      <p className="font-semibold text-gray-900 truncate">
+                        {casa.nombre}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {numPerfumes}{" "}
+                        {numPerfumes === 1 ? "perfume" : "perfumes"}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 justify-end mt-2">
+                      <button
+                        onClick={() => navigate(`/admin/casas/${casa.id}`)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold hover:bg-blue-200 transition-colors"
+                      >
+                        <Pencil size={12} />
+                        Editar
+                      </button>
+                      {sinPerfumesAsociados && (
+                        <button
+                          onClick={() => handleEliminar(casa)}
+                          disabled={eliminando === casa.id}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded text-xs font-semibold hover:bg-red-100 transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 size={12} />
+                          {eliminando === casa.id ? "..." : "Eliminar"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

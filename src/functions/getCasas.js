@@ -111,3 +111,15 @@ export async function ensureCasaExists(nombreCasa) {
   }
   return data;
 }
+
+/**
+ * Borra una casa de la tabla. Solo se usa cuando no tiene perfumes asociados
+ * (el AdminCasasList lo valida antes de mostrar el botón).
+ */
+export async function deleteCasa(id) {
+  const { error } = await supabase.from("casas").delete().eq("id", id);
+  if (error) {
+    console.error("Error borrando casa:", error);
+    throw error;
+  }
+}

@@ -212,9 +212,9 @@ function ShoppingCartProduct() {
                   <div className="flex gap-2 mt-2 items-center">
                     <button
                       onClick={() => handleDecrease(item)}
-                      className="text-xs px-2 py-1 border rounded-md hover:bg-gray-100"
+                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
                     >
-                      -
+                      −
                     </button>
 
                     <span className="text-sm">
@@ -227,30 +227,30 @@ function ShoppingCartProduct() {
 
                     <button
                       onClick={() => handleIncrease(item)}
-                      className="text-xs px-2 py-1 border rounded-md hover:bg-gray-100"
+                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
                     >
                       +
                     </button>
 
                     <button
                       onClick={() => setEditingItem(null)}
-                      className="text-xs px-2 py-1 border rounded-md hover:bg-gray-100 ml-2"
+                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100 ml-2"
                     >
                       Guardar
                     </button>
                   </div>
                 ) : confirmingDelete === itemKey ? (
                   <div className="flex gap-2 mt-2 items-center">
-                    <span className="text-xs text-gray-700">¿Eliminar?</span>
+                    <span className="text-sm text-gray-700">¿Eliminar?</span>
                     <button
                       onClick={handleRemove}
-                      className="text-xs px-3 py-1 border rounded-md bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                      className="text-sm px-3 py-2 border rounded-md bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
                     >
                       Sí
                     </button>
                     <button
                       onClick={() => setConfirmingDelete(null)}
-                      className="text-xs px-3 py-1 border rounded-md hover:bg-gray-100"
+                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
                     >
                       No
                     </button>
@@ -259,13 +259,13 @@ function ShoppingCartProduct() {
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={() => setEditingItem(itemKey)}
-                      className="text-xs px-2 py-1 border rounded-md hover:bg-gray-100"
+                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => setConfirmingDelete(itemKey)}
-                      className="text-xs px-2 py-1 border rounded-md hover:bg-gray-100"
+                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
                     >
                       Eliminar
                     </button>

@@ -29,8 +29,8 @@ export default function AvisameFormulario({ parfum }) {
       });
       setExito(true);
     } catch (err) {
-      // 23505 = violación de UNIQUE constraint: ya hay aviso pendiente con
-      // este WhatsApp para este perfume. Lo tratamos como éxito amable.
+      // 23505 = violación de UNIQUE: ya hay un aviso pendiente con este
+      // WhatsApp para este perfume. Se trata como éxito amable.
       if (err?.code === "23505") {
         setExito(true);
       } else {
