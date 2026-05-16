@@ -18,7 +18,7 @@ function HomeBrand({ image, title, description, onClick }) {
         <p className="text-sm mb-4">{description}</p>
         <button
           type="button"
-          className="bg-white text-black font-semibold py-2 px-4 rounded hover:bg-gray-200 transition"
+          className="bg-white text-black font-semibold py-2 px-4 rounded hover:bg-gray-200 active:bg-gray-300 transition"
         >
           Ir a comprar
         </button>

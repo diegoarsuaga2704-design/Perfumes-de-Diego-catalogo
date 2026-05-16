@@ -277,7 +277,7 @@ export default function ProductDetail() {
                       estaDisponible &&
                       (!esDecant || mililitros) &&
                       (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
-                        ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
+                        ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >

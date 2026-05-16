@@ -18,7 +18,7 @@ function SearchBar({ onSearchResult }) {
     if (query.trim() === "") {
       setSuggestions([]);
       setShowSuggestions(false);
-      onSearchResult(parfums);
+      onSearchResult(null);
       return;
     }
 
@@ -113,7 +113,18 @@ function SearchBar({ onSearchResult }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar..."
             className="w-full px-4 pr-10 py-2 focus:outline-none text-sm h-10 rounded-l-md border border-gray-300 text-gray-800"
-            onFocus={() => setShowSuggestions(true)}
+            onFocus={() => {
+              setShowSuggestions(true);
+              // En mobile, esperar a que aparezca el teclado virtual y
+              // scrollear el input al top para que las sugerencias queden
+              // visibles. En desktop el efecto es imperceptible.
+              setTimeout(() => {
+                inputRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }, 300);
+            }}
           />
 
           {query && (

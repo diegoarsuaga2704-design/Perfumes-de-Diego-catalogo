@@ -115,7 +115,7 @@ Gracias!`;
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
         }}
         disabled={!cartItems.length || disabled || inAppInfo.isInApp}
-        className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+        className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
       >
         Realizar pedido
       </button>

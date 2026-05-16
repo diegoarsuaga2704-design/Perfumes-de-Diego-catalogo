@@ -104,7 +104,7 @@ export default function AvisameFormulario({ parfum }) {
         className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
           enviando
             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-sky-600 hover:bg-sky-700 text-white"
+            : "bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white"
         }`}
       >
         <Bell size={16} />

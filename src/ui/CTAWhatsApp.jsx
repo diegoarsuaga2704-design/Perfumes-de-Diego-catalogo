@@ -22,7 +22,7 @@ function CTAWhatsApp({
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-white text-[#A47E3B] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg"
+          className="inline-flex items-center gap-2 bg-white text-[#A47E3B] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-all duration-300 hover:scale-105 shadow-lg"
         >
           <MessageCircle size={20} />
           Escríbeme por WhatsApp
