@@ -1,9 +1,19 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { FaTiktok } from "react-icons/fa";
+import { ShoppingCart, Check } from "lucide-react";
 import { slugify } from "../functions/slugify";
+import { useCart } from "../context/CartContext";
+import { getMililitrosMinimos } from "../functions/pricingDecant";
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const [agregado, setAgregado] = useState(false);
+
+  const esBotellaCompleta = parfum.stock === true;
+  const esDecant = parfum.stock === false;
+  const mlMinimo = esDecant ? getMililitrosMinimos(parfum) : null;
 
   // Etiqueta dinámica: MEJOR VENDIDO gana sobre NUEVO.
   // Ninguna se muestra si el perfume está Próximamente o Agotado
@@ -29,6 +39,43 @@ function ProductCard({ parfum }) {
 
   const handleCardClick = () => {
     navigate(`/product/${slugify(parfum.nombre)}/${parfum.id}`);
+  };
+
+  const handleQuickAdd = (e) => {
+    e.stopPropagation();
+
+    if (esDecant) {
+      addToCart({
+        id: parfum.id,
+        nombre: parfum.nombre,
+        image: parfum.image,
+        casa: parfum.casa,
+        tipoVenta: "decant",
+        precioUnitario: parfum.precio,
+        precio30ml: parfum.precio30ml || null,
+        mlBotella: null,
+        mililitros: mlMinimo,
+        cantidad: null,
+        stockDisponible: null,
+      });
+    } else {
+      addToCart({
+        id: parfum.id,
+        nombre: parfum.nombre,
+        image: parfum.image,
+        casa: parfum.casa,
+        tipoVenta: "botella",
+        precioUnitario: parfum.precio,
+        precio30ml: null,
+        mlBotella: parfum.mlBotella || null,
+        mililitros: null,
+        cantidad: 1,
+        stockDisponible: parfum.botellasDisponibles,
+      });
+    }
+
+    setAgregado(true);
+    setTimeout(() => setAgregado(false), 1500);
   };
 
   return (
@@ -74,7 +121,7 @@ function ProductCard({ parfum }) {
           {parfum.casa}
           <p className="italic">{parfum.concentracion}</p>
         </div>
-        <div className="border-t border-gray-200 pt-4 flex flex-col justify-between">
+        <div className="border-t border-gray-200 pt-4 flex flex-col gap-3">
           <span className="text-gray-800 text-sm font-semibold">
             Precio: ${parfum.precio}
             {!parfum.stock && "/ml"}
@@ -89,11 +136,34 @@ function ProductCard({ parfum }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="mt-2 inline-flex items-center justify-center gap-1 text-[10px] sm:text-xs text-[#A47E3B] hover:text-[#D4AF7A] font-semibold border border-[#A47E3B] rounded-md py-1 px-2 w-fit"
+              className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-xs text-[#A47E3B] hover:text-[#D4AF7A] font-semibold border border-[#A47E3B] rounded-md py-1 px-2 w-fit"
             >
               <FaTiktok className="h-3 w-3" />
               Ver video
             </a>
+          )}
+
+          {esDisponible && (
+            <button
+              onClick={handleQuickAdd}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                agregado
+                  ? "bg-green-500 text-white"
+                  : "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
+              }`}
+            >
+              {agregado ? (
+                <>
+                  <Check size={16} />
+                  Agregado
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={16} />
+                  {esDecant ? `Agregar ${mlMinimo} ml` : "Agregar al pedido"}
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>
