@@ -3,12 +3,11 @@ import { useCart } from "../context/CartContext";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 
 function InAppBrowserModal() {
-  const { cartItems } = useCart();
+  const { cartItems, closeCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [platform, setPlatform] = useState("android");
   const [source, setSource] = useState(null);
   const [isInApp, setIsInApp] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // Detectar in-app browser una sola vez al montar.
   useEffect(() => {
@@ -22,8 +21,9 @@ function InAppBrowserModal() {
     setSource(detectedSource);
   }, []);
 
-  // Disparar el modal cuando el cliente tiene al menos un producto en el carrito,
-  // está en un navegador in-app, y no descartó el modal en esta sesión.
+  // Disparar el modal cuando el cliente tiene al menos un producto en el carrito
+  // y está en un navegador in-app y no descartó el modal en esta sesión.
+  // Al abrirlo, cerramos el carrito para que no quede superpuesto.
   useEffect(() => {
     if (!isInApp) return;
     if (cartItems.length === 0) return;
@@ -32,17 +32,12 @@ function InAppBrowserModal() {
     if (yaDescartado) return;
 
     setIsOpen(true);
+    closeCart();
   }, [isInApp, cartItems.length]);
 
   const handleDismiss = () => {
     setIsOpen(false);
     sessionStorage.setItem("inAppModalDismissed", "true");
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   if (!isOpen) return null;
@@ -69,34 +64,13 @@ function InAppBrowserModal() {
             no se puede abrir WhatsApp para enviar tu pedido.
           </p>
 
-          {/* Opción 1: 3 puntitos */}
-          <div className="bg-amber-50 rounded-xl p-4 mb-3 border-2 border-amber-300">
-            <p className="text-sm font-bold text-gray-900 mb-2">
-              Opción 1 (fácil):
-            </p>
+          {/* Instrucciones */}
+          <div className="bg-amber-50 rounded-xl p-4 mb-4 border-2 border-amber-300">
+            <p className="text-sm font-bold text-gray-900 mb-2">Cómo abrirlo:</p>
             <ol className="space-y-1.5 list-decimal pl-5 text-sm text-gray-800">
               <li>Toca los 3 puntitos {platform === "ios" ? "(···)" : "(⋮)"} arriba a la derecha</li>
               <li>Selecciona "Abrir en {navegadorObjetivo}"</li>
             </ol>
-          </div>
-
-          {/* Opción 2: copiar enlace */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
-            <p className="text-sm font-bold text-gray-900 mb-2">
-              Opción 2 (si la 1 no aparece):
-            </p>
-            <ol className="space-y-1.5 list-decimal pl-5 text-sm text-gray-800 mb-3">
-              <li>Copia el enlace con el botón de abajo</li>
-              <li>Abre {navegadorObjetivo} desde tu pantalla de inicio</li>
-              <li>Pega el enlace en la barra de direcciones</li>
-            </ol>
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] text-white py-2.5 rounded-lg font-semibold text-sm transition-colors"
-            >
-              {copied ? "✓ Enlace copiado" : "📋 Copiar enlace"}
-            </button>
           </div>
 
           {/* Aviso del carrito */}
