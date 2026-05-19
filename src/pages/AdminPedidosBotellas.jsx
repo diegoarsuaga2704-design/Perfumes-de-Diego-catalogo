@@ -13,7 +13,9 @@ import {
   getClientesConStats,
   createClienteAdmin,
 } from "../functions/getClientesAdmin";
+import { getAllParfumsAdmin } from "../functions/getParfumsAdmin";
 import ClienteCombobox from "../ui/ClienteCombobox";
+import PerfumeCombobox from "../ui/PerfumeCombobox";
 
 const PAGE_SIZE = 300;
 const MAX_UNDO = 30;
@@ -23,6 +25,7 @@ export default function AdminPedidosBotellas() {
   const [pedidos, setPedidos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [parfums, setParfums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
   const [confirmarBorrar, setConfirmarBorrar] = useState(null);
@@ -53,14 +56,16 @@ export default function AdminPedidosBotellas() {
   async function fetchAll() {
     setLoading(true);
     try {
-      const [p, prov, cli] = await Promise.all([
+      const [p, prov, cli, par] = await Promise.all([
         getAllPedidosBotellas(),
         getProveedoresConConteo(),
         getClientesConStats(),
+        getAllParfumsAdmin(),
       ]);
       setPedidos(p);
       setProveedores(prov);
       setClientes(cli);
+      setParfums(par);
     } catch (err) {
       console.error(err);
     } finally {
@@ -412,6 +417,61 @@ export default function AdminPedidosBotellas() {
     }
   }
 
+  // Nombres únicos de perfumes en el historial (para sugerencias)
+  const historicoNombres = useMemo(() => {
+    const set = new Set();
+    pedidos.forEach((p) => {
+      if (p.perfume_nombre && p.perfume_nombre.trim() && p.perfume_nombre !== "(sin nombre)") {
+        set.add(p.perfume_nombre.trim());
+      }
+    });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [pedidos]);
+
+  // Actualiza perfume_nombre + parfum_id en una sola operación
+  async function handlePerfumeChange(id, nombre, parfumIdNuevo) {
+    const fila = pedidos.find((p) => p.id === id);
+    if (!fila) return;
+
+    const updates = {
+      perfume_nombre: nombre || "(sin nombre)",
+      parfum_id: parfumIdNuevo,
+    };
+
+    // Si nada cambió, no hacer nada
+    if (
+      updates.perfume_nombre === fila.perfume_nombre &&
+      updates.parfum_id === fila.parfum_id
+    ) {
+      return;
+    }
+
+    const valoresAnteriores = {
+      perfume_nombre: fila.perfume_nombre ?? null,
+      parfum_id: fila.parfum_id ?? null,
+    };
+
+    setHistorial((prev) => [
+      ...prev.slice(-(MAX_UNDO - 1)),
+      { id, valoresAnteriores },
+    ]);
+
+    setPedidos((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+    );
+    setSaving((prev) => ({ ...prev, [id]: true }));
+
+    try {
+      await updatePedidoBotella(id, updates);
+    } catch (err) {
+      console.error("Error guardando perfume:", err);
+      alert("Error al guardar.");
+      setPedidos((prev) => prev.map((p) => (p.id === id ? fila : p)));
+    } finally {
+      setSaving((prev) => ({ ...prev, [id]: false }));
+    }
+  }
+
   async function handleCreateCliente(nombre) {
     const nuevo = await createClienteAdmin({ nombre });
     setClientes((prev) =>
@@ -628,11 +688,14 @@ export default function AdminPedidosBotellas() {
                       pedido={p}
                       proveedores={proveedores}
                       clientes={clientes}
+                      parfums={parfums}
+                      historicoNombres={historicoNombres}
                       isSaving={!!saving[p.id]}
                       ordenAlternada={ordenColorMap[p.id]}
                       seleccionada={seleccionadas.has(p.id)}
                       onToggleSeleccion={() => toggleSeleccion(p.id)}
                       onEdit={handleEdit}
+                      onPerfumeChange={handlePerfumeChange}
                       onCreateCliente={handleCreateCliente}
                       onCheckboxMouseDown={handleCheckboxMouseDown}
                       onCheckboxMouseEnter={handleCheckboxMouseEnter}
@@ -674,9 +737,10 @@ export default function AdminPedidosBotellas() {
 }
 
 function FilaPedido({
-  pedido, proveedores, clientes, isSaving, ordenAlternada,
+  pedido, proveedores, clientes, parfums, historicoNombres,
+  isSaving, ordenAlternada,
   seleccionada, onToggleSeleccion,
-  onEdit, onCreateCliente,
+  onEdit, onPerfumeChange, onCreateCliente,
   onCheckboxMouseDown, onCheckboxMouseEnter,
   onDelete, confirmarBorrar, onConfirmDelete, onCancelDelete,
 }) {
@@ -714,7 +778,13 @@ function FilaPedido({
         <input type="text" defaultValue={pedido.numero_orden || ""} onBlur={(e) => { if (e.target.value !== (pedido.numero_orden || "")) onEdit(pedido.id, "numero_orden", e.target.value || null); }} className={`${cellInput} w-28`} />
       </td>
       <td className="px-1 py-1">
-        <input type="text" defaultValue={pedido.perfume_nombre || ""} onBlur={(e) => { if (e.target.value !== (pedido.perfume_nombre || "")) onEdit(pedido.id, "perfume_nombre", e.target.value || "(sin nombre)"); }} className={`${cellInput} w-36`} />
+        <PerfumeCombobox
+          nombre={pedido.perfume_nombre}
+          parfumId={pedido.parfum_id}
+          parfums={parfums}
+          historicoNombres={historicoNombres}
+          onChange={(nombre, parfumIdNuevo) => onPerfumeChange(pedido.id, nombre, parfumIdNuevo)}
+        />
       </td>
       <td
         className="px-1 py-1 select-none"
