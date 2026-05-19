@@ -12,7 +12,7 @@ const faqs = [
   {
     pregunta: "¿Los perfumes son 100% originales?",
     respuesta:
-      "Sí. Todos nuestros perfumes son originales, adquiridos directamente de distribuidores autorizados. Puedes comprar con total confianza.",
+      "Sí. Todos mis perfumes son originales, adquiridos directamente de distribuidores autorizados. Puedes comprar con total confianza.",
   },
   {
     pregunta: "¿Cómo realizo mi pedido?",
@@ -27,12 +27,12 @@ const faqs = [
   {
     pregunta: "¿Cuánto tarda el envío?",
     respuesta:
-      "Los envíos a todo México tardan entre 2 y 5 días hábiles una vez confirmado el pago. Usamos paqueterías confiables con número de guía para que rastrees tu pedido.",
+      "Los envíos a todo México tardan entre 2 y 5 días hábiles una vez confirmado el pago. Uso paqueterías confiables con número de guía para que rastrees tu pedido.",
   },
   {
     pregunta: "¿Cuánto cuesta el envío?",
     respuesta:
-      "El costo depende de tu código postal y el peso del paquete. Al hacer tu pedido te lo cotizamos sin compromiso.",
+      "El costo depende de tu código postal y el peso del paquete. Al hacer tu pedido te lo cotizo sin compromiso.",
   },
   {
     pregunta: "¿Puedo pedir una muestra antes de comprar un frasco completo?",

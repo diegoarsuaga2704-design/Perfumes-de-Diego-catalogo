@@ -20,7 +20,7 @@ export default function NotFound() {
         {/* Texto descriptivo */}
         <p className="text-gray-600 mb-8 leading-relaxed">
           Lo sentimos, la página que estás buscando no existe o ha sido movida.
-          Te invitamos a volver al inicio y continuar explorando nuestras
+          Te invito a volver al inicio y continuar explorando nuestras
           fragancias exclusivas.
         </p>
 

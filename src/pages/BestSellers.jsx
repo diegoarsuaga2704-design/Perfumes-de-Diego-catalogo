@@ -45,7 +45,7 @@ function BestSellers() {
     <section className="bg-gray-100 py-12 min-h-screen">
       <SEO
         title="Perfumes más vendidos"
-        description="Los perfumes favoritos de nuestros clientes. Decants y botellas de los más vendidos en Perfumes de Diego."
+        description="Los perfumes favoritos de mis clientes. Decants y botellas de los más vendidos en Perfumes de Diego."
       />
       <div className="max-w-12xl mx-auto sm:mx-8 lg:mx-12 px-6">
         {/* Encabezado */}
@@ -54,7 +54,7 @@ function BestSellers() {
             Mejor vendidos
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
-            Los favoritos de nuestros clientes
+            Los favoritos de mis clientes
           </p>
         </div>
 

@@ -26,7 +26,7 @@ export default function TestimoniosSeccion() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Lo que dicen nuestros clientes
+            Lo que dicen mis clientes
           </h2>
           <p className="text-gray-600 text-sm sm:text-base">
             Testimonios reales de quienes ya compraron

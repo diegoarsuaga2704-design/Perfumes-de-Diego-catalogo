@@ -20,7 +20,7 @@ function Prehome() {
       image:
         "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/bestseller.jpeg",
       title: "Mejor vendidos",
-      description: "Los favoritos de nuestros clientes.",
+      description: "Los favoritos de mis clientes.",
     },
     {
       image: "https://fraguru.com/himg/o.gxxUAHYdeV7.jpg",

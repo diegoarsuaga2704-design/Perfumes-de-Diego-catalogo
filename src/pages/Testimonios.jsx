@@ -59,7 +59,7 @@ export default function Testimonios() {
         ) : testimonios.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
             <p className="text-gray-500">
-              Próximamente subiremos testimonios de nuestros clientes.
+              Próximamente subiremos testimonios de mis clientes.
             </p>
           </div>
         ) : (
