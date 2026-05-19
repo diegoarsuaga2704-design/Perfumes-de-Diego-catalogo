@@ -30,3 +30,12 @@ main li {
   -webkit-touch-callout: default;
   user-select: text;
 }
+/* Quitar flechas de incremento SOLO en inputs con la clase .no-spinner */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinner {
+  -moz-appearance: textfield;
+}

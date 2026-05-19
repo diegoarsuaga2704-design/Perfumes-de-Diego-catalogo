@@ -18,6 +18,19 @@ const OPCIONES_CONCENTRACION = [
 ];
 const OPCIONES_DISPONIBLE = ["Disponible", "Agotado", "Próximamente"];
 
+
+
+const OPCIONES_LINEA_TESTER = ["Línea", "Tester"];
+
+const OPCIONES_ESTADO = [
+  "Sellado con caja",
+  "Sellado sin caja",
+  "Parcial con caja",
+  "Parcial sin caja",
+  "Nuevo con caja",
+  "Nuevo sin caja",
+];
+
 const DEFAULT_FORM = {
   nombre: "",
   casa: "",
@@ -34,6 +47,8 @@ const DEFAULT_FORM = {
   fraganticaLink: "",
   tiktokLink: "",
   esBestSeller: false,
+  linea_tester: "",
+  estado_botella: "",
 };
 
 export default function AdminPerfumeCreate() {
@@ -216,6 +231,40 @@ export default function AdminPerfumeCreate() {
                   ))}
                 </select>
               </Field>
+
+              {esBotella && (
+                <>
+                  <Field label="Línea / Tester">
+                    <select
+                      value={form.linea_tester || ""}
+                      onChange={(e) => handleChange("linea_tester", e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="">— sin especificar —</option>
+                      {OPCIONES_LINEA_TESTER.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  <Field label="Estado de la botella">
+                    <select
+                      value={form.estado_botella || ""}
+                      onChange={(e) => handleChange("estado_botella", e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="">— sin especificar —</option>
+                      {OPCIONES_ESTADO.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </>
+              )}
 
               <Field label="Tipo de venta">
                 <div className="flex gap-2">

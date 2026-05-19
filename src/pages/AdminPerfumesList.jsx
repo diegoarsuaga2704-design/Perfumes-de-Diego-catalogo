@@ -22,7 +22,9 @@ export default function AdminPerfumesList() {
   const [parfums, setParfums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    () => sessionStorage.getItem("adminPerfumes_search") || "",
+  );
   const [confirmingDelete, setConfirmingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -30,6 +32,27 @@ export default function AdminPerfumesList() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Guardar búsqueda en sessionStorage cada vez que cambie
+  useEffect(() => {
+    sessionStorage.setItem("adminPerfumes_search", search);
+  }, [search]);
+
+  // Restaurar scroll cuando regreses desde edición
+  useEffect(() => {
+    if (loading) return;
+    const saved = sessionStorage.getItem("adminPerfumes_scrollY");
+    if (saved) {
+      window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
+      sessionStorage.removeItem("adminPerfumes_scrollY");
+    }
+  }, [loading]);
+
+  // Guardar scroll antes de ir a editar
+  const handleEditar = (id) => {
+    sessionStorage.setItem("adminPerfumes_scrollY", String(window.scrollY));
+    navigate(`/admin/perfumes/${id}`);
+  };
 
   const fetchData = async () => {
     try {
@@ -239,9 +262,7 @@ export default function AdminPerfumesList() {
                         ) : (
                           <div className="flex justify-end gap-2">
                             <button
-                              onClick={() =>
-                                navigate(`/admin/perfumes/${p.id}`)
-                              }
+                              onClick={() => handleEditar(p.id)}
                               className="p-2 text-gray-600 hover:text-[#A47E3B] hover:bg-amber-50 rounded transition-colors"
                               title="Editar"
                             >
@@ -321,7 +342,7 @@ export default function AdminPerfumesList() {
                     ) : (
                       <div className="flex gap-2 mt-2">
                         <button
-                          onClick={() => navigate(`/admin/perfumes/${p.id}`)}
+                          onClick={() => handleEditar(p.id)}
                           className="flex items-center gap-1 text-xs px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
                         >
                           <Pencil size={12} />

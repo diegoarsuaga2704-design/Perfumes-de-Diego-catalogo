@@ -25,6 +25,7 @@ import AdminCasaEdit from "./pages/AdminCasaEdit";
 import AdminAvisos from "./pages/AdminAvisos";
 import AdminProveedoresList from "./pages/AdminProveedoresList";
 import AdminClientesList from "./pages/AdminClientesList";
+import AdminPedidosBotellas from "./pages/AdminPedidosBotellas";
 import Casas from "./pages/Casas";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 import RouterErrorElement from "./ui/RouterErrorElement";
@@ -200,6 +201,15 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminClientesList />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/pedidos-botellas",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPedidosBotellas />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,

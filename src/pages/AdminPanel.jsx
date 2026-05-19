@@ -12,6 +12,7 @@ import {
   Bell,
   Truck,
   Users,
+  Wine,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -246,6 +247,19 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Lista de clientes con historial de compras
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/pedidos-botellas")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left sm:col-span-2"
+            >
+              <Wine className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Pedidos de botellas
+              </h3>
+              <p className="text-sm text-gray-600">
+                Todas tus botellas con edición tipo Excel y filtros
               </p>
             </button>
           </div>
