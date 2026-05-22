@@ -12,7 +12,9 @@ import {
   Bell,
   Truck,
   Users,
-  Wine,
+  FlaskConical,
+  BarChart3,
+  Droplets,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -61,6 +63,79 @@ export default function AdminPanel() {
           </p>
         </div>
 
+        {/* Operaciones internas: proveedores y clientes */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+            Operaciones internas
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => navigate("/admin/proveedores")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Truck className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Proveedores
+              </h3>
+              <p className="text-sm text-gray-600">
+                Gestiona tus proveedores y cruzadores
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/clientes")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Users className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Clientes
+              </h3>
+              <p className="text-sm text-gray-600">
+                Lista de clientes con historial de compras
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/pedidos-botellas")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <FlaskConical className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Pedidos de botellas
+              </h3>
+              <p className="text-sm text-gray-600">
+                Todas tus botellas con edición tipo Excel y filtros
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/finanzas")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <BarChart3 className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Finanzas
+              </h3>
+              <p className="text-sm text-gray-600">
+                KPIs, gráficas, top clientes y proveedores
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/decants-parciales")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Droplets className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Decants y parciales
+              </h3>
+              <p className="text-sm text-gray-600">
+                Registrar ventas de decants y parciales
+              </p>
+            </button>
+          </div>
+        </div>
+
         {/* Sección Perfumes */}
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
@@ -96,7 +171,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Sección Paquetes */}
-        <div>
+        <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
             Paquetes
           </h3>
@@ -130,7 +205,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Sección Testimonios */}
-        <div className="mt-6">
+        <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
             Testimonios
           </h3>
@@ -164,7 +239,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Sección Casas */}
-        <div className="mt-6">
+        <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
             Casas
           </h3>
@@ -185,7 +260,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Sección Avisos de stock */}
-        <div className="mt-6">
+        <div>
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
             Avisos de stock
           </h3>
@@ -213,53 +288,6 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Clientes que pidieron aviso cuando llegue un perfume Próximamente
-              </p>
-            </button>
-          </div>
-        </div>
-
-        {/* Operaciones internas: proveedores y clientes */}
-        <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Operaciones internas
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate("/admin/proveedores")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              <Truck className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Proveedores
-              </h3>
-              <p className="text-sm text-gray-600">
-                Gestiona tus proveedores y cruzadores
-              </p>
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/clientes")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              <Users className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Clientes
-              </h3>
-              <p className="text-sm text-gray-600">
-                Lista de clientes con historial de compras
-              </p>
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/pedidos-botellas")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left sm:col-span-2"
-            >
-              <Wine className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Pedidos de botellas
-              </h3>
-              <p className="text-sm text-gray-600">
-                Todas tus botellas con edición tipo Excel y filtros
               </p>
             </button>
           </div>

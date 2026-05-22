@@ -8,14 +8,15 @@ import {
   deletePedidoBotella,
   recalcularDependientes,
 } from "../functions/getPedidosBotellas";
-import { getProveedoresConConteo } from "../functions/getProveedores";
+import { getProveedoresConConteo, createProveedor } from "../functions/getProveedores";
 import {
   getClientesConStats,
   createClienteAdmin,
 } from "../functions/getClientesAdmin";
-import { getAllParfumsAdmin } from "../functions/getParfumsAdmin";
+import { getAllParfumsAdmin, createParfumAdmin } from "../functions/getParfumsAdmin";
 import ClienteCombobox from "../ui/ClienteCombobox";
 import PerfumeCombobox from "../ui/PerfumeCombobox";
+import ProveedorCombobox from "../ui/ProveedorCombobox";
 
 const PAGE_SIZE = 300;
 const MAX_UNDO = 30;
@@ -91,7 +92,20 @@ export default function AdminPedidosBotellas() {
   function handleCheckboxMouseDown(id, field, currentValue) {
     const newValue = !currentValue;
     setPedidos((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, [field]: newValue } : p)),
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const updates = { [field]: newValue };
+        // Auto-vincular si se marca disponible_stock sin parfum_id
+        if (field === "disponible_stock" && newValue && !p.parfum_id && p.perfume_nombre) {
+          const match = parfums.find(
+            (parfum) =>
+              (parfum.nombre || "").trim().toLowerCase() ===
+              p.perfume_nombre.trim().toLowerCase(),
+          );
+          if (match) updates.parfum_id = match.id;
+        }
+        return { ...p, ...updates };
+      }),
     );
     dragStateRef.current = {
       field,
@@ -177,7 +191,7 @@ export default function AdminPedidosBotellas() {
     }
     window.addEventListener("mouseup", handleMouseUp);
     return () => window.removeEventListener("mouseup", handleMouseUp);
-  }, [pedidos]);
+  }, []);
 
   // Estado indeterminate del checkbox "Seleccionar todo" del header
   useEffect(() => {
@@ -397,6 +411,23 @@ export default function AdminPedidosBotellas() {
     const calc = recalcularDependientes(fila, field, value);
     const updates = { [field]: value, ...calc };
 
+    // Auto-desmarcar disponible_stock cuando se asigna cliente
+    if (field === "cliente_id" && value !== null && fila.disponible_stock) {
+      updates.disponible_stock = false;
+    }
+
+    // Auto-vincular al catálogo público cuando se marca Stock sin vincular
+    if (field === "disponible_stock" && value === true && !fila.parfum_id && fila.perfume_nombre) {
+      const match = parfums.find(
+        (p) =>
+          p.nombre.trim().toLowerCase() ===
+          fila.perfume_nombre.trim().toLowerCase(),
+      );
+      if (match) {
+        updates.parfum_id = match.id;
+      }
+    }
+
     const valoresAnteriores = {};
     for (const key of Object.keys(updates)) {
       valoresAnteriores[key] = fila[key] ?? null;
@@ -472,10 +503,44 @@ export default function AdminPedidosBotellas() {
     }
   }
 
+  async function handleCreateParfumQuick(nombre) {
+    const nuevo = await createParfumAdmin({
+      nombre,
+      casa: "",
+      categoria: "",
+      concentracion: "",
+      disponible: "Disponible",
+      stock: true,
+      botellasDisponibles: 0,
+      precio: 0,
+      tags: [],
+    });
+    setParfums((prev) =>
+      [...prev, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+    );
+    return nuevo;
+  }
+
   async function handleCreateCliente(nombre) {
     const nuevo = await createClienteAdmin({ nombre });
     setClientes((prev) =>
-      [...prev, { ...nuevo, cantidad_botellas: 0, cantidad_decants: 0, total_comprado: 0 }]
+      [
+        ...prev,
+        {
+          ...nuevo,
+          cantidad_botellas: 0,
+          cantidad_decants: 0,
+          total_comprado: 0,
+        },
+      ].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+    );
+    return nuevo;
+  }
+
+  async function handleCreateProveedor(nombre) {
+    const nuevo = await createProveedor({ nombre });
+    setProveedores((prev) =>
+      [...prev, { ...nuevo, cantidad_pedidos: 0 }]
         .sort((a, b) => a.nombre.localeCompare(b.nombre)),
     );
     return nuevo;
@@ -670,6 +735,7 @@ export default function AdminPedidosBotellas() {
                     <th className="px-2 py-2 font-semibold text-gray-700">Avisado</th>
                     <th className="px-2 py-2 font-semibold text-gray-700">Recibido</th>
                     <th className="px-2 py-2 font-semibold text-gray-700">Entregado</th>
+                    <th className="px-2 py-2 font-semibold text-gray-700">Stock</th>
                     <th className="px-2 py-2 font-semibold text-gray-700">Cliente</th>
                     <th className="px-2 py-2 font-semibold text-gray-700">USD</th>
                     <th className="px-2 py-2 font-semibold text-gray-700">MXN</th>
@@ -697,6 +763,8 @@ export default function AdminPedidosBotellas() {
                       onEdit={handleEdit}
                       onPerfumeChange={handlePerfumeChange}
                       onCreateCliente={handleCreateCliente}
+                      onCreateProveedor={handleCreateProveedor}
+                      onCreateParfum={handleCreateParfumQuick}
                       onCheckboxMouseDown={handleCheckboxMouseDown}
                       onCheckboxMouseEnter={handleCheckboxMouseEnter}
                       onDelete={() => setConfirmarBorrar(p.id)}
@@ -740,7 +808,7 @@ function FilaPedido({
   pedido, proveedores, clientes, parfums, historicoNombres,
   isSaving, ordenAlternada,
   seleccionada, onToggleSeleccion,
-  onEdit, onPerfumeChange, onCreateCliente,
+  onEdit, onPerfumeChange, onCreateCliente, onCreateProveedor, onCreateParfum,
   onCheckboxMouseDown, onCheckboxMouseEnter,
   onDelete, confirmarBorrar, onConfirmDelete, onCancelDelete,
 }) {
@@ -756,7 +824,7 @@ function FilaPedido({
   const cellInput = "w-full px-1 py-0.5 border border-transparent hover:border-gray-300 focus:border-[#A47E3B] rounded text-xs text-center bg-transparent";
 
   return (
-    <tr className={`border-b border-gray-200 hover:bg-blue-50/40 ${rowClass} ${seleccionada ? "ring-2 ring-inset ring-[#A47E3B]" : ""}`}>
+    <tr className={`border-b border-gray-200 hover:bg-blue-50/40 ${rowClass} ${seleccionada ? "ring-2 ring-inset ring-[#A47E3B]" : ""} ${!pedido.cliente_id ? "!bg-orange-50" : ""}`}>
       <td className="px-2 py-1 w-8">
         <input
           type="checkbox"
@@ -769,10 +837,12 @@ function FilaPedido({
         <input type="date" defaultValue={pedido.fecha || ""} onBlur={(e) => { if (e.target.value !== (pedido.fecha || "")) onEdit(pedido.id, "fecha", e.target.value || null); }} className={`${cellInput} w-32`} />
       </td>
       <td className="px-1 py-1">
-        <select value={pedido.proveedor_id || ""} onChange={(e) => onEdit(pedido.id, "proveedor_id", e.target.value ? Number(e.target.value) : null)} className={`${cellInput} w-32`}>
-          <option value="">—</option>
-          {proveedores.map((pr) => <option key={pr.id} value={pr.id}>{pr.nombre}</option>)}
-        </select>
+        <ProveedorCombobox
+          value={pedido.proveedor_id}
+          proveedores={proveedores}
+          onChange={(id) => onEdit(pedido.id, "proveedor_id", id)}
+          onCreateNew={onCreateProveedor}
+        />
       </td>
       <td className="px-1 py-1">
         <input type="text" defaultValue={pedido.numero_orden || ""} onBlur={(e) => { if (e.target.value !== (pedido.numero_orden || "")) onEdit(pedido.id, "numero_orden", e.target.value || null); }} className={`${cellInput} w-28`} />
@@ -784,6 +854,7 @@ function FilaPedido({
           parfums={parfums}
           historicoNombres={historicoNombres}
           onChange={(nombre, parfumIdNuevo) => onPerfumeChange(pedido.id, nombre, parfumIdNuevo)}
+          onCreateNew={onCreateParfum}
         />
       </td>
       <td
@@ -811,6 +882,17 @@ function FilaPedido({
         title={!pedido.cliente_id ? "Asigna un cliente primero" : ""}
       >
         <input type="checkbox" checked={!!pedido.entregado_a_cliente} readOnly disabled={!pedido.cliente_id} className="rounded cursor-pointer pointer-events-none" />
+      </td>
+      <td
+        className="px-1 py-1 select-none"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onCheckboxMouseDown(pedido.id, "disponible_stock", !!pedido.disponible_stock);
+        }}
+        onMouseEnter={() => onCheckboxMouseEnter(pedido.id, "disponible_stock", !!pedido.disponible_stock)}
+        title="Marcar para mostrar en stock del catálogo público"
+      >
+        <input type="checkbox" checked={!!pedido.disponible_stock} readOnly className="rounded cursor-pointer pointer-events-none" />
       </td>
       <td className="px-1 py-1">
         <ClienteCombobox value={pedido.cliente_id} clientes={clientes} onChange={(id) => onEdit(pedido.id, "cliente_id", id)} onCreateNew={onCreateCliente} />

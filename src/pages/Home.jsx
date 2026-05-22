@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext, useLocation, useSearchParams, useParams } from "react-router-dom";
+import { useOutletContext, useLocation, useSearchParams, useParams, useNavigate } from "react-router-dom";
 import Navbar from "../ui/Navbar";
 import ProductGrid from "../ui/ProductGrid";
 import { useParfums } from "../context/ParfumsContext";
@@ -12,6 +12,7 @@ function Home({ forcedMode }) {
   const [, setSearchParams] = useSearchParams();
   const { slug } = useParams();
   const { parfums } = useParfums();
+  const navigate = useNavigate();
 
   // Helper para resetear paginación cuando cambian filtros
   const resetPage = () => {
@@ -77,6 +78,7 @@ function Home({ forcedMode }) {
     setSelectedOcasion(null);
     setSelectedCategoria(null);
     resetPage();
+    navigate(`/casa/${slugify(value)}`);
   };
 
   const handleSelectOcasion = (value) => {
@@ -96,16 +98,15 @@ function Home({ forcedMode }) {
   const handleSelectLimpiar = () => {
     setSelectedCategoria(null);
     setSelectedOcasion(null);
-    // Si la ruta fuerza casa (/casa/:slug), mantener selectedCasa para
-    // que siga coherente con la URL.
-    if (!slug) {
-      setSelectedCasa(null);
-    }
-    // Si la ruta fuerza un modo (/botellas, /decants), mantener su stockFilter.
+    setSelectedCasa(null);
     if (!forcedMode) {
       setStockFilter(null);
     }
-    resetPage();
+    if (slug) {
+      navigate("/home");
+    } else {
+      resetPage();
+    }
   };
 
   // Título dinámico según la ruta

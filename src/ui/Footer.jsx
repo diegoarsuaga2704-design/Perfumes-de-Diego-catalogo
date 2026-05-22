@@ -62,6 +62,14 @@ function Footer() {
                 Mejor vendidos
               </Link>
             </li>
+            <li>
+              <Link
+                to="/sobre-mi"
+                className="hover:text-[#A47E3B] transition-colors"
+              >
+                Sobre mí
+              </Link>
+            </li>
           </ul>
         </div>
 

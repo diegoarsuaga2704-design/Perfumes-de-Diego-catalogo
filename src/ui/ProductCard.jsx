@@ -24,7 +24,7 @@ function ProductCard({ parfum }) {
   const etiqueta = esMejorVendido
     ? { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" }
     : esNuevo
-      ? { texto: "NUEVO", color: "bg-blue-600" }
+      ? { texto: "NUEVO", color: "bg-emerald-500" }
       : null;
 
   const handleCardClick = () => {

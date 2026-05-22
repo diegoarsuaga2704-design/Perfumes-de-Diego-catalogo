@@ -13,7 +13,7 @@ function BadgesEstatus({ parfum }) {
     const dias =
       (new Date() - new Date(parfum.created_at)) / (1000 * 60 * 60 * 24);
     if (dias <= 15) {
-      badge = { texto: "NUEVO", color: "bg-blue-600" };
+      badge = { texto: "NUEVO", color: "bg-emerald-500" };
     }
   }
 

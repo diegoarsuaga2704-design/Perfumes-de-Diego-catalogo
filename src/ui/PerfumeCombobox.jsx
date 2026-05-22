@@ -19,9 +19,11 @@ export default function PerfumeCombobox({
   parfums,
   historicoNombres,
   onChange,
+  onCreateNew,
 }) {
   const [texto, setTexto] = useState(nombre || "");
   const [abierto, setAbierto] = useState(false);
+  const [creando, setCreando] = useState(false);
   const wrapperRef = useRef(null);
   const closeTimeoutRef = useRef(null);
 
@@ -46,7 +48,7 @@ export default function PerfumeCombobox({
     const trimmed = texto.trim();
     if (trimmed !== (nombre || "")) {
       const match = parfums.find(
-        (p) => p.nombre.toLowerCase() === trimmed.toLowerCase(),
+        (p) => (p.nombre || "").toLowerCase() === trimmed.toLowerCase(),
       );
       onChange(trimmed || "(sin nombre)", match?.id || null);
     }
@@ -64,20 +66,36 @@ export default function PerfumeCombobox({
     setAbierto(false);
   }
 
+  async function handleCreate() {
+    const trimmed = texto.trim();
+    if (!trimmed) return;
+    setCreando(true);
+    try {
+      const nuevo = await onCreateNew(trimmed);
+      onChange(nuevo.nombre, nuevo.id);
+      setTexto(nuevo.nombre);
+      setAbierto(false);
+    } catch {
+      alert("Error al crear perfume en catálogo.");
+    } finally {
+      setCreando(false);
+    }
+  }
+
   const q = texto.trim().toLowerCase();
 
   const sugerenciasCatalogo = q
     ? parfums
         .filter(
           (p) =>
-            p.nombre.toLowerCase().includes(q) ||
+            (p.nombre || "").toLowerCase().includes(q) ||
             (p.casa || "").toLowerCase().includes(q),
         )
         .slice(0, 25)
     : parfums.slice(0, 25);
 
   const nombresCatalogoLower = new Set(
-    parfums.map((p) => p.nombre.toLowerCase()),
+    parfums.map((p) => (p.nombre || "").toLowerCase()),
   );
 
   const sugerenciasHistorico = q
@@ -156,6 +174,23 @@ export default function PerfumeCombobox({
                 ))}
               </>
             )}
+            {texto.trim() &&
+              !parfums.some(
+                (p) => p.nombre.toLowerCase() === texto.trim().toLowerCase(),
+              ) &&
+              onCreateNew && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={handleCreate}
+                  disabled={creando}
+                  className="w-full text-left px-2 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border-t border-amber-200 font-semibold"
+                >
+                  {creando
+                    ? "Creando en catálogo..."
+                    : `+ Crear en catálogo público: "${texto.trim()}"`}
+                </button>
+              )}
           </div>
         )}
     </div>

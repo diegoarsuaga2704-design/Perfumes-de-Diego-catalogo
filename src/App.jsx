@@ -26,7 +26,10 @@ import AdminAvisos from "./pages/AdminAvisos";
 import AdminProveedoresList from "./pages/AdminProveedoresList";
 import AdminClientesList from "./pages/AdminClientesList";
 import AdminPedidosBotellas from "./pages/AdminPedidosBotellas";
+import AdminFinanzas from "./pages/AdminFinanzas";
+import AdminDecantsParciales from "./pages/AdminDecantsParciales";
 import Casas from "./pages/Casas";
+import SobreMi from "./pages/SobreMi";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 import RouterErrorElement from "./ui/RouterErrorElement";
 
@@ -47,6 +50,7 @@ const router = createBrowserRouter([
       { path: "/best-sellers", element: <BestSellers /> },
       { path: "/tiktok", element: <VistoEnTikTok /> },
       { path: "/paquetes", element: <Paquetes /> },
+      { path: "/sobre-mi", element: <SobreMi /> },
       { path: "/product/:nombre/:id", element: <ProductDetail /> },
       { path: "*", element: <NotFound /> },
     ],
@@ -210,6 +214,24 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPedidosBotellas />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/finanzas",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminFinanzas />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/decants-parciales",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminDecantsParciales />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,
