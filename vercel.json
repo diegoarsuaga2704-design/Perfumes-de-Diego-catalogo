@@ -22,6 +22,6 @@
       ],
       "destination": "/api/og?type=casa&slug=:slug"
     },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/((?!api/).*)", "destination": "/" }
   ]
 }
