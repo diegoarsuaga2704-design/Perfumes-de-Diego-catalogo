@@ -1,4 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+let spaHtml;
+try {
+  spaHtml = readFileSync(join(__dirname, "..", "dist", "index.html"), "utf-8");
+} catch {
+  spaHtml = "<!DOCTYPE html><html><head><meta charset=UTF-8/></head><body></body></html>";
+}
+
+const BOT_PATTERN =
+  /bot|crawl|spider|slurp|WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Discordbot|Slackbot|LinkedInBot|Applebot|Googlebot|Bingbot|DuckDuckBot|Pinterest|Snapchat|metatag|opengraph|iframely|embedly|preview|MetaInspector|curl|wget|python-requests/i;
 
 function slugify(text) {
   if (!text) return "";
@@ -23,7 +38,7 @@ const DEFAULT_IMAGE =
   "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/perfumes-de-diego-letras-horizontal.png";
 const SITE_NAME = "Perfumes de Diego";
 
-function buildHtml({ title, description, image, url }) {
+function buildOgHtml({ title, description, image, url }) {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -46,20 +61,29 @@ function buildHtml({ title, description, image, url }) {
 }
 
 export default async function handler(req, res) {
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL,
-    process.env.VITE_SUPABASE_ANON_KEY,
-  );
+  const ua = req.headers["user-agent"] || "";
+  const isBot = BOT_PATTERN.test(ua);
+
+  if (!isBot) {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+    res.status(200).send(spaHtml);
+    return;
+  }
 
   const { type, id, slug } = req.query;
 
   let title = SITE_NAME;
-  let description =
-    "Decants y botellas de perfumes de nicho y de diseniador en Mexico.";
+  let description = "Decants y botellas de perfumes de nicho en Mexico.";
   let image = DEFAULT_IMAGE;
   let url = SITE_URL;
 
   try {
+    const supabase = createClient(
+      process.env.VITE_SUPABASE_URL,
+      process.env.VITE_SUPABASE_ANON_KEY,
+    );
+
     if (type === "product" && id) {
       const { data: perfume } = await supabase
         .from("parfums")
@@ -97,5 +121,5 @@ export default async function handler(req, res) {
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
-  res.status(200).send(buildHtml({ title, description, image, url }));
+  res.status(200).send(buildOgHtml({ title, description, image, url }));
 }

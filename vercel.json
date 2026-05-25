@@ -1,25 +1,16 @@
 {
+  "functions": {
+    "api/og.mjs": {
+      "includeFiles": "dist/index.html"
+    }
+  },
   "rewrites": [
     {
       "source": "/product/:nombre/:id",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(WhatsApp|whatsapp|facebookexternalhit|Twitterbot|twitterbot|TelegramBot|telegrambot|Discordbot|discordbot|Slackbot|slackbot|LinkedInBot|linkedinbot|Applebot|applebot|Googlebot|googlebot|Bingbot|bingbot|Pinterest|pinterest)"
-        }
-      ],
-      "destination": "/api/og?type=product&id=:id"
+      "destination": "/api/og?type=product&id=:id&nombre=:nombre"
     },
     {
       "source": "/casa/:slug",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(WhatsApp|whatsapp|facebookexternalhit|Twitterbot|twitterbot|TelegramBot|telegrambot|Discordbot|discordbot|Slackbot|slackbot|LinkedInBot|linkedinbot|Applebot|applebot|Googlebot|googlebot|Bingbot|bingbot|Pinterest|pinterest)"
-        }
-      ],
       "destination": "/api/og?type=casa&slug=:slug"
     },
     { "source": "/((?!api/).*)", "destination": "/" }
