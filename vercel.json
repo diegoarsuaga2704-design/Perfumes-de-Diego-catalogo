@@ -1,3 +1,27 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "rewrites": [
+    {
+      "source": "/product/:nombre/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(WhatsApp|whatsapp|facebookexternalhit|Twitterbot|twitterbot|TelegramBot|telegrambot|Discordbot|discordbot|Slackbot|slackbot|LinkedInBot|linkedinbot|Applebot|applebot|Googlebot|googlebot|Bingbot|bingbot|Pinterest|pinterest)"
+        }
+      ],
+      "destination": "/api/og?type=product&id=:id"
+    },
+    {
+      "source": "/casa/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(WhatsApp|whatsapp|facebookexternalhit|Twitterbot|twitterbot|TelegramBot|telegrambot|Discordbot|discordbot|Slackbot|slackbot|LinkedInBot|linkedinbot|Applebot|applebot|Googlebot|googlebot|Bingbot|bingbot|Pinterest|pinterest)"
+        }
+      ],
+      "destination": "/api/og?type=casa&slug=:slug"
+    },
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }
