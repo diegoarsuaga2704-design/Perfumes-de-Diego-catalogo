@@ -34,12 +34,12 @@ export default function ProveedorCombobox({ value, proveedores, onChange, onCrea
 
   const filtrados = texto.trim()
     ? proveedores.filter((p) =>
-        p.nombre.toLowerCase().includes(texto.toLowerCase().trim()),
+        (p.nombre || "").toLowerCase().includes(texto.toLowerCase().trim()),
       )
     : proveedores;
 
   const matchExacto = proveedores.some(
-    (p) => p.nombre.toLowerCase() === texto.toLowerCase().trim(),
+    (p) => (p.nombre || "").toLowerCase() === texto.toLowerCase().trim(),
   );
 
   async function handleCreate() {

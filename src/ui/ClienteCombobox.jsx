@@ -36,12 +36,12 @@ export default function ClienteCombobox({ value, clientes, onChange, onCreateNew
 
   const filtrados = texto.trim()
     ? clientes.filter((c) =>
-        c.nombre.toLowerCase().includes(texto.toLowerCase().trim()),
+        (c.nombre || "").toLowerCase().includes(texto.toLowerCase().trim()),
       )
     : clientes;
 
   const matchExacto = clientes.some(
-    (c) => c.nombre.toLowerCase() === texto.toLowerCase().trim(),
+    (c) => (c.nombre || "").toLowerCase() === texto.toLowerCase().trim(),
   );
 
   async function handleCreate() {

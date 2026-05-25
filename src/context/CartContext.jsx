@@ -62,11 +62,11 @@ export function CartProvider({ children }) {
 
   // 🛍️ Códigos disponibles
   const availableDiscounts = {
-    DIAPERFUME: {
+    DECANTSHS: {
       type: "percentage",
       value: 10,
       appliesTo: "DECANT",
-      expira: "2026-05-23",
+      expira: "2026-06-01",
     },
   };
 

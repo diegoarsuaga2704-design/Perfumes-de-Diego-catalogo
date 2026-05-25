@@ -126,9 +126,11 @@ function Home({ forcedMode }) {
         ? `Catálogo de perfumes de la casa ${selectedCasa || slug}. Decants y botellas disponibles.`
         : "Explora nuestro catálogo completo de decants y botellas de perfumes de nicho y de diseñador.";
 
+  const currentUrl = `${window.location.origin}${location.pathname}`;
+
   return (
     <div>
-      <SEO title={seoTitle} description={seoDescription} />
+      <SEO title={seoTitle} description={seoDescription} url={currentUrl} />
       <Navbar
         onSelectCasa={handleSelectCasa}
         onSelectOcasion={handleSelectOcasion}
