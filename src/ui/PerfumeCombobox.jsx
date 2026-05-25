@@ -176,7 +176,7 @@ export default function PerfumeCombobox({
             )}
             {texto.trim() &&
               !parfums.some(
-                (p) => p.nombre.toLowerCase() === texto.trim().toLowerCase(),
+                (p) => (p.nombre || "").toLowerCase() === texto.trim().toLowerCase(),
               ) &&
               onCreateNew && (
                 <button

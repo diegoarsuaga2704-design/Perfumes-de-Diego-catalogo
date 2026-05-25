@@ -31,6 +31,7 @@ export default function AdminProveedoresList() {
       setProveedores(data);
     } catch (err) {
       console.error(err);
+      alert("Error cargando los proveedores. Recarga la página.");
     } finally {
       setLoading(false);
     }
@@ -94,7 +95,7 @@ export default function AdminProveedoresList() {
   }
 
   const filtrados = proveedores.filter((p) =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase().trim()),
+    (p.nombre || "").toLowerCase().includes(busqueda.toLowerCase().trim()),
   );
 
   return (

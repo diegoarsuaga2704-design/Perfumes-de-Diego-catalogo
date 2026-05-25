@@ -69,6 +69,7 @@ export default function AdminPedidosBotellas() {
       setParfums(par);
     } catch (err) {
       console.error(err);
+      alert("Error cargando los datos. Recarga la página.");
     } finally {
       setLoading(false);
     }
@@ -420,7 +421,7 @@ export default function AdminPedidosBotellas() {
     if (field === "disponible_stock" && value === true && !fila.parfum_id && fila.perfume_nombre) {
       const match = parfums.find(
         (p) =>
-          p.nombre.trim().toLowerCase() ===
+          (p.nombre || "").trim().toLowerCase() ===
           fila.perfume_nombre.trim().toLowerCase(),
       );
       if (match) {
@@ -954,12 +955,12 @@ function BulkClienteModal({ clientes, count, onAsignar, onCancelar, onCreateNew 
 
   const filtrados = texto.trim()
     ? clientes.filter((c) =>
-        c.nombre.toLowerCase().includes(texto.toLowerCase().trim()),
+        (c.nombre || "").toLowerCase().includes(texto.toLowerCase().trim()),
       )
     : clientes;
 
   const matchExacto = clientes.some(
-    (c) => c.nombre.toLowerCase() === texto.toLowerCase().trim(),
+    (c) => (c.nombre || "").toLowerCase() === texto.toLowerCase().trim(),
   );
 
   async function handleCreate() {

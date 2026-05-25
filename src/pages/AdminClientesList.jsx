@@ -36,6 +36,7 @@ export default function AdminClientesList() {
       setClientes(data);
     } catch (err) {
       console.error(err);
+      alert("Error cargando los clientes. Recarga la página.");
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,7 @@ export default function AdminClientesList() {
   }
 
   const filtrados = clientes.filter((c) =>
-    c.nombre.toLowerCase().includes(busqueda.toLowerCase().trim()),
+    (c.nombre || "").toLowerCase().includes(busqueda.toLowerCase().trim()),
   );
 
   const formatMoney = (n) =>
