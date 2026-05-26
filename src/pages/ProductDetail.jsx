@@ -258,6 +258,28 @@ export default function ProductDetail() {
                   </>
                 )}
 
+                {parfum.estado_botella && (
+                  <>
+                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
+                      ESTADO:
+                    </h2>
+                    <ul className="text-sm text-gray-600 leading-6">
+                      <li>{parfum.estado_botella}</li>
+                    </ul>
+                  </>
+                )}
+
+                {parfum.linea_tester && (
+                  <>
+                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
+                      LÍNEA:
+                    </h2>
+                    <ul className="text-sm text-gray-600 leading-6">
+                      <li>{parfum.linea_tester}</li>
+                    </ul>
+                  </>
+                )}
+
                 <h2 className="text-sm font-semibold text-gray-700 mt-2">
                   NOTAS:
                 </h2>

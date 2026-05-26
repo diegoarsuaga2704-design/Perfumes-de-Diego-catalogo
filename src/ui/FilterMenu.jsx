@@ -9,6 +9,9 @@ export default function FilterMenu({
   onSelectCasa,
   onSelectOcasion,
   onSelectCategoria,
+  selectedTipo,
+  onSelectTipo,
+  tipoFijo,
 }) {
   const [openMenu, setOpenMenu] = useState(null);
   const { parfums } = useParfums();
@@ -59,8 +62,32 @@ export default function FilterMenu({
     setOpenMenu(null);
   };
 
+  const tipoBtns = [
+    { label: "Todos", value: null },
+    { label: "Decant", value: false },
+    { label: "Botella", value: true },
+  ];
+
   return (
     <div className="relative flex flex-wrap justify-center sm:justify-start gap-1 sm:gap-4">
+      {!tipoFijo && onSelectTipo && (
+        <div className="flex gap-1 items-center">
+          {tipoBtns.map((btn) => (
+            <button
+              key={String(btn.value)}
+              onClick={() => onSelectTipo(btn.value)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                selectedTipo === btn.value
+                  ? "bg-[#A47E3B] text-white border-[#A47E3B]"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-[#A47E3B]"
+              }`}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <MenuDesplegado
         menuType="casa"
         toggleMenu={toggleMenu}

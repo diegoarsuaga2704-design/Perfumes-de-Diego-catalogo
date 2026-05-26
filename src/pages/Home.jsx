@@ -95,6 +95,11 @@ function Home({ forcedMode }) {
     resetPage();
   };
 
+  const handleSelectTipo = (value) => {
+    setStockFilter(value);
+    resetPage();
+  };
+
   const handleSelectLimpiar = () => {
     setSelectedCategoria(null);
     setSelectedOcasion(null);
@@ -135,6 +140,9 @@ function Home({ forcedMode }) {
         onSelectCasa={handleSelectCasa}
         onSelectOcasion={handleSelectOcasion}
         onSelectCategoria={handleSelectCategoria}
+        selectedTipo={stockFilter}
+        onSelectTipo={handleSelectTipo}
+        tipoFijo={!!forcedMode}
       />
 
       <ProductGrid
