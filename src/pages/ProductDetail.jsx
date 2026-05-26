@@ -166,7 +166,14 @@ export default function ProductDetail() {
           <div className="flex-1 flex flex-col justify-between">
             <div>
               <BadgesEstatus parfum={parfum} />
-              <h1 className="text-2xl font-semibold mb-2">{parfum.nombre}</h1>
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <h1 className="text-2xl font-semibold">{parfum.nombre}</h1>
+                {parfum.linea_tester && (
+                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-semibold">
+                    {parfum.linea_tester}
+                  </span>
+                )}
+              </div>
 
               <p className="text-gray-500 text-sm italic">
                 {parfum.concentracion}
@@ -256,12 +263,6 @@ export default function ProductDetail() {
                       <li>{parfum.mlBotella} ml</li>
                     </ul>
                   </>
-                )}
-
-                {parfum.linea_tester && (
-                  <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-semibold">
-                    {parfum.linea_tester}
-                  </span>
                 )}
 
                 {parfum.estado_botella && (
