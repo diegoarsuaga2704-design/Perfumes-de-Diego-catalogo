@@ -39,6 +39,8 @@ function ShoppingCartProduct() {
     if (discountTarget === "ALL") return item.tipoVenta !== "paquete";
     if (discountTarget === "DECANT") return item.tipoVenta === "decant";
     if (discountTarget === "BOTELLA") return item.tipoVenta === "botella";
+    if (discountTarget === "BOTELLA_SELLADA")
+      return item.tipoVenta === "botella" && item.estado_botella?.startsWith("Sellado");
     return false;
   };
 

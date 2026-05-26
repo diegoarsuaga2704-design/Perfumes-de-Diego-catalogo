@@ -92,6 +92,7 @@ export default function ProductDetail() {
       mililitros: esDecant ? mililitros : null,
       cantidad: esBotellaCompleta ? botellas : null,
       stockDisponible: esBotellaCompleta ? parfum.botellasDisponibles : null,
+      estado_botella: parfum.estado_botella || null,
     };
 
     addToCart(product);

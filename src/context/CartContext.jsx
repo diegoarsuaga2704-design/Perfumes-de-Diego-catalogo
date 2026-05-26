@@ -62,16 +62,16 @@ export function CartProvider({ children }) {
 
   // 🛍️ Códigos disponibles
   const availableDiscounts = {
-    DECANTSHS: {
+    DECANTHS: {
       type: "percentage",
       value: 10,
       appliesTo: "DECANT",
       expira: "2026-06-02",
     },
-    PERFUME10: {
+    PERFUMEHS: {
       type: "percentage",
-      value: 10,
-      appliesTo: "BOTELLA",
+      value: 5,
+      appliesTo: "BOTELLA_SELLADA",
       expira: "2026-06-02",
     },
   };
@@ -228,6 +228,8 @@ export function CartProvider({ children }) {
       if (discount.appliesTo === "ALL") return item.tipoVenta !== "paquete";
       if (discount.appliesTo === "DECANT") return item.tipoVenta === "decant";
       if (discount.appliesTo === "BOTELLA") return item.tipoVenta === "botella";
+      if (discount.appliesTo === "BOTELLA_SELLADA")
+        return item.tipoVenta === "botella" && item.estado_botella?.startsWith("Sellado");
       return item.tipoVenta === "decant" && item.casa === discount.appliesTo;
     });
 
@@ -258,6 +260,8 @@ export function CartProvider({ children }) {
       if (discountTarget === "ALL") applies = item.tipoVenta !== "paquete";
       else if (discountTarget === "DECANT") applies = item.tipoVenta === "decant";
       else if (discountTarget === "BOTELLA") applies = item.tipoVenta === "botella";
+      else if (discountTarget === "BOTELLA_SELLADA")
+        applies = item.tipoVenta === "botella" && item.estado_botella?.startsWith("Sellado");
 
       if (!applies) return;
 
