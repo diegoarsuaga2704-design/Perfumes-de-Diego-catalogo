@@ -68,11 +68,11 @@ export function CartProvider({ children }) {
       appliesTo: "DECANT",
       expira: "2026-06-02",
     },
-    BOTELLA10: {
+    PERFUME10: {
       type: "percentage",
       value: 10,
       appliesTo: "BOTELLA",
-      expira: "2026-05-31",
+      expira: "2026-06-02",
     },
   };
 
