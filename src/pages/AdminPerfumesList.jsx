@@ -29,6 +29,9 @@ export default function AdminPerfumesList() {
   const [filtroDisponible, setFiltroDisponible] = useState(
     () => sessionStorage.getItem("adminPerfumes_disponible") || "",
   );
+  const [filtroTipo, setFiltroTipo] = useState(
+    () => sessionStorage.getItem("adminPerfumes_tipo") || "",
+  );
   const [precioMin, setPrecioMin] = useState(
     () => sessionStorage.getItem("adminPerfumes_precioMin") || "",
   );
@@ -51,6 +54,10 @@ export default function AdminPerfumesList() {
   useEffect(() => {
     sessionStorage.setItem("adminPerfumes_disponible", filtroDisponible);
   }, [filtroDisponible]);
+
+  useEffect(() => {
+    sessionStorage.setItem("adminPerfumes_tipo", filtroTipo);
+  }, [filtroTipo]);
 
   useEffect(() => {
     sessionStorage.setItem("adminPerfumes_precioMin", precioMin);
@@ -102,12 +109,14 @@ export default function AdminPerfumesList() {
         if (!matchNombre && !matchCasa) return false;
       }
       if (filtroDisponible && p.disponible !== filtroDisponible) return false;
+      if (filtroTipo === "botella" && p.stock !== true) return false;
+      if (filtroTipo === "decant" && p.stock !== false) return false;
       const precio = Number(p.precio) || 0;
       if (min !== null && precio < min) return false;
       if (max !== null && precio > max) return false;
       return true;
     });
-  }, [parfums, search, filtroDisponible, precioMin, precioMax]);
+  }, [parfums, search, filtroDisponible, filtroTipo, precioMin, precioMax]);
 
   const handleDelete = async (id) => {
     setDeleting(true);
@@ -216,6 +225,16 @@ export default function AdminPerfumesList() {
             <option value="Próximamente">Solo próximamente</option>
           </select>
 
+          <select
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B] outline-none"
+          >
+            <option value="">Todo tipo</option>
+            <option value="decant">Decant</option>
+            <option value="botella">Botella</option>
+          </select>
+
           <input
             type="number"
             inputMode="numeric"
@@ -234,10 +253,11 @@ export default function AdminPerfumesList() {
             className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B] outline-none"
           />
 
-          {(filtroDisponible || precioMin || precioMax) && (
+          {(filtroDisponible || filtroTipo || precioMin || precioMax) && (
             <button
               onClick={() => {
                 setFiltroDisponible("");
+                setFiltroTipo("");
                 setPrecioMin("");
                 setPrecioMax("");
               }}
