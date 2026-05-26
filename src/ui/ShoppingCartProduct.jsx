@@ -14,6 +14,7 @@ function ShoppingCartProduct() {
     updateCartItem,
     discountType,
     discountValue,
+    discountTarget,
     isDiscountApplied,
   } = useCart();
 
@@ -35,7 +36,10 @@ function ShoppingCartProduct() {
 
   const productHasDiscount = (item) => {
     if (!isDiscountApplied) return false;
-    return item.tipoVenta === "decant";
+    if (discountTarget === "ALL") return item.tipoVenta !== "paquete";
+    if (discountTarget === "DECANT") return item.tipoVenta === "decant";
+    if (discountTarget === "BOTELLA") return item.tipoVenta === "botella";
+    return false;
   };
 
   const getDiscountedPrice = (item) => {
