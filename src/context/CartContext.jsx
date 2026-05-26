@@ -66,7 +66,13 @@ export function CartProvider({ children }) {
       type: "percentage",
       value: 10,
       appliesTo: "DECANT",
-      expira: "2026-06-01",
+      expira: "2026-06-02",
+    },
+    BOTELLA10: {
+      type: "percentage",
+      value: 10,
+      appliesTo: "BOTELLA",
+      expira: "2026-05-31",
     },
   };
 
@@ -219,10 +225,10 @@ export function CartProvider({ children }) {
 
     // Verificar que el código aplique al carrito actual.
     const applicableItems = cartItems.filter((item) => {
-      if (item.tipoVenta !== "decant") return false;
-      if (discount.appliesTo === "ALL") return true;
-      if (discount.appliesTo === "DECANT") return true;
-      return item.casa === discount.appliesTo;
+      if (discount.appliesTo === "ALL") return item.tipoVenta !== "paquete";
+      if (discount.appliesTo === "DECANT") return item.tipoVenta === "decant";
+      if (discount.appliesTo === "BOTELLA") return item.tipoVenta === "botella";
+      return item.tipoVenta === "decant" && item.casa === discount.appliesTo;
     });
 
     if (applicableItems.length === 0) {
@@ -248,14 +254,17 @@ export function CartProvider({ children }) {
     let discountableTotal = 0;
 
     cartItems.forEach((item) => {
-      if (item.tipoVenta !== "decant") return;
-
       let applies = false;
-      if (discountTarget === "ALL") applies = true;
-      else if (discountTarget === "DECANT") applies = true;
+      if (discountTarget === "ALL") applies = item.tipoVenta !== "paquete";
+      else if (discountTarget === "DECANT") applies = item.tipoVenta === "decant";
+      else if (discountTarget === "BOTELLA") applies = item.tipoVenta === "botella";
 
-      if (applies) {
+      if (!applies) return;
+
+      if (item.tipoVenta === "decant") {
         discountableTotal += calcularPrecioDecantCarrito(item);
+      } else if (item.tipoVenta === "botella") {
+        discountableTotal += (item.precioUnitario || 0) * (item.cantidad || 0);
       }
     });
 
