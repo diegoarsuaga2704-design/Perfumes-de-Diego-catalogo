@@ -258,6 +258,17 @@ export default function ProductDetail() {
                   </>
                 )}
 
+                {parfum.linea_tester && (
+                  <>
+                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
+                      LÍNEA:
+                    </h2>
+                    <ul className="text-sm text-gray-600 leading-6">
+                      <li>{parfum.linea_tester}</li>
+                    </ul>
+                  </>
+                )}
+
                 {parfum.estado_botella && (
                   <>
                     <h2 className="text-sm font-semibold text-gray-700 mt-2">
@@ -269,13 +280,13 @@ export default function ProductDetail() {
                   </>
                 )}
 
-                {parfum.linea_tester && (
+                {parfum.tiene_caja !== null && parfum.tiene_caja !== undefined && (
                   <>
                     <h2 className="text-sm font-semibold text-gray-700 mt-2">
-                      LÍNEA:
+                      CAJA:
                     </h2>
                     <ul className="text-sm text-gray-600 leading-6">
-                      <li>{parfum.linea_tester}</li>
+                      <li>{parfum.tiene_caja ? "Con caja" : "Sin caja"}</li>
                     </ul>
                   </>
                 )}

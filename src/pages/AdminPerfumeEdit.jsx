@@ -24,14 +24,7 @@ const OPCIONES_DISPONIBLE = ["Disponible", "Agotado", "Próximamente"];
 
 const OPCIONES_LINEA_TESTER = ["Línea", "Tester"];
 
-const OPCIONES_ESTADO = [
-  "Sellado con caja",
-  "Sellado sin caja",
-  "Parcial con caja",
-  "Parcial sin caja",
-  "Nuevo con caja",
-  "Nuevo sin caja",
-];
+const OPCIONES_ESTADO = ["Sellado", "Parcial", "Nuevo"];
 
 export default function AdminPerfumeEdit() {
   const { id } = useParams();
@@ -295,6 +288,21 @@ export default function AdminPerfumeEdit() {
                           {opt}
                         </option>
                       ))}
+                    </select>
+                  </Field>
+
+                  <Field label="¿Tiene caja?">
+                    <select
+                      value={form.tiene_caja === null || form.tiene_caja === undefined ? "" : form.tiene_caja ? "true" : "false"}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        handleChange("tiene_caja", v === "" ? null : v === "true");
+                      }}
+                      className={inputClass}
+                    >
+                      <option value="">— sin especificar —</option>
+                      <option value="true">Con caja</option>
+                      <option value="false">Sin caja</option>
                     </select>
                   </Field>
                 </>
