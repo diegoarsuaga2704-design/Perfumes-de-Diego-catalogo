@@ -7,9 +7,6 @@ export default function Navbar({
   onSelectOcasion,
   onSelectCategoria,
   onSelectLimpiar,
-  selectedTipo,
-  onSelectTipo,
-  tipoFijo,
 }) {
   return (
     <div className="bg-gray-200">
@@ -23,9 +20,6 @@ export default function Navbar({
           onSelectOcasion={onSelectOcasion}
           onSelectCategoria={onSelectCategoria}
           onSelectLimpiar={onSelectLimpiar}
-          selectedTipo={selectedTipo}
-          onSelectTipo={onSelectTipo}
-          tipoFijo={tipoFijo}
         />
       </nav>
     </div>
