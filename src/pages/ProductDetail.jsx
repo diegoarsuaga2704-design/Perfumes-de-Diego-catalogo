@@ -24,7 +24,7 @@ export default function ProductDetail() {
   const [error, setError] = useState(null);
   const [mililitros, setMililitros] = useState(null);
   const [botellas, setBotellas] = useState(1);
-  const { addToCart, openCart } = useCart();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     async function fetchParfum() {
@@ -96,7 +96,6 @@ export default function ProductDetail() {
     };
 
     addToCart(product);
-    openCart();
   };
 
   // Texto SEO específico del producto

@@ -9,7 +9,7 @@ import SEO from "../ui/SEO";
 
 export default function Paquetes() {
   const navigate = useNavigate();
-  const { addToCart, openCart } = useCart();
+  const { addToCart } = useCart();
   const [paquetes, setPaquetes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addedId, setAddedId] = useState(null);
@@ -44,7 +44,6 @@ export default function Paquetes() {
     addToCart(cartItem);
     setAddedId(paquete.id);
     setTimeout(() => setAddedId(null), 1500);
-    openCart();
   };
 
   const handlePerfumeClick = (perfume) => {
