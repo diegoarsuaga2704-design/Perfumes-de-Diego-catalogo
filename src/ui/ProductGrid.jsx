@@ -119,7 +119,11 @@ export default function ProductGrid({
     if (recientesFilter) {
       const result = allParfums
         .filter((p) => p.disponible === "Disponible" && esReciente(p))
-        .sort((a, b) => new Date(b.disponible_desde) - new Date(a.disponible_desde));
+        .sort((a, b) => {
+          const casaCmp = safeString(a.casa).localeCompare(safeString(b.casa));
+          if (casaCmp !== 0) return casaCmp;
+          return (Number(a.precio) || 0) - (Number(b.precio) || 0);
+        });
       return result;
     }
 
