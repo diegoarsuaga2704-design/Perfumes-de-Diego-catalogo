@@ -4,8 +4,6 @@ import {
   LogOut,
   Package,
   Plus,
-  Boxes,
-  PackagePlus,
   MessageSquareQuote,
   MessagesSquare,
   Building2,
@@ -59,7 +57,7 @@ export default function AdminPanel() {
             Bienvenido Diego
           </h2>
           <p className="text-gray-600">
-            Desde aquí podrás administrar tu catálogo de perfumes y paquetes.
+            Desde aquí podrás administrar tu catálogo de perfumes.
           </p>
         </div>
 
@@ -165,40 +163,6 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Crear un perfume nuevo en el catálogo
-              </p>
-            </button>
-          </div>
-        </div>
-
-        {/* Sección Paquetes */}
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Paquetes
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate("/admin/paquetes")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              <Boxes className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Ver y editar paquetes
-              </h3>
-              <p className="text-sm text-gray-600">
-                Lista de paquetes con buscador
-              </p>
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/paquetes/nuevo")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              <PackagePlus className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Agregar paquete
-              </h3>
-              <p className="text-sm text-gray-600">
-                Crear un paquete nuevo
               </p>
             </button>
           </div>

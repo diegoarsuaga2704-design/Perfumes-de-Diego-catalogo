@@ -4,7 +4,6 @@ import FAQs from "./pages/FAQs";
 import Testimonios from "./pages/Testimonios";
 import BestSellers from "./pages/BestSellers";
 import VistoEnTikTok from "./pages/VistoEnTikTok";
-import Paquetes from "./pages/Paquetes";
 import AppLayout from "./ui/AppLayout";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
@@ -14,9 +13,6 @@ import AdminPanel from "./pages/AdminPanel";
 import AdminPerfumesList from "./pages/AdminPerfumesList";
 import AdminPerfumeEdit from "./pages/AdminPerfumeEdit";
 import AdminPerfumeCreate from "./pages/AdminPerfumeCreate";
-import AdminPaquetesList from "./pages/AdminPaquetesList";
-import AdminPaqueteCreate from "./pages/AdminPaqueteCreate";
-import AdminPaqueteEdit from "./pages/AdminPaqueteEdit";
 import AdminTestimoniosList from "./pages/AdminTestimoniosList";
 import AdminTestimonioCreate from "./pages/AdminTestimonioCreate";
 import AdminTestimonioEdit from "./pages/AdminTestimonioEdit";
@@ -49,7 +45,6 @@ const router = createBrowserRouter([
       { path: "/casas", element: <Casas /> },
       { path: "/best-sellers", element: <BestSellers /> },
       { path: "/tiktok", element: <VistoEnTikTok /> },
-      { path: "/paquetes", element: <Paquetes /> },
       { path: "/sobre-mi", element: <SobreMi /> },
       { path: "/product/:nombre/:id", element: <ProductDetail /> },
       { path: "*", element: <NotFound /> },
@@ -96,35 +91,6 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPerfumeEdit />
-      </ProtectedAdminRoute>
-    ),
-    errorElement: <RouterErrorElement />,
-  },
-
-  // Paquetes admin
-  {
-    path: "/admin/paquetes",
-    element: (
-      <ProtectedAdminRoute>
-        <AdminPaquetesList />
-      </ProtectedAdminRoute>
-    ),
-    errorElement: <RouterErrorElement />,
-  },
-  {
-    path: "/admin/paquetes/nuevo",
-    element: (
-      <ProtectedAdminRoute>
-        <AdminPaqueteCreate />
-      </ProtectedAdminRoute>
-    ),
-    errorElement: <RouterErrorElement />,
-  },
-  {
-    path: "/admin/paquetes/:id",
-    element: (
-      <ProtectedAdminRoute>
-        <AdminPaqueteEdit />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,

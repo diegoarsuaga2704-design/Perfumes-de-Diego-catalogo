@@ -76,9 +76,7 @@ function EnvioGratisProgress() {
           </p>
           <ul className="list-disc pl-4 space-y-1">
             <li>
-              Aplica únicamente en decants individuales. No válido en botellas
-              completas, parciales ni paquetes (los paquetes ya tienen un
-              descuento aplicado).
+              Aplica únicamente en decants individuales. No válido en botellas completas ni parciales.
             </li>
             <li>
               Monto mínimo: ${UMBRAL_ENVIO_GRATIS} en decants individuales.

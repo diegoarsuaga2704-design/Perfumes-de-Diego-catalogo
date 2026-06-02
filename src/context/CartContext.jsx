@@ -76,29 +76,9 @@ export function CartProvider({ children }) {
     },
   };
 
-  // 🛒 Añadir producto (decant, botella o paquete)
+  // 🛒 Añadir producto (decant o botella)
   const addToCart = (product) => {
     setCartItems((prev) => {
-      // === PAQUETE ===
-      if (product.tipoVenta === "paquete") {
-        const existing = prev.find(
-          (item) =>
-            item.tipoVenta === "paquete" && item.paqueteId === product.paqueteId,
-        );
-
-        if (existing) {
-          return prev.map((item) =>
-            item.tipoVenta === "paquete" &&
-            item.paqueteId === product.paqueteId
-              ? { ...item, cantidad: (item.cantidad || 1) + 1 }
-              : item,
-          );
-        }
-
-        return [...prev, { ...product, cantidad: 1 }];
-      }
-
-      // === DECANT / BOTELLA ===
       const existing = prev.find(
         (item) =>
           item.id === product.id &&
@@ -137,12 +117,6 @@ export function CartProvider({ children }) {
   const updateCartItem = (id, tipoVenta, newValue) => {
     setCartItems((prev) =>
       prev.map((item) => {
-        // Paquetes: id == paqueteId, newValue es la cantidad de paquetes
-        if (tipoVenta === "paquete" && item.paqueteId === id) {
-          if (newValue < 1) return item;
-          return { ...item, cantidad: newValue };
-        }
-
         if (item.id === id && item.tipoVenta === tipoVenta) {
           if (tipoVenta === "botella") {
             if (newValue > item.stockDisponible) return item;
@@ -161,12 +135,7 @@ export function CartProvider({ children }) {
   // 🗑️ Eliminar producto
   const removeFromCart = (id, tipoVenta) => {
     setCartItems((prev) =>
-      prev.filter((item) => {
-        if (tipoVenta === "paquete") {
-          return !(item.tipoVenta === "paquete" && item.paqueteId === id);
-        }
-        return !(item.id === id && item.tipoVenta === tipoVenta);
-      }),
+      prev.filter((item) => !(item.id === id && item.tipoVenta === tipoVenta)),
     );
   };
 
@@ -180,26 +149,10 @@ export function CartProvider({ children }) {
     if (item.tipoVenta === "botella") {
       return acc + (item.precioUnitario || 0) * (item.cantidad || 0);
     }
-
     if (item.tipoVenta === "decant") {
       return acc + calcularPrecioDecantCarrito(item);
     }
-
-    if (item.tipoVenta === "paquete") {
-      return acc + (Number(item.precio) || 0) * (item.cantidad || 1);
-    }
-
     return acc;
-  }, 0);
-
-  // 💰 Ahorro acumulado por paquetes (precioIndividual − precio) × cantidad
-  const ahorroEnPaquetes = cartItems.reduce((acc, item) => {
-    if (item.tipoVenta !== "paquete") return acc;
-    const precio = Number(item.precio) || 0;
-    const precioIndividual = Number(item.precioIndividual) || 0;
-    if (precioIndividual <= precio) return acc;
-    const ahorroUnitario = precioIndividual - precio;
-    return acc + ahorroUnitario * (item.cantidad || 1);
   }, 0);
 
   // 🎟️ Aplicar descuento (NO aplica a paquetes; ya tienen su propio ahorro)
@@ -225,7 +178,7 @@ export function CartProvider({ children }) {
 
     // Verificar que el código aplique al carrito actual.
     const applicableItems = cartItems.filter((item) => {
-      if (discount.appliesTo === "ALL") return item.tipoVenta !== "paquete";
+      if (discount.appliesTo === "ALL") return true;
       if (discount.appliesTo === "DECANT") return item.tipoVenta === "decant";
       if (discount.appliesTo === "BOTELLA") return item.tipoVenta === "botella";
       if (discount.appliesTo === "BOTELLA_SELLADA")
@@ -257,7 +210,7 @@ export function CartProvider({ children }) {
 
     cartItems.forEach((item) => {
       let applies = false;
-      if (discountTarget === "ALL") applies = item.tipoVenta !== "paquete";
+      if (discountTarget === "ALL") applies = true;
       else if (discountTarget === "DECANT") applies = item.tipoVenta === "decant";
       else if (discountTarget === "BOTELLA") applies = item.tipoVenta === "botella";
       else if (discountTarget === "BOTELLA_SELLADA")
@@ -297,7 +250,6 @@ export function CartProvider({ children }) {
         closeCart,
         toggleCart,
         subtotal,
-        ahorroEnPaquetes,
         totalWithDiscount,
         discountCode,
         discountType,

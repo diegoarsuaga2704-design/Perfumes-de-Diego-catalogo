@@ -30,10 +30,6 @@ function Header({ onSearchResult }) {
       nombre: "Visto en TikTok",
       accion: () => navigate("/tiktok"),
     },
-    {
-      nombre: "Paquetes De Decants",
-      accion: () => navigate("/paquetes"),
-    },
   ];
 
   return (

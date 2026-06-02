@@ -36,10 +36,6 @@ function MainMenu() {
       nombre: "Visto en TikTok",
       accion: () => navigate("/tiktok"),
     },
-    {
-      nombre: "Paquetes De Decants",
-      accion: () => navigate("/paquetes"),
-    },
   ];
 
   const handleClick = (accion) => {

@@ -28,15 +28,12 @@ function ShoppingCartProduct() {
     if (item.tipoVenta === "decant") {
       return calcularPrecioDecantCarrito(item);
     }
-    if (item.tipoVenta === "paquete") {
-      return (Number(item.precio) || 0) * (item.cantidad || 1);
-    }
     return 0;
   };
 
   const productHasDiscount = (item) => {
     if (!isDiscountApplied) return false;
-    if (discountTarget === "ALL") return item.tipoVenta !== "paquete";
+    if (discountTarget === "ALL") return true;
     if (discountTarget === "DECANT") return item.tipoVenta === "decant";
     if (discountTarget === "BOTELLA") return item.tipoVenta === "botella";
     if (discountTarget === "BOTELLA_SELLADA")
@@ -69,9 +66,6 @@ function ShoppingCartProduct() {
       updateCartItem(item.id, "decant", nuevosMl);
     }
 
-    if (item.tipoVenta === "paquete") {
-      updateCartItem(item.paqueteId, "paquete", (item.cantidad || 1) + 1);
-    }
   };
 
   const handleDecrease = (item) => {
@@ -87,10 +81,6 @@ function ShoppingCartProduct() {
         updateCartItem(item.id, "decant", nuevosMl);
       }
     }
-
-    if (item.tipoVenta === "paquete" && (item.cantidad || 1) > 1) {
-      updateCartItem(item.paqueteId, "paquete", item.cantidad - 1);
-    }
   };
 
   return (
@@ -105,18 +95,10 @@ function ShoppingCartProduct() {
           const hasDiscount = productHasDiscount(item);
           const discountedPrice = getDiscountedPrice(item);
 
-          // Key e id de borrado distinto para paquetes
-          const itemKey =
-            item.tipoVenta === "paquete"
-              ? `paq-${item.paqueteId}`
-              : `${item.id}-${item.tipoVenta}`;
+          const itemKey = `${item.id}-${item.tipoVenta}`;
 
           const handleRemove = () => {
-            if (item.tipoVenta === "paquete") {
-              removeFromCart(item.paqueteId, "paquete");
-            } else {
-              removeFromCart(item.id, item.tipoVenta);
-            }
+            removeFromCart(item.id, item.tipoVenta);
             setConfirmingDelete(null);
           };
 
@@ -136,19 +118,8 @@ function ShoppingCartProduct() {
               )}
 
               <div className="flex-1">
-                {/* Nombre y badge de paquete */}
-                <div className="flex items-start gap-2 flex-wrap">
-                  <h3 className="text-sm font-medium">{item.nombre}</h3>
-                  {item.tipoVenta === "paquete" && (
-                    <span className="text-[10px] bg-[#A47E3B] text-white px-1.5 py-0.5 rounded font-semibold">
-                      PAQUETE
-                    </span>
-                  )}
-                </div>
-
-                {item.tipoVenta !== "paquete" && (
-                  <p className="text-gray-500 text-sm">{item.casa}</p>
-                )}
+                <h3 className="text-sm font-medium">{item.nombre}</h3>
+                <p className="text-gray-500 text-sm">{item.casa}</p>
 
                 {/* Información específica del tipo */}
                 {item.tipoVenta === "botella" && (
@@ -166,28 +137,6 @@ function ShoppingCartProduct() {
                   <p className="text-gray-500 text-sm">
                     Cantidad: {item.mililitros} ml
                   </p>
-                )}
-
-                {item.tipoVenta === "paquete" && (
-                  <>
-                    <p className="text-gray-500 text-sm">
-                      Cantidad: {item.cantidad || 1}{" "}
-                      {(item.cantidad || 1) === 1 ? "paquete" : "paquetes"}
-                    </p>
-                    {item.contenidoInfo &&
-                      item.contenidoInfo.length > 0 && (
-                        <ul className="text-[11px] text-gray-500 mt-1 space-y-0.5">
-                          {item.contenidoInfo.map((p, idx) => (
-                            <li key={idx} className="leading-tight">
-                              · {p.nombre}{" "}
-                              <span className="text-gray-400">
-                                ({p.mililitros} ml)
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                  </>
                 )}
 
                 {/* Precios */}
@@ -224,11 +173,7 @@ function ShoppingCartProduct() {
                     </button>
 
                     <span className="text-sm">
-                      {item.tipoVenta === "botella"
-                        ? item.cantidad
-                        : item.tipoVenta === "decant"
-                          ? item.mililitros
-                          : item.cantidad || 1}
+                      {item.tipoVenta === "botella" ? item.cantidad : item.mililitros}
                     </span>
 
                     <button
