@@ -54,6 +54,8 @@ function Home({ forcedMode }) {
     }
   }, [mode]);
 
+  const recientesFilter = forcedMode === "recientes";
+
   // Aplicar filtro de casa cuando viene de /casa/:slug.
   // Resuelve el slug contra las casas reales del catálogo.
   useEffect(() => {
@@ -114,17 +116,21 @@ function Home({ forcedMode }) {
     ? "Botellas completas y parciales"
     : forcedMode === "decants"
       ? "Decants de perfumes"
-      : slug
-        ? `Perfumes de ${selectedCasa || slug}`
-        : "Catálogo de perfumes";
+      : forcedMode === "recientes"
+        ? "Recién Llegados"
+        : slug
+          ? `Perfumes de ${selectedCasa || slug}`
+          : "Catálogo de perfumes";
 
   const seoDescription = forcedMode === "stock"
     ? "Perfumes sellados y parciales disponibles para enviar a todo México."
     : forcedMode === "decants"
       ? "Decants para que pruebes tus perfumes favoritos antes de comprar el frasco completo."
-      : slug
-        ? `Catálogo de perfumes de la casa ${selectedCasa || slug}. Decants y botellas disponibles.`
-        : "Explora nuestro catálogo completo de decants y botellas de perfumes de nicho y de diseñador.";
+      : forcedMode === "recientes"
+        ? "Los últimos perfumes que llegaron al catálogo. Novedades de la semana."
+        : slug
+          ? `Catálogo de perfumes de la casa ${selectedCasa || slug}. Decants y botellas disponibles.`
+          : "Explora nuestro catálogo completo de decants y botellas de perfumes de nicho y de diseñador.";
 
   const currentUrl = `${window.location.origin}${location.pathname}`;
 
@@ -144,6 +150,7 @@ function Home({ forcedMode }) {
         onSelectLimpiar={handleSelectLimpiar}
         searchResult={searchResult}
         stockFilter={stockFilter}
+        recientesFilter={recientesFilter}
       />
     </div>
   );

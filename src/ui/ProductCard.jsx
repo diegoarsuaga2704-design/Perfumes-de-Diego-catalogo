@@ -15,10 +15,10 @@ function ProductCard({ parfum }) {
 
   const esNuevo = (() => {
     if (!esDisponible) return false;
-    if (!parfum.created_at) return false;
+    if (!parfum.disponible_desde) return false;
     const dias =
-      (new Date() - new Date(parfum.created_at)) / (1000 * 60 * 60 * 24);
-    return dias <= 15;
+      (new Date() - new Date(parfum.disponible_desde)) / (1000 * 60 * 60 * 24);
+    return dias <= 7;
   })();
 
   const etiqueta = esMejorVendido

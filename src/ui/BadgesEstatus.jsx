@@ -9,10 +9,10 @@ function BadgesEstatus({ parfum }) {
     badge = { texto: "PRÓXIMAMENTE", color: "bg-sky-600" };
   } else if (parfum.esBestSeller === true) {
     badge = { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" };
-  } else if (parfum.created_at) {
+  } else if (parfum.disponible_desde) {
     const dias =
-      (new Date() - new Date(parfum.created_at)) / (1000 * 60 * 60 * 24);
-    if (dias <= 15) {
+      (new Date() - new Date(parfum.disponible_desde)) / (1000 * 60 * 60 * 24);
+    if (dias <= 7) {
       badge = { texto: "NUEVO", color: "bg-emerald-500" };
     }
   }

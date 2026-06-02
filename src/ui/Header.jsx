@@ -27,6 +27,10 @@ function Header({ onSearchResult }) {
       accion: () => navigate("/casas"),
     },
     {
+      nombre: "Recién Llegados",
+      accion: () => navigate("/recien-llegados"),
+    },
+    {
       nombre: "Visto en TikTok",
       accion: () => navigate("/tiktok"),
     },

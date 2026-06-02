@@ -45,6 +45,7 @@ const router = createBrowserRouter([
       { path: "/casas", element: <Casas /> },
       { path: "/best-sellers", element: <BestSellers /> },
       { path: "/tiktok", element: <VistoEnTikTok /> },
+      { path: "/recien-llegados", element: <Home forcedMode="recientes" /> },
       { path: "/sobre-mi", element: <SobreMi /> },
       { path: "/product/:nombre/:id", element: <ProductDetail /> },
       { path: "*", element: <NotFound /> },

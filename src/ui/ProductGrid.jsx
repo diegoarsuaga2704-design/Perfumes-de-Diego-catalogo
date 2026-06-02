@@ -9,6 +9,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 // 🔒 Helper global para blindar strings
 const safeString = (value) => (value ?? "").toString();
 
+const DIAS_NUEVO = 7;
+const esReciente = (p) => {
+  if (!p.disponible_desde) return false;
+  const dias = (new Date() - new Date(p.disponible_desde)) / (1000 * 60 * 60 * 24);
+  return dias <= DIAS_NUEVO;
+};
+
 export default function ProductGrid({
   selectedCasa,
   selectedOcasion,
@@ -16,6 +23,7 @@ export default function ProductGrid({
   onSelectLimpiar,
   searchResult,
   stockFilter,
+  recientesFilter,
 }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -107,6 +115,14 @@ export default function ProductGrid({
       return result;
     }
 
+    // ===== RECIÉN LLEGADOS =====
+    if (recientesFilter) {
+      const result = allParfums
+        .filter((p) => p.disponible === "Disponible" && esReciente(p))
+        .sort((a, b) => new Date(b.disponible_desde) - new Date(a.disponible_desde));
+      return result;
+    }
+
     // ===== FILTROS NORMALES =====
     let result = allParfums.filter((p) => {
       const casaMatch =
@@ -170,6 +186,7 @@ export default function ProductGrid({
     order,
     searchResult,
     stockFilter,
+    recientesFilter,
   ]);
 
   if (loading) return <LoadingSpinner />;
