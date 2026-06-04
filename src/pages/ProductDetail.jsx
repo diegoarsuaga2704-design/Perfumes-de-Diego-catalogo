@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { slugify } from "../functions/slugify";
 import { useEffect, useState } from "react";
-import { ShoppingCart, ArrowLeft } from "lucide-react";
+import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -24,6 +24,7 @@ export default function ProductDetail() {
   const [error, setError] = useState(null);
   const [mililitros, setMililitros] = useState(null);
   const [botellas, setBotellas] = useState(1);
+  const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -96,6 +97,8 @@ export default function ProductDetail() {
     };
 
     addToCart(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   };
 
   // Texto SEO específico del producto
@@ -339,18 +342,30 @@ export default function ProductDetail() {
                   <button
                     onClick={handleAddToCart}
                     disabled={
+                      added ||
                       (esDecant && !mililitros) ||
                       (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
                     }
                     className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
-                      (!esDecant || mililitros) &&
-                      (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
-                        ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      added
+                        ? "bg-green-500 text-white cursor-default"
+                        : (!esDecant || mililitros) &&
+                            (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
+                          ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
-                    <ShoppingCart size={18} />
-                    Añadir al carrito
+                    {added ? (
+                      <>
+                        <CheckCircle size={18} />
+                        Agregado al carrito
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart size={18} />
+                        Añadir al carrito
+                      </>
+                    )}
                   </button>
                 </div>
               )}
@@ -381,20 +396,30 @@ export default function ProductDetail() {
             <button
               onClick={handleAddToCart}
               disabled={
+                added ||
                 (esDecant && !mililitros) ||
                 (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
               }
               className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                (!esDecant || mililitros) &&
-                (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
-                  ? "bg-[#A47E3B] text-white active:bg-[#8B6A30]"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                added
+                  ? "bg-green-500 text-white cursor-default"
+                  : (!esDecant || mililitros) &&
+                      (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
+                    ? "bg-[#A47E3B] text-white active:bg-[#8B6A30]"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              <ShoppingCart size={18} />
-              {esDecant && !mililitros
-                ? "Selecciona los ml primero"
-                : "Añadir al carrito"}
+              {added ? (
+                <>
+                  <CheckCircle size={18} />
+                  Agregado al carrito
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={18} />
+                  {esDecant && !mililitros ? "Selecciona los ml primero" : "Añadir al carrito"}
+                </>
+              )}
             </button>
           </div>
         </>

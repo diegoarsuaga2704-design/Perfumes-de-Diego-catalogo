@@ -1,6 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { FaTiktok } from "react-icons/fa";
+import { Package } from "lucide-react";
 import { slugify } from "../functions/slugify";
+
+const DIAS_NUEVO = 7;
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
@@ -18,7 +21,7 @@ function ProductCard({ parfum }) {
     if (!parfum.disponible_desde) return false;
     const dias =
       (new Date() - new Date(parfum.disponible_desde)) / (1000 * 60 * 60 * 24);
-    return dias <= 7;
+    return dias <= DIAS_NUEVO;
   })();
 
   const etiqueta = esMejorVendido
@@ -60,12 +63,18 @@ function ProductCard({ parfum }) {
         {parfum.disponible === "Disponible" ? "" : parfum.disponible}
       </span>
 
-      <img
-        src={parfum.image}
-        alt={parfum.nombre}
-        loading="lazy"
-        className="w-full h-100 object-cover pt-2"
-      />
+      {parfum.image ? (
+        <img
+          src={parfum.image}
+          alt={parfum.nombre}
+          loading="lazy"
+          className="w-full h-100 object-cover pt-2"
+        />
+      ) : (
+        <div className="w-full h-100 bg-gray-100 flex items-center justify-center">
+          <Package className="text-gray-300" size={48} />
+        </div>
+      )}
       <div className="sm:p-5 px-2 py-5 flex flex-col justify-between">
         <h3 className="sm:text-lg text-sm font-semibold text-gray-900 mb-2 2xl:flex-row">
           {parfum.nombre}
