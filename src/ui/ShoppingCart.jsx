@@ -21,6 +21,7 @@ export default function ShoppingCart() {
 
   const [postalCode, setPostalCode] = useState("");
   const [inputCode, setInputCode] = useState("");
+  const [applying, setApplying] = useState(false);
 
   // Bloquear scroll del body al abrir el carrito, preservando la posición
   useEffect(() => {
@@ -59,9 +60,14 @@ export default function ShoppingCart() {
     if (/^\d{0,5}$/.test(value)) setPostalCode(value);
   };
 
-  const handleApplyCode = () => {
-    if (!inputCode.trim()) return;
-    applyDiscountCode(inputCode);
+  const handleApplyCode = async () => {
+    if (!inputCode.trim() || applying) return;
+    setApplying(true);
+    try {
+      await applyDiscountCode(inputCode);
+    } finally {
+      setApplying(false);
+    }
     setInputCode("");
   };
 
@@ -118,9 +124,10 @@ export default function ShoppingCart() {
               />
               <button
                 onClick={handleApplyCode}
-                className="ml-2 bg-[#A47E3B] text-white px-3 py-2 rounded-md text-sm hover:bg-[#8b6d32]"
+                disabled={applying}
+                className="ml-2 bg-[#A47E3B] text-white px-3 py-2 rounded-md text-sm hover:bg-[#8b6d32] disabled:opacity-50"
               >
-                Aplicar
+                {applying ? "Validando..." : "Aplicar"}
               </button>
             </div>
 

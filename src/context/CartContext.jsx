@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import supabase from "../services/supabase";
 import {
   calcularPrecioDecantCarrito,
   getIncrementoMililitros,
@@ -60,21 +61,8 @@ export function CartProvider({ children }) {
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 🛍️ Códigos disponibles
-  const availableDiscounts = {
-    DECANTHS: {
-      type: "percentage",
-      value: 10,
-      appliesTo: "DECANT",
-      expira: "2026-06-02",
-    },
-    PERFUMEHS: {
-      type: "percentage",
-      value: 5,
-      appliesTo: "BOTELLA_SELLADA",
-      expira: "2026-06-02",
-    },
-  };
+  // 🛍️ Códigos: ahora viven en Supabase (tabla codigos_descuento) y se
+  // validan server-side con la función validar_cupon. Ya no hay nada hardcodeado.
 
   // 🛒 Añadir producto (decant o botella)
   const addToCart = (product) => {
@@ -155,35 +143,45 @@ export function CartProvider({ children }) {
     return acc;
   }, 0);
 
-  // 🎟️ Aplicar descuento (NO aplica a paquetes; ya tienen su propio ahorro)
-  const applyDiscountCode = (code) => {
+  // 🎟️ Aplicar descuento — valida server-side con la función validar_cupon.
+  // (NO aplica a paquetes; ya tienen su propio ahorro)
+  const applyDiscountCode = async (code) => {
     const upperCode = code.trim().toUpperCase();
-    const discount = availableDiscounts[upperCode];
 
-    // Si el código no existe: mostrar error y MANTENER el descuento activo si lo había.
-    if (!discount) {
-      setErrorMessage(`El código "${upperCode}" no es válido.`);
+    // 1) Validar contra Supabase. La lista de códigos nunca sale al navegador.
+    const { data, error } = await supabase.rpc("validar_cupon", {
+      p_codigo: upperCode,
+    });
+
+    if (error) {
+      console.error("Error validando cupón:", error);
+      setErrorMessage("Hubo un problema al validar el código. Intenta de nuevo.");
       return;
     }
 
-    // Si el código expiró: mismo comportamiento, mantenemos el descuento previo.
-    if (discount.expira) {
-      const fechaExpira = new Date(discount.expira + "T23:59:59");
-      const hoy = new Date();
-      if (hoy > fechaExpira) {
-        setErrorMessage(`El código ${upperCode} ya expiró.`);
-        return;
-      }
+    const resultado = data?.[0];
+
+    // 2) Si no es válido, mostramos el motivo y MANTENEMOS el descuento previo si lo había.
+    if (!resultado || !resultado.valido) {
+      setErrorMessage(
+        resultado?.mensaje || `El código "${upperCode}" no es válido.`,
+      );
+      return;
     }
 
-    // Verificar que el código aplique al carrito actual.
+    const target = resultado.aplica_a;
+
+    // 3) Verificar que el código aplique a algo en el carrito actual.
     const applicableItems = cartItems.filter((item) => {
-      if (discount.appliesTo === "ALL") return true;
-      if (discount.appliesTo === "DECANT") return item.tipoVenta === "decant";
-      if (discount.appliesTo === "BOTELLA") return item.tipoVenta === "botella";
-      if (discount.appliesTo === "BOTELLA_SELLADA")
-        return item.tipoVenta === "botella" && item.estado_botella?.startsWith("Sellado");
-      return item.tipoVenta === "decant" && item.casa === discount.appliesTo;
+      if (target === "ALL") return true;
+      if (target === "DECANT") return item.tipoVenta === "decant";
+      if (target === "BOTELLA") return item.tipoVenta === "botella";
+      if (target === "BOTELLA_SELLADA")
+        return (
+          item.tipoVenta === "botella" &&
+          item.estado_botella?.startsWith("Sellado")
+        );
+      return item.tipoVenta === "decant" && item.casa === target;
     });
 
     if (applicableItems.length === 0) {
@@ -193,11 +191,11 @@ export function CartProvider({ children }) {
       return;
     }
 
-    // Código válido: reemplaza el descuento (si había uno previo) y limpia el error.
+    // 4) Válido: aplica el descuento y limpia el error.
     setDiscountCode(upperCode);
-    setDiscountType(discount.type);
-    setDiscountValue(discount.value);
-    setDiscountTarget(discount.appliesTo);
+    setDiscountType(resultado.tipo);
+    setDiscountValue(Number(resultado.valor));
+    setDiscountTarget(target);
     setIsDiscountApplied(true);
     setErrorMessage("");
   };

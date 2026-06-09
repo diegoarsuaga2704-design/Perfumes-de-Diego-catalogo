@@ -10,9 +10,7 @@ import {
   Bell,
   Truck,
   Users,
-  FlaskConical,
-  BarChart3,
-  Droplets,
+  Ticket,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -90,45 +88,6 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Lista de clientes con historial de compras
-              </p>
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/pedidos-botellas")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              <FlaskConical className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Pedidos de botellas
-              </h3>
-              <p className="text-sm text-gray-600">
-                Todas tus botellas con edición tipo Excel y filtros
-              </p>
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/finanzas")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              <BarChart3 className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Finanzas
-              </h3>
-              <p className="text-sm text-gray-600">
-                KPIs, gráficas, top clientes y proveedores
-              </p>
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/decants-parciales")}
-              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              <Droplets className="text-[#A47E3B] mb-3" size={28} />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Decants y parciales
-              </h3>
-              <p className="text-sm text-gray-600">
-                Registrar ventas de decants y parciales
               </p>
             </button>
           </div>
@@ -218,6 +177,27 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Subir imagen y descripción de cada casa
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* Sección Cupones */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+            Cupones
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => navigate("/admin/cupones")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Ticket className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Cupones de descuento
+              </h3>
+              <p className="text-sm text-gray-600">
+                Crear, activar y desactivar códigos de descuento
               </p>
             </button>
           </div>

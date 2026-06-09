@@ -21,9 +21,7 @@ import AdminCasaEdit from "./pages/AdminCasaEdit";
 import AdminAvisos from "./pages/AdminAvisos";
 import AdminProveedoresList from "./pages/AdminProveedoresList";
 import AdminClientesList from "./pages/AdminClientesList";
-import AdminPedidosBotellas from "./pages/AdminPedidosBotellas";
-import AdminFinanzas from "./pages/AdminFinanzas";
-import AdminDecantsParciales from "./pages/AdminDecantsParciales";
+import AdminCodigosList from "./pages/AdminCodigosList";
 import Casas from "./pages/Casas";
 import SobreMi from "./pages/SobreMi";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
@@ -176,29 +174,13 @@ const router = createBrowserRouter([
     ),
     errorElement: <RouterErrorElement />,
   },
+
+  // Cupones admin
   {
-    path: "/admin/pedidos-botellas",
+    path: "/admin/cupones",
     element: (
       <ProtectedAdminRoute>
-        <AdminPedidosBotellas />
-      </ProtectedAdminRoute>
-    ),
-    errorElement: <RouterErrorElement />,
-  },
-  {
-    path: "/admin/finanzas",
-    element: (
-      <ProtectedAdminRoute>
-        <AdminFinanzas />
-      </ProtectedAdminRoute>
-    ),
-    errorElement: <RouterErrorElement />,
-  },
-  {
-    path: "/admin/decants-parciales",
-    element: (
-      <ProtectedAdminRoute>
-        <AdminDecantsParciales />
+        <AdminCodigosList />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,
