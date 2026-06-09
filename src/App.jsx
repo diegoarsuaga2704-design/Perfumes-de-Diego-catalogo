@@ -19,8 +19,6 @@ import AdminTestimonioEdit from "./pages/AdminTestimonioEdit";
 import AdminCasasList from "./pages/AdminCasasList";
 import AdminCasaEdit from "./pages/AdminCasaEdit";
 import AdminAvisos from "./pages/AdminAvisos";
-import AdminProveedoresList from "./pages/AdminProveedoresList";
-import AdminClientesList from "./pages/AdminClientesList";
 import AdminCodigosList from "./pages/AdminCodigosList";
 import Casas from "./pages/Casas";
 import SobreMi from "./pages/SobreMi";
@@ -150,26 +148,6 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminAvisos />
-      </ProtectedAdminRoute>
-    ),
-    errorElement: <RouterErrorElement />,
-  },
-
-  // Operaciones internas: proveedores y clientes
-  {
-    path: "/admin/proveedores",
-    element: (
-      <ProtectedAdminRoute>
-        <AdminProveedoresList />
-      </ProtectedAdminRoute>
-    ),
-    errorElement: <RouterErrorElement />,
-  },
-  {
-    path: "/admin/clientes",
-    element: (
-      <ProtectedAdminRoute>
-        <AdminClientesList />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,
