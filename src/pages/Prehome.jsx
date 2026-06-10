@@ -11,19 +11,19 @@ function Prehome() {
   const collections = [
     {
       image:
-        "https://filipposorcinelli.com/cdn/shop/files/slide-bn-FIlReli-desktop.jpg?v=1707475834&width=1680",
+        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/o.rZpkAR0ZbQi.jpg",
       title: "Decants",
       description:
         "Prueba tus perfumes favoritos antes de comprar el frasco completo.",
     },
     {
       image:
-        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/bestseller.jpeg",
+        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg",
       title: "Mejor vendidos",
       description: "Los favoritos de mis clientes.",
     },
     {
-      image: "https://fraguru.com/himg/o.gxxUAHYdeV7.jpg",
+      image: "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/haec%20foto.webp",
       title: "Botellas completas y parciales",
       description: "Perfumes sellados y parciales disponibles.",
     },

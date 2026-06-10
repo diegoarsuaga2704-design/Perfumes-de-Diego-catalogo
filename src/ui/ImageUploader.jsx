@@ -41,10 +41,10 @@ export default function ImageUploader({
     if (file.size < 200 * 1024) return file;
 
     const options = {
-      maxSizeMB: 0.3, // objetivo: 300KB
-      maxWidthOrHeight: 1200, // máximo 1200px del lado más largo
+      maxSizeMB: 0.25, // objetivo: ~250KB
+      maxWidthOrHeight: 1000, // máximo 1000px del lado más largo
       useWebWorker: true,
-      initialQuality: 0.85,
+      initialQuality: 0.8,
     };
 
     try {
@@ -88,7 +88,7 @@ export default function ImageUploader({
       const { error: uploadError } = await supabase.storage
         .from(bucket)
         .upload(fileName, compressedFile, {
-          cacheControl: "3600",
+          cacheControl: "2592000",
           upsert: false,
         });
 

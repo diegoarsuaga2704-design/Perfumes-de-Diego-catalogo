@@ -38,6 +38,11 @@ const CACHE_SECONDS = 2592000; // 30 días
 const DRY_RUN = process.env.DRY_RUN !== "false";
 const BACKUP_DIR = "./backup-imagenes";
 const FORMATOS = new Set(["jpeg", "jpg", "png", "webp"]);
+const BUCKETS_IMG = new Set([
+  "perfumsImages",
+  "casasImages",
+  "testimoniosImages",
+]);
 
 // ---------- Credenciales ----------
 function leerEnv(clave) {
@@ -80,21 +85,41 @@ function parseStorageUrl(valor) {
 async function recolectar() {
   const mapa = new Map(); // "bucket/ruta" -> { bucket, ruta, url }
   for (const tabla of TABLAS) {
-    const { data, error } = await supabase.from(tabla).select("*");
-    if (error) {
-      console.log(`  ! no pude leer la tabla "${tabla}": ${error.message}`);
-      continue;
+    // Leer TODAS las filas, paginando por si el servidor limita.
+    const filas = [];
+    let desde = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from(tabla)
+        .select("*")
+        .range(desde, desde + 999);
+      if (error) {
+        console.log(`  ! no pude leer la tabla "${tabla}": ${error.message}`);
+        break;
+      }
+      if (!data || data.length === 0) break;
+      filas.push(...data);
+      desde += data.length;
+      if (data.length < 1000) break;
     }
-    for (const row of data || []) {
+
+    let urls = 0;
+    let agregadas = 0;
+    for (const row of filas) {
       for (const valor of Object.values(row)) {
         const info = parseStorageUrl(valor);
-        if (!info) continue;
-        const ext = info.ruta.split(".").pop()?.toLowerCase();
-        if (!FORMATOS.has(ext)) continue;
+        if (!info || !BUCKETS_IMG.has(info.bucket)) continue;
+        urls++;
         const k = `${info.bucket}/${info.ruta}`;
-        if (!mapa.has(k)) mapa.set(k, { ...info, url: valor.split("?")[0] });
+        if (!mapa.has(k)) {
+          mapa.set(k, { ...info, url: valor.split("?")[0] });
+          agregadas++;
+        }
       }
     }
+    console.log(
+      `  tabla ${tabla}: ${filas.length} filas | ${urls} URLs de storage | ${agregadas} imágenes nuevas`,
+    );
   }
   return [...mapa.values()];
 }
@@ -110,6 +135,8 @@ async function recomprimir(buffer) {
   });
   if (meta.format === "png") pipe = pipe.png({ compressionLevel: 9, quality: QUALITY });
   else if (meta.format === "webp") pipe = pipe.webp({ quality: QUALITY });
+  else if (meta.format === "avif" || meta.format === "heif")
+    pipe = pipe.avif({ quality: QUALITY });
   else pipe = pipe.jpeg({ quality: QUALITY, mozjpeg: true });
   return pipe.toBuffer();
 }
