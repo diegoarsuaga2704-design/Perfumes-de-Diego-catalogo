@@ -91,7 +91,9 @@ export default function AdminPerfumeCreate() {
       };
 
       await createParfumAdmin(newParfum);
-      ensureCasaExists(newParfum.casa).catch(() => {});
+      ensureCasaExists(newParfum.casa).catch((err) =>
+        console.error("Error asegurando la casa:", err),
+      );
       setSuccess(true);
 
       setTimeout(() => {

@@ -100,7 +100,9 @@ export default function AdminPerfumeEdit() {
       }
 
       await updateParfumAdmin(id, updates);
-      ensureCasaExists(updates.casa).catch(() => {});
+      ensureCasaExists(updates.casa).catch((err) =>
+        console.error("Error asegurando la casa:", err),
+      );
       setSuccess(true);
 
       setTimeout(() => {

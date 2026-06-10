@@ -15,11 +15,16 @@ export function AuthProvider({ children }) {
       return;
     }
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("admin_users")
         .select("user_id")
         .eq("user_id", userId)
         .maybeSingle();
+      if (error) {
+        console.error("Error verificando admin:", error);
+        setIsAdmin(false);
+        return;
+      }
       setIsAdmin(!!data);
     } catch (err) {
       console.error("Error verificando admin:", err);
@@ -68,7 +73,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Error cerrando sesión:", error);
     setUser(null);
     setIsAdmin(false);
   };
