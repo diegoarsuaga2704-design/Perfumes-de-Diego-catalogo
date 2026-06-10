@@ -9,6 +9,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import {
   getAllParfumsAdmin,
   deleteParfumAdmin,
@@ -19,6 +20,7 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 export default function AdminPerfumesList() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const [parfums, setParfums] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -125,7 +127,7 @@ export default function AdminPerfumesList() {
       setParfums((prev) => prev.filter((p) => p.id !== id));
       setConfirmingDelete(null);
     } catch (err) {
-      alert("Error al borrar el perfume. Intenta de nuevo.");
+      showToast("Error al borrar el perfume. Intenta de nuevo.", "error");
     } finally {
       setDeleting(false);
     }
@@ -140,7 +142,7 @@ export default function AdminPerfumesList() {
     try {
       await updateParfumAdmin(id, { disponible: nuevoValor });
     } catch (err) {
-      alert("Error al actualizar disponibilidad.");
+      showToast("Error al actualizar disponibilidad.", "error");
       // Revertir si falla
       setParfums((prev) =>
         prev.map((p) => (p.id === id ? { ...p, disponible: previo } : p)),

@@ -1,22 +1,7 @@
+import { getBadgeEstatus } from "../functions/getBadgeEstatus";
+
 function BadgesEstatus({ parfum }) {
-  let badge = null;
-
-  // Prioridad: AGOTADO > PRÓXIMAMENTE > MEJOR VENDIDO > NUEVO
-  // Solo se muestra UNO. El más relevante para el cliente.
-  if (parfum.disponible === "Agotado") {
-    badge = { texto: "AGOTADO", color: "bg-red-600" };
-  } else if (parfum.disponible === "Próximamente") {
-    badge = { texto: "PRÓXIMAMENTE", color: "bg-sky-600" };
-  } else if (parfum.esBestSeller === true) {
-    badge = { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" };
-  } else if (parfum.disponible_desde) {
-    const dias =
-      (new Date() - new Date(parfum.disponible_desde)) / (1000 * 60 * 60 * 24);
-    if (dias <= 7) {
-      badge = { texto: "NUEVO", color: "bg-emerald-500" };
-    }
-  }
-
+  const badge = getBadgeEstatus(parfum);
   if (!badge) return null;
 
   return (

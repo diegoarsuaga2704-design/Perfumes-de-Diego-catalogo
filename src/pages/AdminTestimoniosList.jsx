@@ -6,9 +6,11 @@ import {
   deleteTestimonio,
   updateTestimonio,
 } from "../functions/getTestimonios";
+import { useToast } from "../context/ToastContext";
 
 export default function AdminTestimoniosList() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [testimonios, setTestimonios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -35,7 +37,7 @@ export default function AdminTestimoniosList() {
       setTestimonios((prev) => prev.filter((t) => t.id !== id));
       setConfirmDelete(null);
     } catch (err) {
-      alert("Error al eliminar el testimonio");
+      showToast("Error al eliminar el testimonio.", "error");
     }
   }
 
@@ -48,7 +50,7 @@ export default function AdminTestimoniosList() {
         prev.map((t) => (t.id === testimonio.id ? updated : t))
       );
     } catch (err) {
-      alert("Error al actualizar destacado");
+      showToast("Error al actualizar destacado.", "error");
     }
   }
 

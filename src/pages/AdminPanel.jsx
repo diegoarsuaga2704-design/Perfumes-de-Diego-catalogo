@@ -57,6 +57,40 @@ export default function AdminPanel() {
           </p>
         </div>
 
+        {/* Sección Avisos de stock */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+            Avisos de stock
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => navigate("/admin/avisos")}
+              className="relative bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              {conteoNuevos > 0 && (
+                <span className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold rounded-full min-w-[24px] h-6 flex items-center justify-center px-2 shadow-md">
+                  {conteoNuevos}
+                </span>
+              )}
+              <Bell
+                className={conteoNuevos > 0 ? "text-red-600 mb-3" : "text-[#A47E3B] mb-3"}
+                size={28}
+              />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Avisos pendientes
+                {conteoNuevos > 0 && (
+                  <span className="ml-2 text-red-600 text-xs font-bold uppercase">
+                    · {conteoNuevos === 1 ? "1 nuevo" : `${conteoNuevos} nuevos`}
+                  </span>
+                )}
+              </h3>
+              <p className="text-sm text-gray-600">
+                Clientes que pidieron aviso cuando llegue un perfume Próximamente
+              </p>
+            </button>
+          </div>
+        </div>
+
         {/* Sección Perfumes */}
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
@@ -167,39 +201,6 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* Sección Avisos de stock */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Avisos de stock
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate("/admin/avisos")}
-              className="relative bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
-            >
-              {conteoNuevos > 0 && (
-                <span className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold rounded-full min-w-[24px] h-6 flex items-center justify-center px-2 shadow-md">
-                  {conteoNuevos}
-                </span>
-              )}
-              <Bell
-                className={conteoNuevos > 0 ? "text-red-600 mb-3" : "text-[#A47E3B] mb-3"}
-                size={28}
-              />
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Avisos pendientes
-                {conteoNuevos > 0 && (
-                  <span className="ml-2 text-red-600 text-xs font-bold uppercase">
-                    · {conteoNuevos === 1 ? "1 nuevo" : `${conteoNuevos} nuevos`}
-                  </span>
-                )}
-              </h3>
-              <p className="text-sm text-gray-600">
-                Clientes que pidieron aviso cuando llegue un perfume Próximamente
-              </p>
-            </button>
-          </div>
-        </div>
       </main>
     </div>
   );

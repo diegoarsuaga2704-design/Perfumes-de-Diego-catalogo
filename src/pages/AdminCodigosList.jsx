@@ -7,6 +7,7 @@ import {
   updateCodigo,
   deleteCodigo,
 } from "../functions/getCodigosDescuento";
+import { useToast } from "../context/ToastContext";
 
 const OPCIONES_APLICA = [
   { value: "ALL", label: "Todo el carrito" },
@@ -42,6 +43,7 @@ function estaExpirado(c) {
 
 export default function AdminCodigosList() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [codigos, setCodigos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
@@ -63,7 +65,7 @@ export default function AdminCodigosList() {
       setCodigos(data);
     } catch (err) {
       console.error(err);
-      alert("Error cargando los códigos. Recarga la página.");
+      showToast("Error cargando los códigos. Recarga la página.", "error");
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,7 @@ export default function AdminCodigosList() {
       setConfirmarBorrar(null);
       await fetchData();
     } catch {
-      alert("Error al borrar.");
+      showToast("Error al borrar.", "error");
     }
   }
 

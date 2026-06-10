@@ -17,6 +17,7 @@ import {
   deleteAvisoStock,
 } from "../functions/getAvisosStock";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import { useToast } from "../context/ToastContext";
 
 // Helper para derivar el estado de un aviso
 function getEstado(aviso) {
@@ -28,6 +29,7 @@ function getEstado(aviso) {
 export default function AdminAvisos() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [avisos, setAvisos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("pendientes");
@@ -54,7 +56,7 @@ export default function AdminAvisos() {
       await marcarAvisoLeido(id);
       await fetchAvisos();
     } catch {
-      alert("Error al marcar como leído.");
+      showToast("Error al marcar como leído.", "error");
     }
   };
 
@@ -63,7 +65,7 @@ export default function AdminAvisos() {
       await marcarAvisoNotificado(id);
       await fetchAvisos();
     } catch {
-      alert("Error al marcar como notificado.");
+      showToast("Error al marcar como notificado.", "error");
     }
   };
 
@@ -72,7 +74,7 @@ export default function AdminAvisos() {
       await desmarcarAvisoNotificado(id);
       await fetchAvisos();
     } catch {
-      alert("Error al desmarcar.");
+      showToast("Error al desmarcar.", "error");
     }
   };
 
@@ -82,7 +84,7 @@ export default function AdminAvisos() {
       await deleteAvisoStock(id);
       await fetchAvisos();
     } catch {
-      alert("Error al borrar.");
+      showToast("Error al borrar.", "error");
     }
   };
 

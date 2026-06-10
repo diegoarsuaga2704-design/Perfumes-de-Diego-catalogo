@@ -2,33 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { FaTiktok } from "react-icons/fa";
 import { Package } from "lucide-react";
 import { slugify } from "../functions/slugify";
-
-const DIAS_NUEVO = 7;
+import { getBadgeEstatus } from "../functions/getBadgeEstatus";
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
 
-  // Etiqueta dinámica: MEJOR VENDIDO gana sobre NUEVO.
-  // Ninguna se muestra si el perfume está Próximamente o Agotado
-  // (la info crítica de disponibilidad gana sobre la promocional).
-  const esDisponible =
-    parfum.disponible !== "Próximamente" && parfum.disponible !== "Agotado";
-
-  const esMejorVendido = parfum.esBestSeller === true && esDisponible;
-
-  const esNuevo = (() => {
-    if (!esDisponible) return false;
-    if (!parfum.disponible_desde) return false;
-    const dias =
-      (new Date() - new Date(parfum.disponible_desde)) / (1000 * 60 * 60 * 24);
-    return dias <= DIAS_NUEVO;
-  })();
-
-  const etiqueta = esMejorVendido
-    ? { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" }
-    : esNuevo
-      ? { texto: "NUEVO", color: "bg-emerald-500" }
-      : null;
+  // Un solo badge, misma lógica que ProductDetail (fuente única).
+  const badge = getBadgeEstatus(parfum);
 
   const handleCardClick = () => {
     navigate(`/product/${slugify(parfum.nombre)}/${parfum.id}`);
@@ -42,26 +22,14 @@ function ProductCard({ parfum }) {
         ${parfum.disponible === "Agotado" ? "shadow-red-600" : ""}
       ${parfum.disponible === "Próximamente" ? "shadow-sky-600" : ""}`}
     >
-      {/* Etiqueta dinámica (esquina superior derecha) */}
-      {etiqueta && (
+      {/* Badge de estatus (esquina superior derecha) — un solo badge */}
+      {badge && (
         <span
-          className={`absolute top-2 right-2 z-10 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md ${etiqueta.color}`}
+          className={`absolute top-2 right-2 z-10 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md ${badge.color}`}
         >
-          {etiqueta.texto}
+          {badge.texto}
         </span>
       )}
-
-      {/* Etiqueta de disponibilidad (esquina superior derecha) */}
-      <span
-        className={`absolute top-2 right-2 z-10 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md ${
-          parfum.disponible === "Agotado" ? "bg-red-600" : ""
-        }
-      ${parfum.disponible === "Próximamente" ? "bg-sky-600" : ""} ${
-        parfum.disponible === "Disponible" ? "hidden" : ""
-      }`}
-      >
-        {parfum.disponible === "Disponible" ? "" : parfum.disponible}
-      </span>
 
       {parfum.image ? (
         <img

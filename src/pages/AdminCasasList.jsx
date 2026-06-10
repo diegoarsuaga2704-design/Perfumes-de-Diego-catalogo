@@ -6,9 +6,11 @@ import {
   getConteoProductosPorCasa,
   deleteCasa,
 } from "../functions/getCasas";
+import { useToast } from "../context/ToastContext";
 
 export default function AdminCasasList() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [casas, setCasas] = useState([]);
   const [conteo, setConteo] = useState({});
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function AdminCasasList() {
       await deleteCasa(casa.id);
       await fetchData();
     } catch {
-      alert("Error al borrar la casa.");
+      showToast("Error al borrar la casa.", "error");
     } finally {
       setEliminando(null);
     }
