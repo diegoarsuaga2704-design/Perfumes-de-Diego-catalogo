@@ -310,7 +310,7 @@ export default function ProductDetail() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Conocer más sobre "{parfum.nombre}" en Fragrantica
+                    Conocer más sobre "{parfum.nombre}" aquí
                   </a>
                 )}
               </div>
