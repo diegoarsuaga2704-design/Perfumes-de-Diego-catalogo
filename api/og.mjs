@@ -65,18 +65,17 @@ export default async function handler(req, res) {
   const isBot = BOT_PATTERN.test(ua);
 
   if (!isBot) {
-    // Visitante humano: servir el shell del SPA. Si no se pudo leer del
-    // bundle (spaHtml vacío), traerlo por HTTP del propio sitio para no
-    // mostrar una pantalla en blanco.
-    let html = spaHtml;
-    if (!html || html.length < 200) {
-      try {
-        const r = await fetch(`${SITE_URL}/index.html`);
-        if (r.ok) html = await r.text();
-      } catch (e) {
-        console.error("No se pudo obtener el shell del SPA:", e);
-      }
+    // Visitante humano: traer SIEMPRE el shell actual del sitio estático por
+    // HTTP, sin depender de que el archivo del bundle se haya leído bien
+    // (esa dependencia causaba pantallas en blanco intermitentes).
+    let html = "";
+    try {
+      const r = await fetch(`${SITE_URL}/index.html`);
+      if (r.ok) html = await r.text();
+    } catch (e) {
+      console.error("No se pudo obtener el shell del SPA:", e);
     }
+    if (!html || html.length < 200) html = spaHtml; // último recurso
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Cache-Control", "no-store");
     res.status(200).send(html);

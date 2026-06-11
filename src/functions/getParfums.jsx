@@ -1,7 +1,13 @@
 import supabase from "../services/supabase";
 
+// Solo las columnas que usa el grid del catálogo (card + filtros + buscador +
+// orden + badges). Evita bajar columnas pesadas que no se muestran.
+// El detalle de producto (getParfumById) sí trae todo con "*".
+const COLS_GRID =
+  "id, nombre, casa, precio, image, disponible, disponible_desde, categoria, stock, concentracion, notas, tiktokLink, esBestSeller";
+
 export default async function getParfums() {
-  const { data, error } = await supabase.from("parfums").select("*");
+  const { data, error } = await supabase.from("parfums").select(COLS_GRID);
   if (error) {
     console.error("Error fetching parfums:", error);
     throw new Error("Could not fetch parfums");
@@ -25,7 +31,7 @@ export async function getParfumById(id) {
 export async function getBestSellers() {
   const { data, error } = await supabase
     .from("parfums")
-    .select("*")
+    .select(COLS_GRID)
     .eq("esBestSeller", true);
 
   if (error) {
@@ -37,7 +43,7 @@ export async function getBestSellers() {
 export async function getRelacionados(casa, excluirId) {
   const { data, error } = await supabase
     .from("parfums")
-    .select("*")
+    .select(COLS_GRID)
     .eq("casa", casa)
     .neq("id", excluirId)
     .eq("disponible", "Disponible");
@@ -61,7 +67,7 @@ export async function getRelacionados(casa, excluirId) {
 export async function getPerfumesConTikTok() {
   const { data, error } = await supabase
     .from("parfums")
-    .select("*")
+    .select(COLS_GRID)
     .not("tiktokLink", "is", null)
     .neq("tiktokLink", "");
 
