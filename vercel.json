@@ -7,10 +7,24 @@
   "rewrites": [
     {
       "source": "/product/:nombre/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "/bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare|whatsapp/i"
+        }
+      ],
       "destination": "/api/og?type=product&id=:id&nombre=:nombre"
     },
     {
       "source": "/casa/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "/bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare/i"
+        }
+      ],
       "destination": "/api/og?type=casa&slug=:slug"
     },
     { "source": "/((?!api/).*)", "destination": "/" }
