@@ -228,7 +228,7 @@ export function CartProvider({ children }) {
     if (discountType === "percentage") {
       totalAfterDiscount -= (discountableTotal * discountValue) / 100;
     } else if (discountType === "amount") {
-      totalAfterDiscount -= discountValue;
+      totalAfterDiscount -= Math.min(discountValue, discountableTotal);
     }
 
     return Math.max(0, totalAfterDiscount);

@@ -33,6 +33,9 @@ function ShoppingCartProduct() {
 
   const productHasDiscount = (item) => {
     if (!isDiscountApplied) return false;
+    // El cupón de monto fijo es a nivel carrito, no por artículo: se muestra
+    // solo en el total (evita restarlo de más en cada producto).
+    if (discountType === "amount") return false;
     if (discountTarget === "ALL") return true;
     if (discountTarget === "DECANT") return item.tipoVenta === "decant";
     if (discountTarget === "BOTELLA") return item.tipoVenta === "botella";

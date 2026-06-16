@@ -35,7 +35,9 @@ function SearchBar({ onSearchResult }) {
     const containsMatches = parfums.filter(
       (p) =>
         !safeLower(p.nombre).startsWith(lowerQuery) &&
-        safeLower(p.nombre).includes(lowerQuery),
+        !safeLower(p.casa).startsWith(lowerQuery) &&
+        (safeLower(p.nombre).includes(lowerQuery) ||
+          safeLower(p.casa).includes(lowerQuery)),
     );
     // Combinar ambos, priorizando los que empiezan igual
     const orderedSuggestions = [...startsWithMatches, ...containsMatches];
