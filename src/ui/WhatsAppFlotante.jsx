@@ -84,7 +84,7 @@ export default function WhatsAppFlotante() {
             Escríbeme por WhatsApp
           </p>
           <p className="mb-3 leading-relaxed">
-            Desde {inApp.source || "aquí"} a veces no abre solo. Ábreme en{" "}
+            Desde {inApp.source || "aquí"} a veces no abre Whatsapp. Ábreme en{" "}
             {navTarget} (toca {puntos} arriba → “Abrir en {navTarget}”) o copia
             mi número:
           </p>

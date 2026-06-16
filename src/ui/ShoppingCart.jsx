@@ -1,5 +1,5 @@
 import { useCart } from "../context/CartContext";
-import { X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
 import Checkout from "./Checkout";
@@ -22,6 +22,7 @@ export default function ShoppingCart() {
   const [postalCode, setPostalCode] = useState("");
   const [inputCode, setInputCode] = useState("");
   const [applying, setApplying] = useState(false);
+  const [paso, setPaso] = useState("carrito"); // "carrito" | "cp"
 
   // Bloquear scroll del body al abrir el carrito, preservando la posición
   useEffect(() => {
@@ -53,6 +54,16 @@ export default function ShoppingCart() {
     };
   }, [isCartOpen]);
 
+  // Al cerrar el carrito, volver siempre al paso inicial.
+  useEffect(() => {
+    if (!isCartOpen) setPaso("carrito");
+  }, [isCartOpen]);
+
+  // Si el carrito se vacía, regresar al paso inicial.
+  useEffect(() => {
+    if (cartItems.length === 0) setPaso("carrito");
+  }, [cartItems.length]);
+
   if (!isCartOpen) return null;
 
   const handlePostalCodeChange = (e) => {
@@ -78,6 +89,7 @@ export default function ShoppingCart() {
   };
 
   const isPostalCodeValid = postalCode.length === 5;
+  const tituloPanel = paso === "cp" ? "Tu envío 📦" : "Pedido 🛒";
 
   return (
     <>
@@ -94,7 +106,7 @@ export default function ShoppingCart() {
         }`}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-xl font-semibold">Pedido 🛒</h2>
+          <h2 className="text-xl font-semibold">{tituloPanel}</h2>
           <button
             onClick={closeCart}
             className="text-gray-500 hover:text-gray-800"
@@ -104,91 +116,135 @@ export default function ShoppingCart() {
         </div>
 
         <div className="flex flex-col h-[calc(100%-70px)] overflow-y-auto">
-          <EnvioGratisProgress />
+          {paso === "carrito" ? (
+            <>
+              <EnvioGratisProgress />
 
-          {/* Lista de productos */}
-          <ShoppingCartProduct />
+              {/* Lista de productos */}
+              <ShoppingCartProduct />
 
-          {/* Subtotal y código de descuento */}
-          <div
-            className={`border-t px-6 py-4 mt-auto ${
-              cartItems.length === 0 ? "hidden" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <input
-                value={inputCode}
-                onChange={handleInputChange}
-                placeholder="Código de descuento"
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none w-[60%]"
-              />
-              <button
-                onClick={handleApplyCode}
-                disabled={applying}
-                className="ml-2 bg-[#A47E3B] text-white px-3 py-2 rounded-md text-sm hover:bg-[#8b6d32] disabled:opacity-50"
+              {/* Subtotal, código de descuento y botón para continuar */}
+              <div
+                className={`border-t px-6 py-4 mt-auto ${
+                  cartItems.length === 0 ? "hidden" : ""
+                }`}
               >
-                {applying ? "Validando..." : "Aplicar"}
-              </button>
-            </div>
+                <div className="flex items-center justify-between mb-3">
+                  <input
+                    value={inputCode}
+                    onChange={handleInputChange}
+                    placeholder="Código de descuento"
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none w-[60%]"
+                  />
+                  <button
+                    onClick={handleApplyCode}
+                    disabled={applying}
+                    className="ml-2 bg-[#A47E3B] text-white px-3 py-2 rounded-md text-sm hover:bg-[#8b6d32] disabled:opacity-50"
+                  >
+                    {applying ? "Validando..." : "Aplicar"}
+                  </button>
+                </div>
 
-            {errorMessage && (
-              <p className="text-xs text-red-500 mb-2">{errorMessage}</p>
-            )}
+                {errorMessage && (
+                  <p className="text-xs text-red-500 mb-2">{errorMessage}</p>
+                )}
 
-            <div className="flex justify-between text-gray-700 mb-2">
-              <span>Subtotal:</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
+                <div className="flex justify-between text-gray-700 mb-2">
+                  <span>Subtotal:</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
 
-            {isDiscountApplied && (
-              <div className="flex justify-between text-green-700 font-medium mb-2">
-                <span>Descuento aplicado ({discountCode})</span>
-                <span>− ${(subtotal - totalWithDiscount).toFixed(2)}</span>
+                {isDiscountApplied && (
+                  <div className="flex justify-between text-green-700 font-medium mb-2">
+                    <span>Descuento aplicado ({discountCode})</span>
+                    <span>− ${(subtotal - totalWithDiscount).toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-gray-900 font-semibold border-t pt-3 mb-4">
+                  <span>Total:</span>
+                  <span>${totalWithDiscount.toFixed(2)}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPaso("cp")}
+                  disabled={cartItems.length === 0}
+                  className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                >
+                  Realizar pedido
+                </button>
               </div>
-            )}
+            </>
+          ) : (
+            /* PASO 2: código postal obligatorio antes de enviar el pedido */
+            <div className="p-6 flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={() => setPaso("carrito")}
+                className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 self-start"
+              >
+                <ArrowLeft size={16} />
+                Volver al carrito
+              </button>
 
-            <div className="flex justify-between text-gray-900 font-semibold border-t pt-3">
-              <span>Total:</span>
-              <span>${totalWithDiscount.toFixed(2)}</span>
-            </div>
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                <p className="font-bold text-gray-900 mb-1">
+                  Tu código postal:
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Necesito tu <strong>código postal</strong> para calcular el
+                  costo de tu envío. Sin él, no puedo cotizar tu pedido.
+                </p>
+              </div>
 
-            <div className={`${cartItems.length === 0 ? "hidden" : ""}`}>
-              <div className="border-b p-4 flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="postalCode"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Ingresa tu código postal para continuar:
+                  Tu código postal (5 dígitos):
                 </label>
                 <input
                   id="postalCode"
                   type="text"
                   value={postalCode}
                   onChange={handlePostalCodeChange}
-                  placeholder="Ej. 12345"
-                  className={`border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none transition-colors ${
+                  placeholder="Ej. 72000"
+                  className={`border rounded-md px-3 py-3 text-base focus:ring-2 focus:ring-[#A47E3B] focus:outline-none transition-colors ${
                     isPostalCodeValid
-                      ? "bg-white border-gray-300 text-gray-800 placeholder:text-gray-400"
+                      ? "bg-white border-gray-300 text-gray-800"
                       : "bg-red-50 border-red-300 text-gray-800 placeholder:text-gray-400"
                   }`}
                   inputMode="numeric"
                   maxLength={5}
+                  autoFocus
+                />
+                {!isPostalCodeValid && postalCode.length > 0 && (
+                  <p className="text-xs text-red-500">
+                    El código postal debe tener 5 dígitos.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-between text-gray-900 font-semibold border-t pt-3">
+                <span>Total de tu pedido:</span>
+                <span>${totalWithDiscount.toFixed(2)}</span>
+              </div>
+
+              <div
+                className={`${
+                  !isPostalCodeValid ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <Checkout
+                  totalCartPrice={totalWithDiscount}
+                  postalCode={postalCode}
+                  disabled={!isPostalCodeValid}
                 />
               </div>
             </div>
-
-            <div
-              className={`mt-4 ${
-                !isPostalCodeValid ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              <Checkout
-                totalCartPrice={totalWithDiscount}
-                postalCode={postalCode}
-                disabled={!isPostalCodeValid}
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </>

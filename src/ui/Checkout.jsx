@@ -64,7 +64,7 @@ ${productos}
 
 ${resumenPrecio}
 
-Para calcular el costo de envío, este es mi CP: ${postalCode}
+Para calcular el costo de envío, este es mi código postal: ${postalCode}
 Gracias!`;
   }, [
     cartItems,
@@ -208,7 +208,7 @@ Gracias!`;
       disabled={noListo}
       className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
     >
-      Realizar pedido
+      Enviar pedido por WhatsApp
     </button>
   );
 }
