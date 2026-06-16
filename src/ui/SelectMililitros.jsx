@@ -4,7 +4,7 @@ import {
   getPlaceholderMililitros,
 } from "../functions/pricingDecant";
 
-export default function SelectMililitros({ value, onChange, parfum }) {
+export default function SelectMililitros({ value, onChange, parfum, direction = "down" }) {
   const opciones = getOpcionesMililitros(parfum);
   const placeholder = getPlaceholderMililitros(parfum);
 
@@ -15,6 +15,7 @@ export default function SelectMililitros({ value, onChange, parfum }) {
       onChange={onChange}
       options={opciones}
       placeholder={placeholder}
+      direction={direction}
     />
   );
 }

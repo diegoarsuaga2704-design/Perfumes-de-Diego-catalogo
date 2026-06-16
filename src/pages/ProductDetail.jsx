@@ -393,34 +393,45 @@ export default function ProductDetail() {
           <div className="sm:hidden h-20" aria-hidden="true" />
 
           <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-lg p-3">
-            <button
-              onClick={handleAddToCart}
-              disabled={
-                added ||
-                (esDecant && !mililitros) ||
-                (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
-              }
-              className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                added
-                  ? "bg-green-500 text-white cursor-default"
-                  : (!esDecant || mililitros) &&
-                      (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
-                    ? "bg-[#A47E3B] text-white active:bg-[#8B6A30]"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-            >
-              {added ? (
-                <>
-                  <CheckCircle size={18} />
-                  Agregado al carrito
-                </>
-              ) : (
-                <>
-                  <ShoppingCart size={18} />
-                  {esDecant && !mililitros ? "Selecciona los ml primero" : "Añadir al carrito"}
-                </>
-              )}
-            </button>
+            {esDecant && !mililitros ? (
+              <SelectMililitros
+                value={mililitros}
+                onChange={setMililitros}
+                parfum={parfum}
+                direction="up"
+              />
+            ) : (
+              <button
+                onClick={handleAddToCart}
+                disabled={
+                  added ||
+                  (esBotellaCompleta &&
+                    (!parfum.botellasDisponibles ||
+                      parfum.botellasDisponibles < 1))
+                }
+                className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  added
+                    ? "bg-green-500 text-white cursor-default"
+                    : !esBotellaCompleta ||
+                        (parfum.botellasDisponibles &&
+                          parfum.botellasDisponibles >= 1)
+                      ? "bg-[#A47E3B] text-white active:bg-[#8B6A30]"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {added ? (
+                  <>
+                    <CheckCircle size={18} />
+                    Agregado al carrito
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart size={18} />
+                    Añadir al carrito
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </>
       )}
