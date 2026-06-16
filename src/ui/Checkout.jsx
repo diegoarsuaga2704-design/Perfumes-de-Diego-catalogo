@@ -120,7 +120,7 @@ Gracias!`;
     if (!ok) return;
     track("pedido_copiar", { total: safeTotalCartPrice });
     setCopiado(true);
-    setTimeout(() => setCopiado(false), 5000);
+    setTimeout(() => setCopiado(false), 5500);
   };
 
   // Navegador interno de TikTok/Instagram/Facebook: window.open y a veces los
