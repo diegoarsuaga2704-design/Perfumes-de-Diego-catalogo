@@ -8,7 +8,7 @@ const DEFAULT_TITLE =
 const DEFAULT_DESCRIPTION =
   "Decants y botellas de perfumes de nicho y de diseñador en México. Prueba antes de comprar el frasco completo. Envíos a todo el país.";
 const DEFAULT_IMAGE =
-  "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/perfumes-de-diego-letras-horizontal.png";
+  "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg";
 const SITE_URL = "https://perfumes-de-diego-catalogo.vercel.app";
 
 export default function SEO({

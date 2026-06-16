@@ -2,6 +2,7 @@ import { useCart } from "../context/CartContext";
 import { useEffect, useState, useMemo } from "react";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
+import { track } from "@vercel/analytics";
 
 function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
   const {
@@ -85,6 +86,7 @@ Gracias!`;
   const handleCopiar = async () => {
     try {
       await navigator.clipboard.writeText(mensajePedido);
+      track("pedido_copiar", { total: safeTotalCartPrice });
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2500);
     } catch {
@@ -152,6 +154,7 @@ Gracias!`;
       type="button"
       onClick={() => {
         if (noListo) return;
+        track("pedido_whatsapp", { total: safeTotalCartPrice });
         window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
       }}
       disabled={noListo}
