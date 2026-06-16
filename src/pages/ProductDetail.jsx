@@ -239,7 +239,7 @@ export default function ProductDetail() {
                     value={botellas}
                     onChange={(val) => setBotellas(val)}
                     options={Array.from(
-                      { length: parfum.botellasDisponibles },
+                      { length: Math.max(0, Math.floor(Number(parfum.botellasDisponibles) || 0)) },
                       (_, i) => i + 1,
                     ).map((num) => ({
                       value: num,
