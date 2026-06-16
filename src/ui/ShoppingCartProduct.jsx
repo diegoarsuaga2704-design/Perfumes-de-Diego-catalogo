@@ -87,7 +87,7 @@ function ShoppingCartProduct() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 items-center">
+    <div className="p-6 items-center">
       {cartItems.length === 0 ? (
         <p className="text-gray-500 text-center mt-10">
           Tu carrito está vacío.
