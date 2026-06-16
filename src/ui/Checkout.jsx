@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 import { track } from "@vercel/analytics";
+import { CheckCircle } from "lucide-react";
 
 function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
   const {
@@ -83,15 +84,43 @@ Gracias!`;
   // el carrito según el código postal).
   const noListo = !cartItems.length || disabled;
 
-  const handleCopiar = async () => {
+  const copiarTexto = async (texto) => {
+    // 1) API moderna (necesita contexto seguro; a veces bloqueada en in-app)
     try {
-      await navigator.clipboard.writeText(mensajePedido);
-      track("pedido_copiar", { total: safeTotalCartPrice });
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2500);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(texto);
+        return true;
+      }
     } catch {
-      // Si el navegador no permite clipboard, no rompemos nada.
+      // cae al método de respaldo
     }
+    // 2) Respaldo: textarea + execCommand (funciona en más navegadores in-app)
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = texto;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "0";
+      ta.style.left = "0";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, texto.length);
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleCopiar = async () => {
+    const ok = await copiarTexto(mensajePedido);
+    if (!ok) return;
+    track("pedido_copiar", { total: safeTotalCartPrice });
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2500);
   };
 
   // Navegador interno de TikTok/Instagram/Facebook: window.open y a veces los
@@ -129,9 +158,20 @@ Gracias!`;
           type="button"
           onClick={handleCopiar}
           disabled={noListo}
-          className="w-full border border-[#A47E3B] text-[#A47E3B] py-2 rounded-md font-medium hover:bg-[#A47E3B]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full flex items-center justify-center gap-2 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            copiado
+              ? "bg-green-600 text-white animate-[copiadoPop_0.4s_ease]"
+              : "border border-[#A47E3B] text-[#A47E3B] hover:bg-[#A47E3B]/10"
+          }`}
         >
-          {copiado ? "✓ Pedido copiado" : "Copiar mi pedido"}
+          {copiado ? (
+            <>
+              <CheckCircle size={18} />
+              ¡Pedido copiado!
+            </>
+          ) : (
+            "Copiar mi pedido"
+          )}
         </button>
 
         {copiado && (
@@ -145,6 +185,14 @@ Gracias!`;
             Ingresa tu código postal arriba para copiar el pedido completo.
           </p>
         )}
+
+        <style>{`
+          @keyframes copiadoPop {
+            0% { transform: scale(0.96); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+          }
+        `}</style>
       </div>
     );
   }

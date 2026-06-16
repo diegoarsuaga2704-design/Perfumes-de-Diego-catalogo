@@ -310,14 +310,14 @@ export default function ProductDetail() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Conocer más sobre "{parfum.nombre}" aquí
+                    Conocer más sobre "{parfum.nombre}" en Fragrantica
                   </a>
                 )}
               </div>
 
-              {/* SELECTOR SOLO PARA DECANTS */}
+              {/* SELECTOR SOLO PARA DECANTS (en móvil va en la barra fija) */}
               {esDecant && estaDisponible && (
-                <>
+                <div className="hidden sm:block">
                   <SelectMililitros
                     value={mililitros}
                     onChange={setMililitros}
@@ -329,7 +329,7 @@ export default function ProductDetail() {
                       Total: ${totalPrice} por {mililitros} ml
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {/* FORMULARIO AVÍSAME (si no está Disponible) o BOTÓN añadir */}
@@ -338,7 +338,7 @@ export default function ProductDetail() {
                   <AvisameFormulario parfum={parfum} />
                 </div>
               ) : (
-                <div className="mt-4 flex gap-3 items-center">
+                <div className="mt-4 hidden sm:flex gap-3 items-center">
                   <button
                     onClick={handleAddToCart}
                     disabled={
@@ -401,7 +401,13 @@ export default function ProductDetail() {
                 direction="up"
               />
             ) : (
-              <button
+              <div className="flex flex-col gap-1.5">
+                {esDecant && mililitros && (
+                  <div className="text-[#A47E3B] text-sm font-semibold text-center">
+                    Total: ${totalPrice} por {mililitros} ml
+                  </div>
+                )}
+                <button
                 onClick={handleAddToCart}
                 disabled={
                   added ||
@@ -431,6 +437,7 @@ export default function ProductDetail() {
                   </>
                 )}
               </button>
+              </div>
             )}
           </div>
         </>
