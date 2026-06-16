@@ -158,7 +158,7 @@ export default function ShoppingCart() {
                   htmlFor="postalCode"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Ingresa tu código postal:
+                  Ingresa tu código postal para continuar:
                 </label>
                 <input
                   id="postalCode"

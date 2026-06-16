@@ -134,7 +134,7 @@ Gracias!`;
     return (
       <div className="rounded-md border border-[#A47E3B]/40 bg-[#FBF7F0] p-4 text-sm text-gray-700">
         <p className="font-semibold text-gray-900 mb-3">
-          Desde {inAppInfo.source || "aquí"} no se abre WhatsApp solo. Tienes dos
+          Desde {inAppInfo.source || "aquí"} no podrás realizar tu pedido. Tienes dos
           opciones:
         </p>
 
@@ -147,7 +147,7 @@ Gracias!`;
 
         <p className="font-medium text-gray-900">Opción 2</p>
         <p className="mb-2">
-          Copia tu pedido y mándaselo a Diego al WhatsApp{" "}
+          Copia tu pedido y mandamelo a mi WhatsApp{" "}
           <span className="font-semibold whitespace-nowrap">
             +52 221 203 4647
           </span>
@@ -176,7 +176,7 @@ Gracias!`;
 
         {copiado && (
           <p className="mt-2 text-xs text-green-700">
-            Listo. Abre WhatsApp y pega tu pedido en el chat con Diego.
+            Listo. Abre WhatsApp y pega tu pedido en el chat conmigo.
           </p>
         )}
 
