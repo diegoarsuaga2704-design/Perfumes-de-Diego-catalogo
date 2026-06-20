@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
+import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
@@ -97,6 +98,11 @@ export default function ProductDetail() {
     };
 
     addToCart(product);
+    track("add_to_cart", {
+      producto: parfum.nombre,
+      tipo: esBotellaCompleta ? "botella" : "decant",
+      total: totalPrice,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };

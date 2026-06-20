@@ -18,7 +18,7 @@ function Prehome() {
     },
     {
       image:
-        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/bestseller.jpeg",
+        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg",
       title: "Mejor vendidos",
       description: "Los favoritos de mis clientes.",
     },
