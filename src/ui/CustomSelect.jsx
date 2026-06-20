@@ -20,6 +20,7 @@ export default function CustomSelect({
   placeholder = "-- Selecciona --",
   direction = "down",
   variant = "default",
+  pulse = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -79,7 +80,9 @@ export default function CustomSelect({
         onClick={() => setIsOpen(!isOpen)}
         className={
           esCta
-            ? "flex items-center justify-center gap-2 w-full px-5 py-3 rounded-lg bg-[#A47E3B] text-white text-base font-semibold shadow-md active:bg-[#8B6A30] transition-colors"
+            ? `flex items-center justify-center gap-2 w-full px-5 py-3 rounded-lg bg-[#A47E3B] text-white text-base font-semibold shadow-md active:bg-[#8B6A30] transition-colors ${
+                pulse ? "animate-[latido_1.1s_ease-in-out_3]" : ""
+              }`
             : "flex items-center justify-between border border-gray-300 rounded-md px-3 py-3 text-gray-800 bg-white shadow-sm hover:border-[#A47E3B] focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B] transition duration-200 w-full"
         }
       >
@@ -139,6 +142,14 @@ export default function CustomSelect({
             })}
           </div>
         </div>
+      )}
+      {esCta && pulse && (
+        <style>{`
+          @keyframes latido {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            50% { transform: scale(1.04); box-shadow: 0 0 0 5px rgba(164,126,59,0.30); }
+          }
+        `}</style>
       )}
     </div>
   );
