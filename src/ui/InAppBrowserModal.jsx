@@ -61,9 +61,9 @@ function InAppBrowserModal() {
         {/* Contenido */}
         <div className="p-6">
           <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-            Lo más fácil es abrir el sitio en{" "}
+            Estás en el buscador de Tiktok, desde aquí no podrás enviarme tu pedido, lo más fácil es abrir el sitio en{" "}
             <strong>{navegadorObjetivo}</strong>; ahí tu pedido se envía por
-            WhatsApp normal.
+            WhatsApp.
           </p>
 
           <div className="bg-amber-50 rounded-xl p-4 mb-4 border border-amber-200">
