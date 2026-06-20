@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import supabase from "../services/supabase";
+import { useToast } from "./ToastContext";
 import {
   calcularPrecioDecantCarrito,
   getIncrementoMililitros,
@@ -39,6 +40,92 @@ export function CartProvider({ children }) {
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { showToast } = useToast();
+
+  // 🔄 Al cargar, refrescar precio/stock de los items guardados (el carrito
+  // puede tener hasta 10 días). Si un producto ya no existe o se agotó, lo
+  // quitamos. Si la red falla, NO tocamos el carrito (mejor un precio viejo
+  // que vaciarlo sin querer). Corre una sola vez, con el carrito recién
+  // hidratado desde localStorage.
+  useEffect(() => {
+    let cancelado = false;
+
+    async function revalidar() {
+      const ids = cartItems.map((i) => i.id);
+      if (ids.length === 0) return;
+
+      const { data, error } = await supabase
+        .from("parfums")
+        .select("id, precio, precio30ml, botellasDisponibles, disponible")
+        .in("id", ids);
+
+      if (error || !data || cancelado) return;
+
+      const frescosPorId = new Map(data.map((p) => [p.id, p]));
+      let huboCambios = false;
+      let huboEliminados = false;
+      const actualizados = [];
+
+      for (const item of cartItems) {
+        const fresco = frescosPorId.get(item.id);
+
+        // Producto borrado o ya no disponible → fuera.
+        if (!fresco || fresco.disponible !== "Disponible") {
+          huboEliminados = true;
+          huboCambios = true;
+          continue;
+        }
+
+        const nuevo = { ...item };
+
+        if (Number(fresco.precio) !== Number(item.precioUnitario)) {
+          nuevo.precioUnitario = fresco.precio;
+          huboCambios = true;
+        }
+        if ((fresco.precio30ml ?? null) !== (item.precio30ml ?? null)) {
+          nuevo.precio30ml = fresco.precio30ml ?? null;
+          huboCambios = true;
+        }
+
+        // Botella: refrescar stock y recortar cantidad si bajó.
+        if (item.tipoVenta === "botella") {
+          const stock = Number(fresco.botellasDisponibles) || 0;
+          if (stock < 1) {
+            huboEliminados = true;
+            huboCambios = true;
+            continue;
+          }
+          if (stock !== item.stockDisponible) {
+            nuevo.stockDisponible = stock;
+            huboCambios = true;
+          }
+          if (Number(item.cantidad) > stock) {
+            nuevo.cantidad = stock;
+            huboCambios = true;
+          }
+        }
+
+        actualizados.push(nuevo);
+      }
+
+      if (huboCambios && !cancelado) {
+        setCartItems(actualizados);
+        showToast(
+          huboEliminados
+            ? "Quitamos productos de tu carrito que ya no están disponibles."
+            : "Actualizamos tu carrito con precios y stock al día.",
+          "info",
+        );
+      }
+    }
+
+    revalidar();
+
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     try {
@@ -64,8 +151,25 @@ export function CartProvider({ children }) {
   // 🛍️ Códigos: ahora viven en Supabase (tabla codigos_descuento) y se
   // validan server-side con la función validar_cupon. Ya no hay nada hardcodeado.
 
+
   // 🛒 Añadir producto (decant o botella)
   const addToCart = (product) => {
+    // Tope de stock para botellas: avisar en vez de no hacer nada.
+    if (product.tipoVenta === "botella") {
+      const existente = cartItems.find(
+        (i) => i.id === product.id && i.tipoVenta === "botella",
+      );
+      if (existente && existente.cantidad + 1 > existente.stockDisponible) {
+        showToast(
+          `Solo quedan ${existente.stockDisponible} de ${
+            existente.nombre || "este producto"
+          }.`,
+          "info",
+        );
+        return;
+      }
+    }
+
     setCartItems((prev) => {
       const existing = prev.find(
         (item) =>
@@ -103,6 +207,16 @@ export function CartProvider({ children }) {
 
   // ✏️ Actualizar cantidad
   const updateCartItem = (id, tipoVenta, newValue) => {
+    if (tipoVenta === "botella") {
+      const item = cartItems.find(
+        (i) => i.id === id && i.tipoVenta === "botella",
+      );
+      if (item && newValue > item.stockDisponible) {
+        showToast(`Solo hay ${item.stockDisponible} disponibles.`, "info");
+        return;
+      }
+    }
+
     setCartItems((prev) =>
       prev.map((item) => {
         if (item.id === id && item.tipoVenta === tipoVenta) {

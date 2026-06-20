@@ -1,4 +1,4 @@
-function HomeBrand({ image, title, description, onClick }) {
+function HomeBrand({ image, title, description, onClick, eager = false }) {
   return (
     <div
       onClick={onClick}
@@ -8,6 +8,9 @@ function HomeBrand({ image, title, description, onClick }) {
       <img
         src={image}
         alt={title}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={eager ? "high" : "auto"}
         className="w-full h-96 object-cover transition-transform duration-500 group-hover:scale-105"
       />
       {/* Overlay degradado */}

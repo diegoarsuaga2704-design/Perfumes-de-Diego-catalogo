@@ -172,7 +172,7 @@ export default function ShoppingCart() {
                   disabled={cartItems.length === 0}
                   className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
-                  Realizar pedido
+                  Continuar
                 </button>
               </div>
             </>

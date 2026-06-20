@@ -1,29 +1,37 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Home from "./pages/Home";
-import FAQs from "./pages/FAQs";
-import Testimonios from "./pages/Testimonios";
-import BestSellers from "./pages/BestSellers";
-import VistoEnTikTok from "./pages/VistoEnTikTok";
+import { lazy, Suspense } from "react";
 import AppLayout from "./ui/AppLayout";
-import NotFound from "./pages/NotFound";
-import ProductDetail from "./pages/ProductDetail";
-import Prehome from "./pages/Prehome";
-import AdminLogin from "./pages/AdminLogin";
-import AdminPanel from "./pages/AdminPanel";
-import AdminPerfumesList from "./pages/AdminPerfumesList";
-import AdminPerfumeEdit from "./pages/AdminPerfumeEdit";
-import AdminPerfumeCreate from "./pages/AdminPerfumeCreate";
-import AdminTestimoniosList from "./pages/AdminTestimoniosList";
-import AdminTestimonioCreate from "./pages/AdminTestimonioCreate";
-import AdminTestimonioEdit from "./pages/AdminTestimonioEdit";
-import AdminCasasList from "./pages/AdminCasasList";
-import AdminCasaEdit from "./pages/AdminCasaEdit";
-import AdminAvisos from "./pages/AdminAvisos";
-import AdminCodigosList from "./pages/AdminCodigosList";
-import Casas from "./pages/Casas";
-import SobreMi from "./pages/SobreMi";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 import RouterErrorElement from "./ui/RouterErrorElement";
+import LoadingSpinner from "./ui/LoadingSpinner";
+
+// Páginas cargadas bajo demanda (code-splitting). Así el visitante de TikTok
+// no descarga el panel de admin ni páginas que no va a ver en la primera carga.
+const Home = lazy(() => import("./pages/Home"));
+const FAQs = lazy(() => import("./pages/FAQs"));
+const Testimonios = lazy(() => import("./pages/Testimonios"));
+const BestSellers = lazy(() => import("./pages/BestSellers"));
+const VistoEnTikTok = lazy(() => import("./pages/VistoEnTikTok"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Prehome = lazy(() => import("./pages/Prehome"));
+const Casas = lazy(() => import("./pages/Casas"));
+const SobreMi = lazy(() => import("./pages/SobreMi"));
+
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const AdminPerfumesList = lazy(() => import("./pages/AdminPerfumesList"));
+const AdminPerfumeEdit = lazy(() => import("./pages/AdminPerfumeEdit"));
+const AdminPerfumeCreate = lazy(() => import("./pages/AdminPerfumeCreate"));
+const AdminTestimoniosList = lazy(() => import("./pages/AdminTestimoniosList"));
+const AdminTestimonioCreate = lazy(() =>
+  import("./pages/AdminTestimonioCreate"),
+);
+const AdminTestimonioEdit = lazy(() => import("./pages/AdminTestimonioEdit"));
+const AdminCasasList = lazy(() => import("./pages/AdminCasasList"));
+const AdminCasaEdit = lazy(() => import("./pages/AdminCasaEdit"));
+const AdminAvisos = lazy(() => import("./pages/AdminAvisos"));
+const AdminCodigosList = lazy(() => import("./pages/AdminCodigosList"));
 
 const router = createBrowserRouter([
   // Rutas públicas con AppLayout
@@ -166,7 +174,13 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  // Suspense de respaldo para las rutas que no pasan por AppLayout (admin).
+  // Las páginas públicas tienen su propio Suspense alrededor del <Outlet/>.
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <RouterProvider router={router} />
+    </Suspense>
+  );
 }
 
 export default App;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -8,6 +8,7 @@ import TopBanner from "./TopBanner";
 import MainMenu from "./MainMenu";
 import ScrollToTop from "./ScrollToTop";
 import InAppBrowserModal from "./InAppBrowserModal";
+import LoadingSpinner from "./LoadingSpinner";
 
 function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
@@ -19,7 +20,9 @@ function AppLayout() {
       <Header onSearchResult={setSearchResult} />
       <MainMenu />
       <main className="flex-1">
-        <Outlet context={{ searchResult }} />
+        <Suspense fallback={<LoadingSpinner />}>
+          <Outlet context={{ searchResult }} />
+        </Suspense>
       </main>
       <ShoppingCart />
       <Footer />

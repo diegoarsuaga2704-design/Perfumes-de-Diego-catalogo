@@ -11,19 +11,19 @@ function Prehome() {
   const collections = [
     {
       image:
-        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/o.rZpkAR0ZbQi.jpg",
+        "https://filipposorcinelli.com/cdn/shop/files/slide-bn-FIlReli-desktop.jpg?v=1707475834&width=1680",
       title: "Decants",
       description:
         "Prueba tus perfumes favoritos antes de comprar el frasco completo.",
     },
     {
       image:
-        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg",
+        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/bestseller.jpeg",
       title: "Mejor vendidos",
       description: "Los favoritos de mis clientes.",
     },
     {
-      image: "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/haec%20foto.webp",
+      image: "https://fraguru.com/himg/o.gxxUAHYdeV7.jpg",
       title: "Botellas completas y parciales",
       description: "Perfumes sellados y parciales disponibles.",
     },
@@ -54,6 +54,7 @@ function Prehome() {
             image={item.image}
             title={item.title}
             description={item.description}
+            eager={index === 0}
             onClick={() => handleClick(item.title)}
           />
         ))}
