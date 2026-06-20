@@ -19,6 +19,7 @@ export default function CustomSelect({
   options = [],
   placeholder = "-- Selecciona --",
   direction = "down",
+  variant = "default",
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -57,6 +58,7 @@ export default function CustomSelect({
   }, [isOpen, direction]);
 
   const selectedOption = options.find((opt) => opt.value === value);
+  const esCta = variant === "cta";
 
   const handleSelect = (val) => {
     onChange?.(val);
@@ -75,17 +77,35 @@ export default function CustomSelect({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between border border-gray-300 rounded-md px-3 py-3 text-gray-800 bg-white shadow-sm hover:border-[#A47E3B] focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B] transition duration-200 w-full"
+        className={
+          esCta
+            ? "flex items-center justify-center gap-2 w-full px-5 py-3 rounded-lg bg-[#A47E3B] text-white text-base font-semibold shadow-md active:bg-[#8B6A30] transition-colors"
+            : "flex items-center justify-between border border-gray-300 rounded-md px-3 py-3 text-gray-800 bg-white shadow-sm hover:border-[#A47E3B] focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B] transition duration-200 w-full"
+        }
       >
-        <span className={selectedOption ? "text-gray-800" : "text-gray-400"}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown
-          size={18}
-          className={`text-gray-500 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
+        {esCta ? (
+          <>
+            <span>{selectedOption ? selectedOption.label : placeholder}</span>
+            <ChevronDown
+              size={18}
+              className={`text-white transition-transform duration-200 ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            />
+          </>
+        ) : (
+          <>
+            <span className={selectedOption ? "text-gray-800" : "text-gray-400"}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+            <ChevronDown
+              size={18}
+              className={`text-gray-500 transition-transform duration-200 ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            />
+          </>
+        )}
       </button>
 
       {/* Dropdown con opciones */}

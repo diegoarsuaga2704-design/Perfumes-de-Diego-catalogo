@@ -392,14 +392,20 @@ export default function ProductDetail() {
           {/* Spacer para que el sticky no tape el contenido */}
           <div className="sm:hidden h-20" aria-hidden="true" />
 
-          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-lg p-3">
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.12)] p-3">
             {esDecant && !mililitros ? (
-              <SelectMililitros
-                value={mililitros}
-                onChange={setMililitros}
-                parfum={parfum}
-                direction="up"
-              />
+              <div className="flex flex-col gap-1.5">
+                <p className="text-center text-xs font-medium text-gray-600">
+                  👇 Elige los mililitros para agregar al carrito
+                </p>
+                <SelectMililitros
+                  value={mililitros}
+                  onChange={setMililitros}
+                  parfum={parfum}
+                  direction="up"
+                  variant="cta"
+                />
+              </div>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {esDecant && mililitros && (
