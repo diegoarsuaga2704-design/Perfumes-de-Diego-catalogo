@@ -51,7 +51,7 @@ function InAppBrowserModal() {
         {/* Header dorado, tono amable */}
         <div className="bg-gradient-to-r from-[#A47E3B] to-[#D4AF7A] text-white p-4 text-center">
           <h2 className="text-lg sm:text-xl font-bold mb-1">
-            Para enviarme tu pedido 💬
+            Para hacer tu pedido 💬
           </h2>
           <p className="text-sm font-medium text-white/90">
             Estás viendo el sitio dentro de {source || "una app"}
@@ -61,20 +61,23 @@ function InAppBrowserModal() {
         {/* Contenido */}
         <div className="p-6">
           <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-            Tranquilo, puedes terminar tu pedido{" "}
-            <strong>sin salir de aquí</strong>. Cuando llegues al carrito, usa{" "}
-            <strong>“Copiar mi pedido”</strong> y mándamelo por WhatsApp — así no
-            pierdes nada de lo que llevas.
+            Lo más fácil es abrir el sitio en{" "}
+            <strong>{navegadorObjetivo}</strong>; ahí tu pedido se envía por
+            WhatsApp normal.
           </p>
 
           <div className="bg-amber-50 rounded-xl p-4 mb-4 border border-amber-200">
-            <p className="text-sm text-gray-800 leading-relaxed">
-              <strong>¿Prefieres abrirlo en {navegadorObjetivo}?</strong> Toca los
-              3 puntitos {puntos} arriba a la derecha → “Abrir en{" "}
-              {navegadorObjetivo}”. Ojo: ahí tu carrito se queda en{" "}
-              {source || "esta app"}.
-            </p>
+            <p className="text-sm font-bold text-gray-900 mb-2">Cómo abrirlo:</p>
+            <ol className="space-y-1.5 list-decimal pl-5 text-sm text-gray-800">
+              <li>Toca los 3 puntitos {puntos} arriba a la derecha</li>
+              <li>Elige “Abrir en {navegadorObjetivo}”</li>
+            </ol>
           </div>
+
+          <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+            ¿Prefieres no cambiar de navegador? También puedes copiar tu pedido
+            en el carrito y mandármelo por WhatsApp.
+          </p>
 
           <button
             type="button"

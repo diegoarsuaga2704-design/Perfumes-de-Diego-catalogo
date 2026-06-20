@@ -140,19 +140,25 @@ Gracias!`;
         ) : (
           <>
             <p className="font-semibold text-gray-900 mb-3">
-              Desde {inAppInfo.source || "aquí"} no se abre WhatsApp solo. La
-              forma más fácil:
+              Desde {inAppInfo.source || "aquí"} no se abre WhatsApp solo. Tienes
+              dos formas:
             </p>
 
             <p className="font-medium text-gray-900">
-              Opción 1 (recomendada): copia tu pedido
+              Opción 1 (recomendada): ábrela en {navTarget}
             </p>
+            <p className="mb-3">
+              Toca los 3 puntitos {puntos} arriba a la derecha → “Abrir en{" "}
+              {navTarget}”. Ahí el botón de pedido funciona normal.
+            </p>
+
+            <p className="font-medium text-gray-900">Opción 2: copia tu pedido</p>
             <p className="mb-2">
               Cópialo y mándamelo por WhatsApp al{" "}
               <span className="font-semibold whitespace-nowrap">
                 +52 221 203 4647
               </span>
-              . Así no pierdes tu carrito.
+              .
             </p>
 
             <button
@@ -179,15 +185,6 @@ Gracias!`;
                 Listo. Abre WhatsApp y pega tu pedido en el chat con Diego.
               </p>
             )}
-
-            <p className="font-medium text-gray-900 mt-4">
-              Opción 2: ábrela en {navTarget}
-            </p>
-            <p>
-              Toca los 3 puntitos {puntos} arriba a la derecha → “Abrir en{" "}
-              {navTarget}”. Ojo: tu carrito se queda en{" "}
-              {inAppInfo.source || "esta app"}, tendrías que armarlo de nuevo.
-            </p>
           </>
         )}
 
