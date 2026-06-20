@@ -43,50 +43,45 @@ function InAppBrowserModal() {
   if (!isOpen) return null;
 
   const navegadorObjetivo = platform === "ios" ? "Safari" : "Chrome";
+  const puntos = platform === "ios" ? "(···)" : "(⋮)";
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-fade-in-modal">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border-4 border-[#A47E3B] animate-shake">
-        {/* Header dorado */}
-        <div className="bg-gradient-to-r from-[#A47E3B] to-[#D4AF7A] text-white rounded-t-xl p-4 text-center">
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide mb-1">
-            IMPORTANTE
+    <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 animate-fade-in-modal">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
+        {/* Header dorado, tono amable */}
+        <div className="bg-gradient-to-r from-[#A47E3B] to-[#D4AF7A] text-white p-4 text-center">
+          <h2 className="text-lg sm:text-xl font-bold mb-1">
+            Para enviarme tu pedido 💬
           </h2>
-          <p className="text-sm font-semibold">
-            Para realizar tu pedido tienes que abrir el sitio en {navegadorObjetivo}
+          <p className="text-sm font-medium text-white/90">
+            Estás viendo el sitio dentro de {source || "una app"}
           </p>
         </div>
 
         {/* Contenido */}
         <div className="p-6">
-          <p className="text-sm text-gray-700 mb-4 text-center leading-relaxed">
-            Estás viendo el sitio dentro de {source || "una app"}, y desde aquí
-            no se puede abrir WhatsApp para enviar tu pedido.
+          <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+            Tranquilo, puedes terminar tu pedido{" "}
+            <strong>sin salir de aquí</strong>. Cuando llegues al carrito, usa{" "}
+            <strong>“Copiar mi pedido”</strong> y mándamelo por WhatsApp — así no
+            pierdes nada de lo que llevas.
           </p>
 
-          {/* Instrucciones */}
-          <div className="bg-amber-50 rounded-xl p-4 mb-4 border-2 border-amber-300">
-            <p className="text-sm font-bold text-gray-900 mb-2">Cómo abrirlo:</p>
-            <ol className="space-y-1.5 list-decimal pl-5 text-sm text-gray-800">
-              <li>Toca los 3 puntitos {platform === "ios" ? "(···)" : "(⋮)"} arriba a la derecha</li>
-              <li>Selecciona "Abrir en {navegadorObjetivo}"</li>
-            </ol>
-          </div>
-
-          {/* Aviso del carrito */}
-          <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-4 text-xs text-gray-700">
-            <p>
-              <strong>Nota:</strong> tu carrito puede vaciarse al cambiar de
-              navegador. Si pasa, son solo unos clicks volver a armarlo.
+          <div className="bg-amber-50 rounded-xl p-4 mb-4 border border-amber-200">
+            <p className="text-sm text-gray-800 leading-relaxed">
+              <strong>¿Prefieres abrirlo en {navegadorObjetivo}?</strong> Toca los
+              3 puntitos {puntos} arriba a la derecha → “Abrir en{" "}
+              {navegadorObjetivo}”. Ojo: ahí tu carrito se queda en{" "}
+              {source || "esta app"}.
             </p>
           </div>
 
           <button
             type="button"
             onClick={handleDismiss}
-            className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
+            className="w-full bg-[#A47E3B] text-white py-3 rounded-lg font-semibold hover:bg-[#8B6A30] transition-colors text-sm"
           >
-            Sigo aquí por ahora
+            Entendido
           </button>
         </div>
       </div>
@@ -99,15 +94,6 @@ function InAppBrowserModal() {
           }
           .animate-fade-in-modal {
             animation: fade-in-modal 0.2s ease-out;
-          }
-
-          @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-          }
-          .animate-shake {
-            animation: shake 0.4s ease-in-out;
           }
         `}
       </style>
