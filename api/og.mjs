@@ -38,13 +38,14 @@ const DEFAULT_IMAGE =
   "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg";
 const SITE_NAME = "Perfumes de Diego";
 
-function buildOgHtml({ title, description, image, url }) {
+function buildOgHtml({ title, description, image, url, bodyHtml = "" }) {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}" />
+  <link rel="canonical" href="${esc(url)}" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="${esc(title)}" />
   <meta property="og:description" content="${esc(description)}" />
@@ -56,7 +57,7 @@ function buildOgHtml({ title, description, image, url }) {
   <meta name="twitter:description" content="${esc(description)}" />
   <meta name="twitter:image" content="${esc(image)}" />
 </head>
-<body></body>
+<body>${bodyHtml}</body>
 </html>`;
 }
 
@@ -88,6 +89,7 @@ export default async function handler(req, res) {
   let description = "Decants y botellas de perfumes de nicho en Mexico.";
   let image = DEFAULT_IMAGE;
   let url = SITE_URL;
+  let bodyHtml = `<h1>${esc(SITE_NAME)}</h1><p>${esc(description)}</p>`;
 
   try {
     const supabase = createClient(
@@ -109,6 +111,17 @@ export default async function handler(req, res) {
           : `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}. Disponible en decant o botella.`;
         image = perfume.image || DEFAULT_IMAGE;
         url = `${SITE_URL}/product/${slugify(perfume.nombre)}/${id}`;
+        const h1 = `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}`;
+        bodyHtml =
+          `<h1>${esc(h1)}</h1>` +
+          (perfume.concentracion
+            ? `<p>Concentración: ${esc(perfume.concentracion)}</p>`
+            : "") +
+          (perfume.notas
+            ? `<p>Notas olfativas: ${esc(perfume.notas)}</p>`
+            : "") +
+          `<p>Disponible en decant para probar o en botella completa. Envíos a todo México.</p>` +
+          `<p><a href="${esc(url)}">Ver ${esc(perfume.nombre)} en ${esc(SITE_NAME)}</a></p>`;
       }
     } else if (type === "casa" && slug) {
       const { data: casas } = await supabase
@@ -124,6 +137,11 @@ export default async function handler(req, res) {
           `Coleccion de perfumes de ${casa.nombre}. Decants y botellas disponibles.`;
         image = casa.imagen_hero || DEFAULT_IMAGE;
         url = `${SITE_URL}/casa/${slug}`;
+        bodyHtml =
+          `<h1>${esc(casa.nombre)}</h1>` +
+          (casa.descripcion ? `<p>${esc(casa.descripcion)}</p>` : "") +
+          `<p>Explora los decants y botellas de ${esc(casa.nombre)} disponibles en ${esc(SITE_NAME)}.</p>` +
+          `<p><a href="${esc(url)}">Ver perfumes de ${esc(casa.nombre)}</a></p>`;
       }
     }
   } catch (err) {
@@ -132,5 +150,5 @@ export default async function handler(req, res) {
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
-  res.status(200).send(buildOgHtml({ title, description, image, url }));
+  res.status(200).send(buildOgHtml({ title, description, image, url, bodyHtml }));
 }
