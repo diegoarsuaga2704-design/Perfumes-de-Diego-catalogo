@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { useParfums } from "../context/ParfumsContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { slugify } from "../functions/slugify";
 
 function SearchBar({ onSearchResult }) {
@@ -10,6 +10,23 @@ function SearchBar({ onSearchResult }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const prevPathRef = useRef(location.pathname);
+
+  // Resetear el buscador al navegar a una sección del menú (Decants, Casas,
+  // etc.). Se omite "/home" porque ahí es donde aterrizan los resultados de
+  // búsqueda, así que resetear ahí borraría la búsqueda recién hecha.
+  useEffect(() => {
+    if (location.pathname !== prevPathRef.current) {
+      prevPathRef.current = location.pathname;
+      if (location.pathname !== "/home") {
+        setQuery("");
+        setSuggestions([]);
+        setShowSuggestions(false);
+        onSearchResult(null);
+      }
+    }
+  }, [location.pathname, onSearchResult]);
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);

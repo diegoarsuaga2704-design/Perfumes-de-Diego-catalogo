@@ -402,7 +402,7 @@ export default function ProductDetail() {
             <div className="flex flex-col gap-1.5">
               {esDecant && !mililitros ? (
                 <p className="text-center text-sm font-semibold text-gray-600">
-                  Elige una medida 👆 para agregar
+                  Elige tus mililitros 👆 para agregar
                 </p>
               ) : (
                 <div className="text-[#A47E3B] text-sm font-semibold text-center">
