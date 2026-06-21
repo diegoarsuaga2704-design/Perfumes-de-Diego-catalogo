@@ -6,7 +6,7 @@ import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import SelectMililitros from "../ui/SelectMililitros";
+import MililitrosGrid from "../ui/MililitrosGrid";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
 import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
@@ -321,18 +321,18 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              {/* SELECTOR SOLO PARA DECANTS (en móvil va en la barra fija) */}
+              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
               {esDecant && estaDisponible && (
-                <div className="hidden sm:block">
-                  <SelectMililitros
+                <div>
+                  <MililitrosGrid
+                    parfum={parfum}
                     value={mililitros}
                     onChange={setMililitros}
-                    parfum={parfum}
                   />
 
                   {mililitros && (
-                    <div className="text-[#D4AF7A] mt-4 font-semibold">
-                      Total: ${totalPrice} por {mililitros} ml
+                    <div className="text-[#A47E3B] mt-4 font-semibold">
+                      Total: ${totalPrice.toFixed(2)} por {mililitros} ml
                     </div>
                   )}
                 </div>
@@ -399,31 +399,22 @@ export default function ProductDetail() {
           <div className="sm:hidden h-20" aria-hidden="true" />
 
           <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.12)] p-3">
-            {esDecant && !mililitros ? (
-              <div className="flex flex-col gap-1.5">
-                <p className="text-center text-sm font-bold text-gray-600">
-                  👇 Elige los mililitros para agregar al carrito
+            <div className="flex flex-col gap-1.5">
+              {esDecant && !mililitros ? (
+                <p className="text-center text-sm font-semibold text-gray-600">
+                  Elige una medida 👆 para agregar
                 </p>
-                <SelectMililitros
-                  value={mililitros}
-                  onChange={setMililitros}
-                  parfum={parfum}
-                  direction="up"
-                  variant="cta"
-                  pulse
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {esDecant && mililitros && (
-                  <div className="text-[#A47E3B] text-sm font-semibold text-center">
-                    Total: ${totalPrice} por {mililitros} ml
-                  </div>
-                )}
-                <button
+              ) : (
+                <div className="text-[#A47E3B] text-sm font-semibold text-center">
+                  Total: ${totalPrice.toFixed(2)}
+                  {esDecant ? ` por ${mililitros} ml` : ""}
+                </div>
+              )}
+              <button
                 onClick={handleAddToCart}
                 disabled={
                   added ||
+                  (esDecant && !mililitros) ||
                   (esBotellaCompleta &&
                     (!parfum.botellasDisponibles ||
                       parfum.botellasDisponibles < 1))
@@ -431,9 +422,10 @@ export default function ProductDetail() {
                 className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   added
                     ? "bg-green-500 text-white cursor-default"
-                    : !esBotellaCompleta ||
-                        (parfum.botellasDisponibles &&
-                          parfum.botellasDisponibles >= 1)
+                    : (!esDecant || mililitros) &&
+                        (!esBotellaCompleta ||
+                          (parfum.botellasDisponibles &&
+                            parfum.botellasDisponibles >= 1))
                       ? "bg-[#A47E3B] text-white active:bg-[#8B6A30]"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
@@ -450,8 +442,7 @@ export default function ProductDetail() {
                   </>
                 )}
               </button>
-              </div>
-            )}
+            </div>
           </div>
         </>
       )}
