@@ -199,14 +199,17 @@ export default function ProductGrid({
     return <div className="text-center text-red-500 mt-10">{error}</div>;
   }
 
-  const indexOfLastItem = currentPage * itemsPerPage;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredParfums.length / itemsPerPage),
+  );
+  const safePage = Math.min(currentPage, totalPages);
+  const indexOfLastItem = safePage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentParfums = filteredParfums.slice(
     indexOfFirstItem,
     indexOfLastItem,
   );
-
-  const totalPages = Math.ceil(filteredParfums.length / itemsPerPage);
 
   return (
     <section className="bg-gray-100 py-12">
@@ -227,7 +230,11 @@ export default function ProductGrid({
 
         {filteredParfums.length === 0 ? (
           <p className="text-center text-gray-500 mt-8">
-            No hay perfumes que coincidan con los filtros seleccionados.
+            {searchResult
+              ? `No encontramos resultados para "${
+                  searchResult.nombre || searchResult.query
+                }". Revisa la ortografía o intenta con otro término.`
+              : "No hay perfumes que coincidan con los filtros seleccionados."}
           </p>
         ) : (
           <div
@@ -241,7 +248,7 @@ export default function ProductGrid({
         )}
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={safePage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           maxPageButtons={5}
