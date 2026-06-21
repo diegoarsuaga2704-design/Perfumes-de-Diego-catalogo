@@ -73,7 +73,7 @@ export default function FilterMenu({
       <MenuDesplegado
         menuType="ocasion"
         toggleMenu={toggleMenu}
-        buttonName="Disponible"
+        buttonName="Disponibilidad"
         openMenu={openMenu}
         array={ocasionesUnicas}
         onSelectItem={handleSelectOcasion}
