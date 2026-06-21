@@ -3,7 +3,7 @@
 **Perfumes de Diego** es una aplicación web desarrollada para reemplazar un catálogo de perfumes estático en PDF, transformándolo en una experiencia de navegación **interactiva, moderna y eficiente**.  
 El proyecto busca optimizar la comunicación **cliente–vendedor**, ofreciendo una interfaz clara, dinámica y adaptada a la atención personalizada sin necesidad de integrar una pasarela de pagos automática.
 
-👉 [Ver proyecto en Vercel](https://perfumes-de-diego-catalogo.vercel.app)
+👉 [Ver proyecto en Vercel](https://perfumesdediego.com)
 
 ---
 

@@ -113,7 +113,7 @@ export default function ProductDetail() {
     ? `${parfum.nombre} (${parfum.concentracion || "Eau de Parfum"})${parfum.casa ? ` de ${parfum.casa}` : ""}. Notas: ${parfum.notas}. Disponible en decant o botella.`
     : `${parfum.nombre}${parfum.casa ? ` de ${parfum.casa}` : ""}. Disponible para comprar en decant o botella.`;
   const seoImage = parfum.image;
-  const seoUrl = `https://perfumes-de-diego-catalogo.vercel.app/product/${slugify(parfum.nombre)}/${parfum.id}`;
+  const seoUrl = `https://perfumesdediego.com/product/${slugify(parfum.nombre)}/${parfum.id}`;
 
   // Schema.org Product: Google muestra precio y disponibilidad en resultados
   const productSchema = {

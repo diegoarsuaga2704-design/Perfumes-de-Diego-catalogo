@@ -20,7 +20,7 @@ Esa distinción importa: el tono nunca debe ser de "experto que te enseña", sin
 
 ## 3. Cómo se vende
 
-- **Catálogo:** [perfumes-de-diego-catalogo.vercel.app](https://perfumes-de-diego-catalogo.vercel.app)
+- **Catálogo:** [perfumesdediego.com](https://perfumesdediego.com)
 - **Cierre de venta:** WhatsApp `+52 221 203 4647`
 - **Pago:** transferencia bancaria o depósito (los detalles se comparten una vez confirmado el pedido)
 - **Envíos:** a todo México (1-5 días hábiles), paqueterías confiables con guía
@@ -177,7 +177,7 @@ Conversacional, directa, sin adornos. Como contarle a un amigo algo que descubri
 - Frecuencia: 1-5 videos por semana.
 - Seguidores actuales: ~25k-50k.
 
-### Sitio web: perfumes-de-diego-catalogo.vercel.app
+### Sitio web: perfumesdediego.com
 
 - Catálogo navegable por casa, categoría, ocasión.
 - Decants y botellas claramente diferenciados.

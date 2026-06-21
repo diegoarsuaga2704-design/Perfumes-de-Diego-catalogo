@@ -22,7 +22,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 // ---------- Configuración ----------
 // Si algún día tienes dominio propio, cambia SOLO esta línea.
-const BASE_URL = "https://perfumes-de-diego-catalogo.vercel.app";
+const BASE_URL = "https://perfumesdediego.com";
 
 // Rutas fijas e indexables (sin /admin y sin /paquetes, que ya no existe).
 const RUTAS_FIJAS = [

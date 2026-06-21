@@ -33,7 +33,7 @@ function esc(s) {
     .replace(/>/g, "&gt;");
 }
 
-const SITE_URL = "https://perfumes-de-diego-catalogo.vercel.app";
+const SITE_URL = "https://perfumesdediego.com";
 const DEFAULT_IMAGE =
   "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg";
 const SITE_NAME = "Perfumes de Diego";

@@ -11,7 +11,7 @@ export default function SobreMi() {
           name="description"
           content="Diego, amante de la perfumería nicho y artesanal. Decants desde 1 ml. Acceso a casas como Ensar Oud, Toskovat, Stephane Humbert Lucas y más."
         />
-        <link rel="canonical" href="https://perfumes-de-diego-catalogo.vercel.app/sobre-mi" />
+        <link rel="canonical" href="https://perfumesdediego.com/sobre-mi" />
       </Helmet>
 
       <main className="max-w-2xl mx-auto px-5 py-12 md:py-16 text-gray-800">
