@@ -27,6 +27,7 @@
       ],
       "destination": "/api/og?type=casa&slug=:slug"
     },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/((?!api/).*)", "destination": "/" }
   ]
 }
