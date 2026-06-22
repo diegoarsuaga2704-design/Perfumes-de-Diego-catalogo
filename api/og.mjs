@@ -33,12 +33,24 @@ function esc(s) {
     .replace(/>/g, "&gt;");
 }
 
+function disponibilidadSchema(disponible) {
+  if (disponible === "Agotado") return "https://schema.org/OutOfStock";
+  if (disponible === "Próximamente") return "https://schema.org/PreOrder";
+  return "https://schema.org/InStock";
+}
+
 const SITE_URL = "https://perfumesdediego.com";
 const DEFAULT_IMAGE =
   "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg";
 const SITE_NAME = "Perfumes de Diego";
 
-function buildOgHtml({ title, description, image, url, bodyHtml = "" }) {
+function buildOgHtml({ title, description, image, url, bodyHtml = "", jsonLd = [] }) {
+  const ldScripts = jsonLd
+    .map(
+      (obj) =>
+        `  <script type="application/ld+json">${JSON.stringify(obj).replace(/</g, "\\u003c")}</script>`,
+    )
+    .join("\n");
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -56,6 +68,7 @@ function buildOgHtml({ title, description, image, url, bodyHtml = "" }) {
   <meta name="twitter:title" content="${esc(title)}" />
   <meta name="twitter:description" content="${esc(description)}" />
   <meta name="twitter:image" content="${esc(image)}" />
+${ldScripts}
 </head>
 <body>${bodyHtml}</body>
 </html>`;
@@ -90,6 +103,7 @@ export default async function handler(req, res) {
   let image = DEFAULT_IMAGE;
   let url = SITE_URL;
   let bodyHtml = `<h1>${esc(SITE_NAME)}</h1><p>${esc(description)}</p>`;
+  let jsonLd = [];
 
   try {
     const supabase = createClient(
@@ -100,18 +114,19 @@ export default async function handler(req, res) {
     if (type === "product" && id) {
       const { data: perfume } = await supabase
         .from("parfums")
-        .select("nombre, casa, image, notas, concentracion")
+        .select("id, nombre, casa, image, notas, concentracion, precio, disponible")
         .eq("id", id)
         .single();
 
       if (perfume) {
-        title = `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""} | ${SITE_NAME}`;
-        description = perfume.notas
-          ? `${perfume.nombre}${perfume.concentracion ? ` (${perfume.concentracion})` : ""}. Notas: ${perfume.notas}. Disponible en decant o botella.`
-          : `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}. Disponible en decant o botella.`;
+        const h1 = `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}`;
+        title = `${h1} | ${SITE_NAME}`;
+        description =
+          `Compra ${h1}${perfume.concentracion ? ` (${perfume.concentracion})` : ""} en ${SITE_NAME}. ` +
+          `${perfume.notas ? `Notas: ${perfume.notas}. ` : ""}` +
+          `Disponible como decant para probar o botella completa, con envíos a todo México. Perfume de nicho original.`;
         image = perfume.image || DEFAULT_IMAGE;
         url = `${SITE_URL}/product/${slugify(perfume.nombre)}/${id}`;
-        const h1 = `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}`;
         bodyHtml =
           `<h1>${esc(h1)}</h1>` +
           (perfume.concentracion
@@ -122,6 +137,52 @@ export default async function handler(req, res) {
             : "") +
           `<p>Disponible en decant para probar o en botella completa. Envíos a todo México.</p>` +
           `<p><a href="${esc(url)}">Ver ${esc(perfume.nombre)} en ${esc(SITE_NAME)}</a></p>`;
+
+        // Migas de pan: Inicio › Casa › Producto
+        const migas = [
+          { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
+        ];
+        if (perfume.casa) {
+          migas.push({
+            "@type": "ListItem",
+            position: 2,
+            name: perfume.casa,
+            item: `${SITE_URL}/casa/${slugify(perfume.casa)}`,
+          });
+        }
+        migas.push({
+          "@type": "ListItem",
+          position: migas.length + 1,
+          name: perfume.nombre,
+          item: url,
+        });
+        jsonLd.push({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: migas,
+        });
+
+        // Producto + oferta (solo con precio válido, para no emitir schema vacío)
+        const precioNum = Number(perfume.precio);
+        if (precioNum > 0) {
+          jsonLd.unshift({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: h1,
+            description,
+            image: [image],
+            sku: String(perfume.id ?? id),
+            brand: { "@type": "Brand", name: perfume.casa || SITE_NAME },
+            offers: {
+              "@type": "Offer",
+              price: String(precioNum),
+              priceCurrency: "MXN",
+              availability: disponibilidadSchema(perfume.disponible),
+              itemCondition: "https://schema.org/NewCondition",
+              url,
+            },
+          });
+        }
       }
     } else if (type === "casa" && slug) {
       const { data: casas } = await supabase
@@ -142,6 +203,21 @@ export default async function handler(req, res) {
           (casa.descripcion ? `<p>${esc(casa.descripcion)}</p>` : "") +
           `<p>Explora los decants y botellas de ${esc(casa.nombre)} disponibles en ${esc(SITE_NAME)}.</p>` +
           `<p><a href="${esc(url)}">Ver perfumes de ${esc(casa.nombre)}</a></p>`;
+
+        jsonLd.push({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Casas",
+              item: `${SITE_URL}/casas`,
+            },
+            { "@type": "ListItem", position: 3, name: casa.nombre, item: url },
+          ],
+        });
       }
     }
   } catch (err) {
@@ -150,5 +226,7 @@ export default async function handler(req, res) {
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
-  res.status(200).send(buildOgHtml({ title, description, image, url, bodyHtml }));
+  res
+    .status(200)
+    .send(buildOgHtml({ title, description, image, url, bodyHtml, jsonLd }));
 }
