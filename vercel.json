@@ -11,7 +11,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "/bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare|whatsapp/i"
+          "value": "(?i).*(bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare).*"
         }
       ],
       "destination": "/api/og?type=product&id=:id&nombre=:nombre"
@@ -22,7 +22,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "/bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare/i"
+          "value": "(?i).*(bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare).*"
         }
       ],
       "destination": "/api/og?type=casa&slug=:slug"
