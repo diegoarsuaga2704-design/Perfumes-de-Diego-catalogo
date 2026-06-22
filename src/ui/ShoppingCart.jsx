@@ -1,5 +1,5 @@
 import { useCart } from "../context/CartContext";
-import { X, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft, ShoppingBag } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
 import Checkout from "./Checkout";
@@ -118,10 +118,22 @@ export default function ShoppingCart() {
         <div className="flex flex-col h-[calc(100%-70px)] overflow-y-auto">
           {paso === "carrito" ? (
             <>
-              <EnvioGratisProgress />
+              {cartItems.length > 0 && <EnvioGratisProgress />}
 
               {/* Lista de productos */}
               <ShoppingCartProduct />
+
+              {cartItems.length === 0 && (
+                <div className="flex flex-1 flex-col items-center justify-center text-center px-6 py-16 text-gray-500">
+                  <ShoppingBag className="mb-3 text-gray-300" size={56} />
+                  <p className="font-semibold text-gray-700 text-lg">
+                    Tu carrito está vacío
+                  </p>
+                  <p className="text-sm mt-1">
+                    Agrega un decant o una botella para empezar tu pedido.
+                  </p>
+                </div>
+              )}
 
               {/* Subtotal, código de descuento y botón para continuar */}
               <div

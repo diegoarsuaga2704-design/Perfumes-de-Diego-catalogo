@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTiktok } from "react-icons/fa";
 import { Package } from "lucide-react";
@@ -6,6 +7,7 @@ import { getBadgeEstatus } from "../functions/getBadgeEstatus";
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
+  const [imgError, setImgError] = useState(false);
 
   // Un solo badge, misma lógica que ProductDetail (fuente única).
   const badge = getBadgeEstatus(parfum);
@@ -31,11 +33,12 @@ function ProductCard({ parfum }) {
         </span>
       )}
 
-      {parfum.image ? (
+      {parfum.image && !imgError ? (
         <img
           src={parfum.image}
           alt={parfum.nombre}
           loading="lazy"
+          onError={() => setImgError(true)}
           className="w-full h-100 object-cover pt-2"
         />
       ) : (
