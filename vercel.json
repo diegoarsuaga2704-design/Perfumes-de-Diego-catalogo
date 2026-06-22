@@ -4,6 +4,16 @@
       "includeFiles": "dist/index.html"
     }
   },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        { "type": "host", "value": "perfumes-de-diego-catalogo.vercel.app" }
+      ],
+      "destination": "https://perfumesdediego.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/product/:nombre/:id",
