@@ -180,6 +180,34 @@ export default async function handler(req, res) {
               availability: disponibilidadSchema(perfume.disponible),
               itemCondition: "https://schema.org/NewCondition",
               url,
+              shippingDetails: {
+                "@type": "OfferShippingDetails",
+                shippingDestination: {
+                  "@type": "DefinedRegion",
+                  addressCountry: "MX",
+                },
+                deliveryTime: {
+                  "@type": "ShippingDeliveryTime",
+                  handlingTime: {
+                    "@type": "QuantitativeValue",
+                    minValue: 0,
+                    maxValue: 2,
+                    unitCode: "DAY",
+                  },
+                  transitTime: {
+                    "@type": "QuantitativeValue",
+                    minValue: 1,
+                    maxValue: 3,
+                    unitCode: "DAY",
+                  },
+                },
+              },
+              hasMerchantReturnPolicy: {
+                "@type": "MerchantReturnPolicy",
+                applicableCountry: "MX",
+                returnPolicyCategory:
+                  "https://schema.org/MerchantReturnNotPermitted",
+              },
             },
           });
         }

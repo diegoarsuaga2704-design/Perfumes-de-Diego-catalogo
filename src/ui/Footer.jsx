@@ -98,8 +98,25 @@ function Footer() {
       </div>
 
       {/* Línea inferior */}
-      <div className="mt-10 border-t pt-6 text-center text-xs text-gray-500 italic">
-        © {new Date().getFullYear()} Perfumes de Diego. Todos los derechos reservados.
+      <div className="mt-10 border-t pt-6 text-center text-xs text-gray-500">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-3">
+          <Link
+            to="/terminos"
+            className="hover:text-[#A47E3B] transition-colors"
+          >
+            Términos y condiciones
+          </Link>
+          <Link
+            to="/privacidad"
+            className="hover:text-[#A47E3B] transition-colors"
+          >
+            Aviso de privacidad
+          </Link>
+        </div>
+        <p className="italic">
+          © {new Date().getFullYear()} Perfumes de Diego. Todos los derechos
+          reservados.
+        </p>
       </div>
     </footer>
   );

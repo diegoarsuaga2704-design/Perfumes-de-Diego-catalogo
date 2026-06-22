@@ -32,6 +32,8 @@ const RUTAS_FIJAS = [
   { path: "/tiktok", changefreq: "weekly", priority: "0.7" },
   { path: "/testimonios", changefreq: "weekly", priority: "0.7" },
   { path: "/faqs", changefreq: "monthly", priority: "0.5" },
+  { path: "/terminos", changefreq: "yearly", priority: "0.3" },
+  { path: "/privacidad", changefreq: "yearly", priority: "0.3" },
 ];
 
 // slugify idéntico al de src/functions/slugify
