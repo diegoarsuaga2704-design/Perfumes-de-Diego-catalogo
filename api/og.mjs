@@ -39,6 +39,33 @@ function disponibilidadSchema(disponible) {
   return "https://schema.org/InStock";
 }
 
+// Markdown → HTML mínimo para el prerender (encabezados, negritas, listas,
+// enlaces, párrafos). Suficiente para que Google lea el contenido real.
+function mdToHtml(md) {
+  const inline = (s) =>
+    s
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>');
+  return (md || "")
+    .split(/\n{2,}/)
+    .map((raw) => {
+      const block = raw.trim();
+      if (!block) return "";
+      if (/^### /.test(block)) return `<h3>${inline(esc(block.slice(4)))}</h3>`;
+      if (/^## /.test(block)) return `<h2>${inline(esc(block.slice(3)))}</h2>`;
+      if (/^# /.test(block)) return `<h2>${inline(esc(block.slice(2)))}</h2>`;
+      const lines = block.split("\n");
+      if (lines.every((l) => /^[-*] /.test(l.trim()))) {
+        return `<ul>${lines
+          .map((l) => `<li>${inline(esc(l.trim().slice(2)))}</li>`)
+          .join("")}</ul>`;
+      }
+      return `<p>${inline(esc(block)).replace(/\n/g, "<br>")}</p>`;
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 const SITE_URL = "https://perfumesdediego.com";
 const DEFAULT_IMAGE =
   "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg";
@@ -244,6 +271,60 @@ export default async function handler(req, res) {
               item: `${SITE_URL}/casas`,
             },
             { "@type": "ListItem", position: 3, name: casa.nombre, item: url },
+          ],
+        });
+      }
+    } else if (type === "post" && slug) {
+      const { data: post } = await supabase
+        .from("posts")
+        .select(
+          "slug, titulo, extracto, contenido, imagen, creado_en, actualizado_en",
+        )
+        .eq("slug", slug)
+        .eq("publicado", true)
+        .maybeSingle();
+
+      if (post) {
+        title = `${post.titulo} | ${SITE_NAME}`;
+        description =
+          post.extracto ||
+          `${post.titulo}. Reseña de perfume de nicho en ${SITE_NAME}.`;
+        image = post.imagen || DEFAULT_IMAGE;
+        url = `${SITE_URL}/blog/${post.slug}`;
+        bodyHtml =
+          `<h1>${esc(post.titulo)}</h1>` + mdToHtml(post.contenido);
+
+        jsonLd.push({
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: post.titulo,
+          description: post.extracto || undefined,
+          image: post.imagen ? [post.imagen] : undefined,
+          datePublished: post.creado_en,
+          dateModified: post.actualizado_en || post.creado_en,
+          author: { "@type": "Person", name: "Diego" },
+          publisher: {
+            "@type": "Organization",
+            name: SITE_NAME,
+            logo: {
+              "@type": "ImageObject",
+              url: "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/perfumes-de-diego-letras-horizontal.png",
+            },
+          },
+          mainEntityOfPage: url,
+        });
+        jsonLd.push({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Blog",
+              item: `${SITE_URL}/blog`,
+            },
+            { "@type": "ListItem", position: 3, name: post.titulo, item: url },
           ],
         });
       }

@@ -34,6 +34,7 @@ const RUTAS_FIJAS = [
   { path: "/faqs", changefreq: "monthly", priority: "0.5" },
   { path: "/terminos", changefreq: "yearly", priority: "0.3" },
   { path: "/privacidad", changefreq: "yearly", priority: "0.3" },
+  { path: "/blog", changefreq: "weekly", priority: "0.7" },
 ];
 
 // slugify idéntico al de src/functions/slugify
@@ -117,6 +118,20 @@ export default async function handler(req, res) {
           loc: `${BASE_URL}/casa/${slug}`,
           changefreq: "weekly",
           priority: "0.7",
+        });
+      }
+
+      // Posts del blog (publicados)
+      const { data: posts } = await supabase
+        .from("posts")
+        .select("slug")
+        .eq("publicado", true);
+      for (const post of posts || []) {
+        if (!post.slug) continue;
+        urls.push({
+          loc: `${BASE_URL}/blog/${post.slug}`,
+          changefreq: "monthly",
+          priority: "0.6",
         });
       }
     }
