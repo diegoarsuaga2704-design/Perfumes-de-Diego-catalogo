@@ -32,6 +32,14 @@ function Footer() {
           <ul className="space-y-2 text-sm">
             <li>
               <Link
+                to="/blog"
+                className="hover:text-[#A47E3B] transition-colors"
+              >
+                Blog
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/faqs"
                 className="hover:text-[#A47E3B] transition-colors"
               >

@@ -19,6 +19,8 @@ const Casas = lazy(() => import("./pages/Casas"));
 const SobreMi = lazy(() => import("./pages/SobreMi"));
 const Terminos = lazy(() => import("./pages/Terminos"));
 const Privacidad = lazy(() => import("./pages/Privacidad"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
 
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
@@ -55,6 +57,8 @@ const router = createBrowserRouter([
       { path: "/sobre-mi", element: <SobreMi /> },
       { path: "/terminos", element: <Terminos /> },
       { path: "/privacidad", element: <Privacidad /> },
+      { path: "/blog", element: <Blog /> },
+      { path: "/blog/:slug", element: <BlogPost /> },
       { path: "/product/:nombre/:id", element: <ProductDetail /> },
       { path: "*", element: <NotFound /> },
     ],

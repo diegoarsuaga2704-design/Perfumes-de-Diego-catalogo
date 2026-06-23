@@ -232,7 +232,6 @@ export default function Terminos() {
             >
               +52 221 203 4647
             </a>{" "}
-            o al correo [COMPLETAR: correo de contacto].
           </p>
         </section>
       </main>
