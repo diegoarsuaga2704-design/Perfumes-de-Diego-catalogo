@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import ReactMarkdown from "react-markdown";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import { getPostBySlug } from "../functions/getPosts";
-import slugify from "../functions/slugify";
+import { slugify } from "../functions/slugify";
 
 const SITE = "https://perfumesdediego.com";
 
