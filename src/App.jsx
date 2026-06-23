@@ -36,6 +36,8 @@ const AdminCasasList = lazy(() => import("./pages/AdminCasasList"));
 const AdminCasaEdit = lazy(() => import("./pages/AdminCasaEdit"));
 const AdminAvisos = lazy(() => import("./pages/AdminAvisos"));
 const AdminCodigosList = lazy(() => import("./pages/AdminCodigosList"));
+const AdminBlogList = lazy(() => import("./pages/AdminBlogList"));
+const AdminBlogForm = lazy(() => import("./pages/AdminBlogForm"));
 
 const router = createBrowserRouter([
   // Rutas públicas con AppLayout
@@ -175,6 +177,35 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminCodigosList />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+
+  // Blog admin
+  {
+    path: "/admin/blog",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminBlogList />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/blog/nuevo",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminBlogForm />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/blog/:id",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminBlogForm />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,

@@ -9,6 +9,8 @@ import {
   Building2,
   Bell,
   Ticket,
+  Newspaper,
+  PenLine,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -196,6 +198,40 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Crear, activar y desactivar códigos de descuento
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* Sección Blog */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+            Blog
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => navigate("/admin/blog")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Newspaper className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Ver y editar posts
+              </h3>
+              <p className="text-sm text-gray-600">
+                Lista de reseñas y artículos del blog
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/blog/nuevo")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <PenLine className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Escribir post
+              </h3>
+              <p className="text-sm text-gray-600">
+                Crear una reseña o artículo nuevo
               </p>
             </button>
           </div>
