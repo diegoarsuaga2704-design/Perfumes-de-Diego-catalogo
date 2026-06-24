@@ -3,6 +3,7 @@ import { X, ArrowLeft, ShoppingBag } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
 import Checkout from "./Checkout";
+import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 import { useState, useEffect } from "react";
 
 export default function ShoppingCart() {
@@ -22,7 +23,8 @@ export default function ShoppingCart() {
   const [postalCode, setPostalCode] = useState("");
   const [inputCode, setInputCode] = useState("");
   const [applying, setApplying] = useState(false);
-  const [paso, setPaso] = useState("carrito"); // "carrito" | "cp"
+  const [paso, setPaso] = useState("carrito"); // "carrito" | "cp" | "pedido"
+  const [inApp, setInApp] = useState(false);
 
   // Bloquear scroll del body al abrir el carrito, preservando la posición
   useEffect(() => {
@@ -64,6 +66,13 @@ export default function ShoppingCart() {
     if (cartItems.length === 0) setPaso("carrito");
   }, [cartItems.length]);
 
+  // Solo los navegadores in-app (TikTok/Instagram/Facebook) necesitan el paso
+  // extra con las instrucciones de WhatsApp. En un navegador normal el pedido
+  // se envía con un solo botón, sin paso adicional.
+  useEffect(() => {
+    setInApp(detectInAppBrowser().isInApp);
+  }, []);
+
   if (!isCartOpen) return null;
 
   const handlePostalCodeChange = (e) => {
@@ -89,7 +98,12 @@ export default function ShoppingCart() {
   };
 
   const isPostalCodeValid = postalCode.length === 5;
-  const tituloPanel = paso === "cp" ? "Tu envío 📦" : "Pedido 🛒";
+  const tituloPanel =
+    paso === "cp"
+      ? "Tu envío 📦"
+      : paso === "pedido"
+        ? "Enviar pedido 📦"
+        : "Pedido 🛒";
 
   return (
     <>
@@ -188,8 +202,8 @@ export default function ShoppingCart() {
                 </button>
               </div>
             </>
-          ) : (
-            /* PASO 2: código postal obligatorio antes de enviar el pedido */
+          ) : paso === "cp" ? (
+            /* PASO 2: solo código postal y total (sin la parte de WhatsApp) */
             <div className="p-6 flex flex-col gap-4">
               <button
                 type="button"
@@ -244,17 +258,51 @@ export default function ShoppingCart() {
                 <span>${totalWithDiscount.toFixed(2)}</span>
               </div>
 
-              <div
-                className={`${
-                  !isPostalCodeValid ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <Checkout
-                  totalCartPrice={totalWithDiscount}
-                  postalCode={postalCode}
+              {inApp ? (
+                <button
+                  type="button"
+                  onClick={() => setPaso("pedido")}
                   disabled={!isPostalCodeValid}
-                />
+                  className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                >
+                  Continuar
+                </button>
+              ) : (
+                <div
+                  className={
+                    !isPostalCodeValid ? "opacity-50 cursor-not-allowed" : ""
+                  }
+                >
+                  <Checkout
+                    totalCartPrice={totalWithDiscount}
+                    postalCode={postalCode}
+                    disabled={!isPostalCodeValid}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            /* PASO 3: cómo enviar el pedido por WhatsApp */
+            <div className="p-6 flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={() => setPaso("cp")}
+                className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 self-start"
+              >
+                <ArrowLeft size={16} />
+                Atrás
+              </button>
+
+              <div className="flex justify-between text-gray-900 font-semibold border-b pb-3">
+                <span>Total de tu pedido:</span>
+                <span>${totalWithDiscount.toFixed(2)}</span>
               </div>
+
+              <Checkout
+                totalCartPrice={totalWithDiscount}
+                postalCode={postalCode}
+                disabled={!isPostalCodeValid}
+              />
             </div>
           )}
         </div>
