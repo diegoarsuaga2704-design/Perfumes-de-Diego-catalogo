@@ -42,7 +42,7 @@ function EnvioGratisProgress() {
     <div className="px-6 py-3 bg-gradient-to-r from-amber-50 to-white border-b border-amber-100">
       {alcanzoEnvioGratis ? (
         <p className="text-sm text-green-700 font-semibold text-center mb-2">
-          🎉 ¡Tienes envío gratis en tus decants!
+          🎉 ¡Tienes envío gratis!
         </p>
       ) : (
         <p className="text-sm text-gray-700 text-center mb-2">

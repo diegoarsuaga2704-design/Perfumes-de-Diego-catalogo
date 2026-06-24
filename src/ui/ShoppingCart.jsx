@@ -6,6 +6,7 @@ import Checkout from "./Checkout";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 import { formatPrecio } from "../functions/formatPrecio";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
+import { track } from "@vercel/analytics";
 import { useState, useEffect } from "react";
 
 export default function ShoppingCart() {
@@ -223,7 +224,10 @@ export default function ShoppingCart() {
 
                 <button
                   type="button"
-                  onClick={() => setPaso("cp")}
+                  onClick={() => {
+                    track("continuar_a_cp");
+                    setPaso("cp");
+                  }}
                   disabled={cartItems.length === 0}
                   className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
@@ -242,6 +246,10 @@ export default function ShoppingCart() {
                 <ArrowLeft size={16} />
                 Volver al carrito
               </button>
+
+              {cartItems.some((i) => i.tipoVenta === "decant") && (
+                <EnvioGratisProgress />
+              )}
 
               <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
                 <p className="font-bold text-gray-900 mb-1">
@@ -291,7 +299,10 @@ export default function ShoppingCart() {
               {inApp ? (
                 <button
                   type="button"
-                  onClick={() => setPaso("pedido")}
+                  onClick={() => {
+                    track("continuar_a_pedido");
+                    setPaso("pedido");
+                  }}
                   disabled={!isPostalCodeValid}
                   className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >

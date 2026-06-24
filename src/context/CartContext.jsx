@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import supabase from "../services/supabase";
 import { useToast } from "./ToastContext";
+import { track } from "@vercel/analytics";
 import {
   calcularPrecioDecantCarrito,
   getIncrementoMililitros,
@@ -170,6 +171,11 @@ export function CartProvider({ children }) {
       }
     }
 
+    track("agregar_al_carrito", {
+      producto: product?.nombre || "",
+      tipo: product?.tipoVenta || "",
+    });
+
     setCartItems((prev) => {
       const existing = prev.find(
         (item) =>
@@ -242,7 +248,10 @@ export function CartProvider({ children }) {
   };
 
   // ⚙️ Carrito
-  const openCart = () => setIsCartOpen(true);
+  const openCart = () => {
+    track("abrir_carrito");
+    setIsCartOpen(true);
+  };
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
