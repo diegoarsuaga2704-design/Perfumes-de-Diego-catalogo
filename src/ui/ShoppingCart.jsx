@@ -4,6 +4,7 @@ import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
 import Checkout from "./Checkout";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
+import { formatPrecio } from "../functions/formatPrecio";
 import { useState, useEffect } from "react";
 
 export default function ShoppingCart() {
@@ -177,20 +178,23 @@ export default function ShoppingCart() {
 
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>${formatPrecio(subtotal)}</span>
                 </div>
 
                 {isDiscountApplied && (
                   <div className="flex justify-between text-green-700 font-medium mb-2">
                     <span>Descuento aplicado ({discountCode})</span>
-                    <span>− ${(subtotal - totalWithDiscount).toFixed(2)}</span>
+                    <span>− ${formatPrecio(subtotal - totalWithDiscount)}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between text-gray-900 font-semibold border-t pt-3 mb-4">
+                <div className="flex justify-between text-gray-900 font-semibold border-t pt-3 mb-1">
                   <span>Total:</span>
-                  <span>${totalWithDiscount.toFixed(2)}</span>
+                  <span>${formatPrecio(totalWithDiscount)}</span>
                 </div>
+                <p className="text-xs text-gray-400 mb-4">
+                  El envío no está incluido; se cotiza según tu código postal.
+                </p>
 
                 <button
                   type="button"
@@ -219,8 +223,9 @@ export default function ShoppingCart() {
                   Tu código postal:
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  Necesito tu <strong>código postal</strong> para calcular el
-                  costo de tu envío. Sin él, no puedo cotizar tu pedido.
+                  Necesito tu <strong>código postal</strong> para confirmar tu
+                  zona de envío. Con él cotizo el costo exacto, o aplico tu{" "}
+                  <strong>envío gratis</strong> si tus decants ya califican.
                 </p>
               </div>
 
@@ -255,7 +260,7 @@ export default function ShoppingCart() {
 
               <div className="flex justify-between text-gray-900 font-semibold border-t pt-3">
                 <span>Total de tu pedido:</span>
-                <span>${totalWithDiscount.toFixed(2)}</span>
+                <span>${formatPrecio(totalWithDiscount)}</span>
               </div>
 
               {inApp ? (
@@ -295,7 +300,7 @@ export default function ShoppingCart() {
 
               <div className="flex justify-between text-gray-900 font-semibold border-b pb-3">
                 <span>Total de tu pedido:</span>
-                <span>${totalWithDiscount.toFixed(2)}</span>
+                <span>${formatPrecio(totalWithDiscount)}</span>
               </div>
 
               <Checkout

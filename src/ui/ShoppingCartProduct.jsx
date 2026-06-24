@@ -1,11 +1,12 @@
 import { useCart } from "../context/CartContext";
 import { useState } from "react";
-import { Package } from "lucide-react";
+import { Package, Trash2 } from "lucide-react";
 import {
   calcularPrecioDecantCarrito,
   getIncrementoMililitros,
   getMililitrosMinimos,
 } from "../functions/pricingDecant";
+import { formatPrecio } from "../functions/formatPrecio";
 
 function ShoppingCartProduct() {
   const {
@@ -18,7 +19,6 @@ function ShoppingCartProduct() {
     isDiscountApplied,
   } = useCart();
 
-  const [editingItem, setEditingItem] = useState(null);
   const [confirmingDelete, setConfirmingDelete] = useState(null);
 
   const calculateItemTotal = (item) => {
@@ -62,20 +62,16 @@ function ShoppingCartProduct() {
         updateCartItem(item.id, "botella", item.cantidad + 1);
       }
     }
-
     if (item.tipoVenta === "decant") {
       const incremento = getIncrementoMililitros(item);
-      const nuevosMl = item.mililitros + incremento;
-      updateCartItem(item.id, "decant", nuevosMl);
+      updateCartItem(item.id, "decant", item.mililitros + incremento);
     }
-
   };
 
   const handleDecrease = (item) => {
     if (item.tipoVenta === "botella" && item.cantidad > 1) {
       updateCartItem(item.id, "botella", item.cantidad - 1);
     }
-
     if (item.tipoVenta === "decant") {
       const incremento = getIncrementoMililitros(item);
       const minimo = getMililitrosMinimos(item);
@@ -86,150 +82,141 @@ function ShoppingCartProduct() {
     }
   };
 
+  // El estado vacío lo muestra el panel padre (ShoppingCart), no aquí.
+  if (cartItems.length === 0) return null;
+
   return (
     <div className="p-6 items-center">
-      {cartItems.length === 0 ? (
-        <p className="text-gray-500 text-center mt-10">
-          Tu carrito está vacío.
-        </p>
-      ) : (
-        cartItems.map((item) => {
-          const itemTotal = calculateItemTotal(item);
-          const hasDiscount = productHasDiscount(item);
-          const discountedPrice = getDiscountedPrice(item);
+      {cartItems.map((item) => {
+        const itemTotal = calculateItemTotal(item);
+        const hasDiscount = productHasDiscount(item);
+        const discountedPrice = getDiscountedPrice(item);
+        const itemKey = `${item.id}-${item.tipoVenta}`;
 
-          const itemKey = `${item.id}-${item.tipoVenta}`;
+        // Límites del stepper
+        const incremento =
+          item.tipoVenta === "decant" ? getIncrementoMililitros(item) : 1;
+        const minimo =
+          item.tipoVenta === "decant" ? getMililitrosMinimos(item) : 1;
+        const canDecrease =
+          item.tipoVenta === "botella"
+            ? item.cantidad > 1
+            : item.mililitros - incremento >= minimo;
+        const canIncrease =
+          item.tipoVenta === "botella"
+            ? item.cantidad < item.stockDisponible
+            : true;
 
-          const handleRemove = () => {
-            removeFromCart(item.id, item.tipoVenta);
-            setConfirmingDelete(null);
-          };
+        const handleRemove = () => {
+          removeFromCart(item.id, item.tipoVenta);
+          setConfirmingDelete(null);
+        };
 
-          return (
-            <div key={itemKey} className="flex gap-4 border-b py-3">
-              {item.image || item.imagen ? (
-                <img
-                  src={item.image || item.imagen}
-                  alt={item.nombre}
-                  loading="lazy"
-                  className="w-24 h-32 object-cover rounded-md"
-                />
-              ) : (
-                <div className="w-24 h-32 bg-gray-100 rounded-md flex items-center justify-center">
-                  <Package className="text-gray-300" size={32} />
-                </div>
+        return (
+          <div key={itemKey} className="flex gap-4 border-b py-3">
+            {item.image || item.imagen ? (
+              <img
+                src={item.image || item.imagen}
+                alt={item.nombre}
+                loading="lazy"
+                className="w-24 h-32 object-cover rounded-md"
+              />
+            ) : (
+              <div className="w-24 h-32 bg-gray-100 rounded-md flex items-center justify-center">
+                <Package className="text-gray-300" size={32} />
+              </div>
+            )}
+
+            <div className="flex-1">
+              <h3 className="text-sm font-medium">{item.nombre}</h3>
+              <p className="text-gray-500 text-sm">{item.casa}</p>
+
+              {item.tipoVenta === "botella" && (
+                <p className="text-gray-500 text-sm">
+                  Contenido: {item.mlBotella} ml
+                </p>
               )}
 
-              <div className="flex-1">
-                <h3 className="text-sm font-medium">{item.nombre}</h3>
-                <p className="text-gray-500 text-sm">{item.casa}</p>
-
-                {/* Información específica del tipo */}
-                {item.tipoVenta === "botella" && (
-                  <>
-                    <p className="text-gray-500 text-sm">
-                      Contenido: {item.mlBotella} ml
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Piezas: {item.cantidad}
-                    </p>
-                  </>
-                )}
-
-                {item.tipoVenta === "decant" && (
-                  <p className="text-gray-500 text-sm">
-                    Cantidad: {item.mililitros} ml
+              {/* Precios */}
+              {hasDiscount ? (
+                <div className="mt-1">
+                  <p className="text-gray-400 text-sm line-through">
+                    ${formatPrecio(itemTotal)}
                   </p>
-                )}
-
-                {/* Precios */}
-                {hasDiscount ? (
-                  <div className="mt-1">
-                    <p className="text-gray-400 text-sm line-through">
-                      ${itemTotal.toFixed(2)}
-                    </p>
-                    <p className="text-green-700 font-semibold text-base">
-                      ${discountedPrice.toFixed(2)}{" "}
-                      <span className="text-xs text-green-600 font-normal">
-                        (
-                        {discountType === "percentage"
-                          ? `-${discountValue}%`
-                          : `-$${discountValue}`}
-                        )
-                      </span>
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-gray-900 font-semibold">
-                    ${itemTotal.toFixed(2)}
-                  </p>
-                )}
-
-                {/* Edición */}
-                {editingItem === itemKey ? (
-                  <div className="flex gap-2 mt-2 items-center">
-                    <button
-                      onClick={() => handleDecrease(item)}
-                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
-                    >
-                      −
-                    </button>
-
-                    <span className="text-sm">
-                      {item.tipoVenta === "botella" ? item.cantidad : item.mililitros}
+                  <p className="text-green-700 font-semibold text-base">
+                    ${formatPrecio(discountedPrice)}{" "}
+                    <span className="text-xs text-green-600 font-normal">
+                      (
+                      {discountType === "percentage"
+                        ? `-${discountValue}%`
+                        : `-$${formatPrecio(discountValue, 0)}`}
+                      )
                     </span>
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-900 font-semibold mt-1">
+                  ${formatPrecio(itemTotal)}
+                </p>
+              )}
 
-                    <button
-                      onClick={() => handleIncrease(item)}
-                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
-                    >
-                      +
-                    </button>
+              {/* Controles: stepper siempre visible + eliminar */}
+              <div className="flex items-center gap-3 mt-3">
+                <div className="flex items-center border rounded-md">
+                  <button
+                    onClick={() => handleDecrease(item)}
+                    disabled={!canDecrease}
+                    className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                    aria-label="Disminuir"
+                  >
+                    −
+                  </button>
+                  <span className="px-3 text-sm text-center min-w-[3.5rem]">
+                    {item.tipoVenta === "botella"
+                      ? item.cantidad
+                      : `${item.mililitros} ml`}
+                  </span>
+                  <button
+                    onClick={() => handleIncrease(item)}
+                    disabled={!canIncrease}
+                    className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                    aria-label="Aumentar"
+                  >
+                    +
+                  </button>
+                </div>
 
-                    <button
-                      onClick={() => setEditingItem(null)}
-                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100 ml-2"
-                    >
-                      Guardar
-                    </button>
-                  </div>
-                ) : confirmingDelete === itemKey ? (
-                  <div className="flex gap-2 mt-2 items-center">
-                    <span className="text-sm text-gray-700">¿Eliminar?</span>
+                {confirmingDelete === itemKey ? (
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <span className="text-gray-600">¿Eliminar?</span>
                     <button
                       onClick={handleRemove}
-                      className="text-sm px-3 py-2 border rounded-md bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                      className="px-2 py-1 rounded-md bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
                     >
                       Sí
                     </button>
                     <button
                       onClick={() => setConfirmingDelete(null)}
-                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
+                      className="px-2 py-1 rounded-md border hover:bg-gray-100"
                     >
                       No
                     </button>
-                  </div>
+                  </span>
                 ) : (
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => setEditingItem(itemKey)}
-                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => setConfirmingDelete(itemKey)}
-                      className="text-sm px-3 py-2 border rounded-md hover:bg-gray-100"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setConfirmingDelete(itemKey)}
+                    title="Eliminar"
+                    aria-label="Eliminar"
+                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 )}
               </div>
             </div>
-          );
-        })
-      )}
+          </div>
+        );
+      })}
     </div>
   );
 }

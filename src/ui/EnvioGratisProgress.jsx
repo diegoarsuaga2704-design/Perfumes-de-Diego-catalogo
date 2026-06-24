@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
+import { formatPrecio } from "../functions/formatPrecio";
 
 const UMBRAL_ENVIO_GRATIS = 1950;
 
@@ -46,7 +47,7 @@ function EnvioGratisProgress() {
       ) : (
         <p className="text-sm text-gray-700 text-center mb-2">
           Te faltan{" "}
-          <span className="font-bold text-[#A47E3B]">${falta.toFixed(0)}</span>{" "}
+          <span className="font-bold text-[#A47E3B]">${formatPrecio(falta, 0)}</span>{" "}
           en decants para <span className="font-semibold">envío gratis</span>
         </p>
       )}
@@ -79,7 +80,7 @@ function EnvioGratisProgress() {
               Aplica únicamente en decants individuales. No válido en botellas completas ni parciales.
             </li>
             <li>
-              Monto mínimo: ${UMBRAL_ENVIO_GRATIS} en decants individuales.
+              Monto mínimo: ${formatPrecio(UMBRAL_ENVIO_GRATIS, 0)} en decants individuales.
             </li>
             <li>
               Válido solo para <strong>zonas regulares de DHL</strong>. No

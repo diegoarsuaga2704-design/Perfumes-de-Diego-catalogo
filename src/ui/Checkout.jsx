@@ -2,6 +2,7 @@ import { useCart } from "../context/CartContext";
 import { useEffect, useState, useMemo } from "react";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
+import { formatPrecio } from "../functions/formatPrecio";
 import { track } from "@vercel/analytics";
 import { CheckCircle } from "lucide-react";
 
@@ -35,13 +36,13 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
         if (item.tipoVenta === "botella") {
           const precioTotalItem =
             Number(item.precioUnitario) * Number(item.cantidad);
-          return `${nombre} x${item.cantidad} ($${precioTotalItem.toFixed(2)})`;
+          return `${nombre} x${item.cantidad} ($${formatPrecio(precioTotalItem)})`;
         }
 
         if (item.tipoVenta === "decant") {
           const precioTotalItem = calcularPrecioDecantCarrito(item);
-          return `${item.mililitros} ml de ${nombre} ($${precioTotalItem.toFixed(
-            2,
+          return `${item.mililitros} ml de ${nombre} ($${formatPrecio(
+            precioTotalItem,
           )})`;
         }
 
@@ -51,12 +52,12 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
       .join("\n");
 
     const resumenPrecio = isDiscountApplied
-      ? `Subtotal: $${safeSubtotal.toFixed(2)}
-Descuento aplicado (${discountCode}): −$${(
-          safeSubtotal - safeTotalWithDiscount
-        ).toFixed(2)}
-Total con descuento: $${safeTotalWithDiscount.toFixed(2)}`
-      : `Total del pedido: $${safeTotalCartPrice.toFixed(2)}`;
+      ? `Subtotal: $${formatPrecio(safeSubtotal)}
+Descuento aplicado (${discountCode}): −$${formatPrecio(
+          safeSubtotal - safeTotalWithDiscount,
+        )}
+Total con descuento: $${formatPrecio(safeTotalWithDiscount)} (no incluye envío)`
+      : `Total del pedido: $${formatPrecio(safeTotalCartPrice)} (no incluye envío)`;
 
     return `Hola Diego, me gustaría realizar mi pedido:
 
@@ -123,6 +124,12 @@ Gracias!`;
     setTimeout(() => setCopiado(false), 2500);
   };
 
+  const trustLine = (
+    <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-500">
+      Productos 100% originales · Envío por DHL · Pago seguro
+    </p>
+  );
+
   // Navegador interno de TikTok/Instagram/Facebook: window.open y a veces los
   // deep-links de WhatsApp fallan. En vez de dejar el botón gris y mudo, le
   // damos al usuario un camino claro: enlace directo, copiar pedido e
@@ -185,6 +192,8 @@ Gracias!`;
                 Listo. Abre WhatsApp y pega tu pedido en el chat con Diego.
               </p>
             )}
+
+            {trustLine}
           </>
         )}
 
@@ -200,18 +209,21 @@ Gracias!`;
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => {
-        if (noListo) return;
-        track("pedido_whatsapp", { total: safeTotalCartPrice });
-        window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
-      }}
-      disabled={noListo}
-      className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-    >
-      Enviar pedido por WhatsApp
-    </button>
+    <div>
+      <button
+        type="button"
+        onClick={() => {
+          if (noListo) return;
+          track("pedido_whatsapp", { total: safeTotalCartPrice });
+          window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
+        }}
+        disabled={noListo}
+        className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+      >
+        Enviar pedido por WhatsApp
+      </button>
+      {trustLine}
+    </div>
   );
 }
 
