@@ -49,7 +49,6 @@ export default function ShoppingCart() {
   }
   const decantsCalifican =
     subtotalDecants > 0 && totalDecants >= UMBRAL_ENVIO_GRATIS;
-  const hayBotellas = cartItems.some((i) => i.tipoVenta === "botella");
 
   // Bloquear scroll del body al abrir el carrito, preservando la posición
   useEffect(() => {
@@ -217,11 +216,9 @@ export default function ShoppingCart() {
                   <span>${formatPrecio(totalWithDiscount)}</span>
                 </div>
                 <p className="text-xs text-gray-400 mb-4">
-                  {decantsCalifican && hayBotellas
-                    ? "Tus decants tienen envío gratis (zona regular DHL); el de tus botellas se cotiza según tu código postal."
-                    : decantsCalifican
-                      ? "Tu envío es gratis en zona regular DHL."
-                      : "El envío no está incluido; se cotiza según tu código postal."}
+                  {decantsCalifican
+                    ? "Tu envío es gratis (zona regular DHL)."
+                    : "El envío no está incluido; se cotiza según tu código postal."}
                 </p>
 
                 <button
