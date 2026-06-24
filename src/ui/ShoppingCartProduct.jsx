@@ -160,57 +160,60 @@ function ShoppingCartProduct() {
                 </p>
               )}
 
-              {/* Controles: stepper siempre visible + eliminar */}
-              <div className="flex items-center gap-3 mt-3">
-                <div className="flex items-center border rounded-md">
-                  <button
-                    onClick={() => handleDecrease(item)}
-                    disabled={!canDecrease}
-                    className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                    aria-label="Disminuir"
-                  >
-                    −
-                  </button>
-                  <span className="px-3 text-sm text-center min-w-[3.5rem]">
-                    {item.tipoVenta === "botella"
-                      ? item.cantidad
-                      : `${item.mililitros} ml`}
-                  </span>
-                  <button
-                    onClick={() => handleIncrease(item)}
-                    disabled={!canIncrease}
-                    className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                    aria-label="Aumentar"
-                  >
-                    +
-                  </button>
-                </div>
-
+              {/* Controles: stepper + eliminar; al confirmar, la confirmación
+                  ocupa toda la fila para que no se corte. */}
+              <div className="flex flex-wrap items-center gap-3 mt-3">
                 {confirmingDelete === itemKey ? (
-                  <span className="flex items-center gap-1.5 text-sm">
+                  <div className="flex items-center gap-2 text-sm">
                     <span className="text-gray-600">¿Eliminar?</span>
                     <button
                       onClick={handleRemove}
-                      className="px-2 py-1 rounded-md bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                      className="px-3 py-1.5 rounded-md bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
                     >
                       Sí
                     </button>
                     <button
                       onClick={() => setConfirmingDelete(null)}
-                      className="px-2 py-1 rounded-md border hover:bg-gray-100"
+                      className="px-3 py-1.5 rounded-md border hover:bg-gray-100"
                     >
                       No
                     </button>
-                  </span>
+                  </div>
                 ) : (
-                  <button
-                    onClick={() => setConfirmingDelete(itemKey)}
-                    title="Eliminar"
-                    aria-label="Eliminar"
-                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <>
+                    <div className="flex items-center border rounded-md">
+                      <button
+                        onClick={() => handleDecrease(item)}
+                        disabled={!canDecrease}
+                        className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        aria-label="Disminuir"
+                      >
+                        −
+                      </button>
+                      <span className="px-3 text-sm text-center min-w-[3.5rem]">
+                        {item.tipoVenta === "botella"
+                          ? item.cantidad
+                          : `${item.mililitros} ml`}
+                      </span>
+                      <button
+                        onClick={() => handleIncrease(item)}
+                        disabled={!canIncrease}
+                        className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        aria-label="Aumentar"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => setConfirmingDelete(itemKey)}
+                      title="Eliminar"
+                      aria-label="Eliminar"
+                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </>
                 )}
               </div>
             </div>

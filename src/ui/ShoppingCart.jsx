@@ -5,6 +5,7 @@ import EnvioGratisProgress from "./EnvioGratisProgress";
 import Checkout from "./Checkout";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 import { formatPrecio } from "../functions/formatPrecio";
+import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
 import { useState, useEffect } from "react";
 
 export default function ShoppingCart() {
@@ -17,6 +18,9 @@ export default function ShoppingCart() {
     discountCode,
     applyDiscountCode,
     isDiscountApplied,
+    discountType,
+    discountValue,
+    discountTarget,
     errorMessage,
     setErrorMessage,
   } = useCart();
@@ -26,6 +30,26 @@ export default function ShoppingCart() {
   const [applying, setApplying] = useState(false);
   const [paso, setPaso] = useState("carrito"); // "carrito" | "cp" | "pedido"
   const [inApp, setInApp] = useState(false);
+
+  // ¿Los decants del carrito ya califican a envío gratis? Mismo cálculo que la
+  // barra de progreso, para que el mensaje del total no se contradiga con ella.
+  const UMBRAL_ENVIO_GRATIS = 1950;
+  const subtotalDecants = cartItems
+    .filter((i) => i.tipoVenta === "decant")
+    .reduce((s, i) => s + calcularPrecioDecantCarrito(i), 0);
+  let totalDecants = subtotalDecants;
+  if (
+    isDiscountApplied &&
+    (discountTarget === "ALL" || discountTarget === "DECANT")
+  ) {
+    if (discountType === "percentage")
+      totalDecants = subtotalDecants * (1 - discountValue / 100);
+    else if (discountType === "amount")
+      totalDecants = Math.max(0, subtotalDecants - discountValue);
+  }
+  const decantsCalifican =
+    subtotalDecants > 0 && totalDecants >= UMBRAL_ENVIO_GRATIS;
+  const hayBotellas = cartItems.some((i) => i.tipoVenta === "botella");
 
   // Bloquear scroll del body al abrir el carrito, preservando la posición
   useEffect(() => {
@@ -193,7 +217,11 @@ export default function ShoppingCart() {
                   <span>${formatPrecio(totalWithDiscount)}</span>
                 </div>
                 <p className="text-xs text-gray-400 mb-4">
-                  El envío no está incluido; se cotiza según tu código postal.
+                  {decantsCalifican && hayBotellas
+                    ? "Tus decants tienen envío gratis (zona regular DHL); el de tus botellas se cotiza según tu código postal."
+                    : decantsCalifican
+                      ? "Tu envío es gratis en zona regular DHL."
+                      : "El envío no está incluido; se cotiza según tu código postal."}
                 </p>
 
                 <button
