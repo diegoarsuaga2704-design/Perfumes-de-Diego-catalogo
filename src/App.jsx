@@ -4,7 +4,6 @@ import AppLayout from "./ui/AppLayout";
 import ProtectedAdminRoute from "./ui/ProtectedAdminRoute";
 import RouterErrorElement from "./ui/RouterErrorElement";
 import LoadingSpinner from "./ui/LoadingSpinner";
-import { SpeedInsights } from "@vercel/speed-insights/next"
 
 // Páginas cargadas bajo demanda (code-splitting). Así el visitante de TikTok
 // no descarga el panel de admin ni páginas que no va a ver en la primera carga.

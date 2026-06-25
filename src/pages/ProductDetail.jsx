@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
+import { formatPrecio } from "../functions/formatPrecio";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import MililitrosGrid from "../ui/MililitrosGrid";
@@ -206,7 +207,7 @@ export default function ProductDetail() {
                 {esBotellaCompleta && (
                   <>
                     <span className="text-3xl font-bold text-gray-900">
-                      ${parfum.precio}
+                      ${formatPrecio(parfum.precio)}
                     </span>
                     <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">
                       Botella completa
@@ -217,7 +218,7 @@ export default function ProductDetail() {
                 {esDecant && (
                   <>
                     <span className="text-3xl font-bold text-gray-900">
-                      ${parfum.precio}
+                      ${formatPrecio(parfum.precio)}
                       <span className="text-lg">/ml</span>
                     </span>
                     <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold">
@@ -233,7 +234,7 @@ export default function ProductDetail() {
                 parfum.precio30ml && (
                   <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4 inline-block">
                     Precio especial para 30 ml:{" "}
-                    <span className="font-bold">${parfum.precio30ml}</span>
+                    <span className="font-bold">${formatPrecio(parfum.precio30ml)}</span>
                   </p>
                 )}
 
@@ -254,7 +255,7 @@ export default function ProductDetail() {
                   />
 
                   <div className="text-[#D4AF7A] mt-4 font-semibold">
-                    Total: ${totalPrice} por {botellas} pieza
+                    Total: ${formatPrecio(totalPrice)} por {botellas} pieza
                     {botellas > 1 ? "s" : ""}
                   </div>
                 </div>
@@ -332,7 +333,7 @@ export default function ProductDetail() {
 
                   {mililitros && (
                     <div className="text-[#A47E3B] mt-4 font-semibold">
-                      Total: ${totalPrice.toFixed(2)} por {mililitros} ml
+                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
                     </div>
                   )}
                 </div>
@@ -344,7 +345,12 @@ export default function ProductDetail() {
                   <AvisameFormulario parfum={parfum} />
                 </div>
               ) : (
-                <div className="mt-4 hidden sm:flex gap-3 items-center">
+                <div className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start">
+                  {esDecant && !mililitros && (
+                    <p className="text-sm font-semibold text-gray-600">
+                      Elige tus mililitros 👆 para agregar
+                    </p>
+                  )}
                   <button
                     onClick={handleAddToCart}
                     disabled={
@@ -406,7 +412,7 @@ export default function ProductDetail() {
                 </p>
               ) : (
                 <div className="text-[#A47E3B] text-sm font-semibold text-center">
-                  Total: ${totalPrice.toFixed(2)}
+                  Total: ${formatPrecio(totalPrice)}
                   {esDecant ? ` por ${mililitros} ml` : ""}
                 </div>
               )}
