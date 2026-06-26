@@ -17,8 +17,10 @@ function AppLayout() {
       <InAppBrowserModal />
       <ScrollToTop />
       <TopBanner />
-      <Header onSearchResult={setSearchResult} />
-      <MainMenu />
+      <div className="sticky top-0 z-30 shadow-sm">
+        <Header onSearchResult={setSearchResult} />
+        <MainMenu />
+      </div>
       <main className="flex-1">
         <Suspense fallback={<LoadingSpinner />}>
           <Outlet context={{ searchResult }} />

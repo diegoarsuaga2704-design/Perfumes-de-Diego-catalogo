@@ -133,7 +133,7 @@ export default function ShoppingCart() {
   return (
     <>
       <div
-        className={`fixed inset-0 bg-black/50 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
           isCartOpen ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
         onClick={closeCart}
