@@ -36,6 +36,13 @@ export default function Casas() {
     navigate(`/casa/${slugify(nombreCasa)}`);
   }
 
+  // Oculta las casas sin perfumes. Si el conteo aún no cargó o falló (objeto
+  // vacío), muestra todas para no esconderlas por un error de conteo.
+  const conteoListo = Object.keys(conteo).length > 0;
+  const casasVisibles = conteoListo
+    ? casas.filter((casa) => (conteo[casa.nombre] || 0) > 0)
+    : casas;
+
   return (
     <section className="bg-gray-100 min-h-screen py-10 sm:py-14">
       <SEO
@@ -64,7 +71,7 @@ export default function Casas() {
 
         {loading ? (
           <p className="text-center text-gray-500 py-12">Cargando...</p>
-        ) : casas.length === 0 ? (
+        ) : casasVisibles.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
             <p className="text-gray-500">
               Próximamente subiremos imágenes de cada casa.
@@ -72,7 +79,7 @@ export default function Casas() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {casas.map((casa) => (
+            {casasVisibles.map((casa) => (
               <button
                 key={casa.id}
                 onClick={() => handleClickCasa(casa.nombre)}
