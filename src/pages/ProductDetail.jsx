@@ -27,7 +27,8 @@ export default function ProductDetail() {
   const [mililitros, setMililitros] = useState(null);
   const [botellas, setBotellas] = useState(1);
   const [added, setAdded] = useState(false);
-  const { addToCart } = useCart();
+  const [yaAgrego, setYaAgrego] = useState(false);
+  const { addToCart, openCart } = useCart();
 
   useEffect(() => {
     async function fetchParfum() {
@@ -53,6 +54,7 @@ export default function ProductDetail() {
   useEffect(() => {
     setMililitros(null);
     setBotellas(1);
+    setYaAgrego(false);
   }, [parfum]);
 
   if (loading) return <LoadingSpinner />;
@@ -105,6 +107,7 @@ export default function ProductDetail() {
       total: totalPrice,
     });
     setAdded(true);
+    setYaAgrego(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
@@ -299,9 +302,20 @@ export default function ProductDetail() {
                 <h2 className="text-sm font-semibold text-gray-700 mt-2">
                   NOTAS:
                 </h2>
-                <ul className="text-sm text-gray-600 leading-6">
-                  <li>{parfum.notas}</li>
-                </ul>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {(parfum.notas || "")
+                    .split(",")
+                    .map((n) => n.trim())
+                    .filter(Boolean)
+                    .map((nota, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full"
+                      >
+                        {nota}
+                      </span>
+                    ))}
+                </div>
 
                 <h2 className="text-sm font-semibold text-gray-700 mt-2">
                   CATEGORÍA:
@@ -379,6 +393,15 @@ export default function ProductDetail() {
                       </>
                     )}
                   </button>
+
+                  {yaAgrego && (
+                    <button
+                      onClick={openCart}
+                      className="text-sm font-semibold text-[#A47E3B] hover:text-[#D4AF7A] hover:underline"
+                    >
+                      Ver carrito →
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -448,6 +471,15 @@ export default function ProductDetail() {
                   </>
                 )}
               </button>
+
+              {yaAgrego && (
+                <button
+                  onClick={openCart}
+                  className="text-sm font-semibold text-[#A47E3B] text-center py-1"
+                >
+                  Ver carrito →
+                </button>
+              )}
             </div>
           </div>
         </>
