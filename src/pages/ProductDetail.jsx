@@ -336,33 +336,12 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
-              {esDecant && estaDisponible && (
-                <div>
-                  <MililitrosGrid
-                    parfum={parfum}
-                    value={mililitros}
-                    onChange={setMililitros}
-                  />
-
-                  {mililitros && (
-                    <div className="text-[#A47E3B] mt-4 font-semibold">
-                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* FORMULARIO AVÍSAME (si no está Disponible) o BOTÓN añadir */}
-              {!estaDisponible ? (
-                <div className="mt-4">
-                  <AvisameFormulario parfum={parfum} />
-                </div>
-              ) : (
+              {/* BOTÓN añadir — arriba del selector (escritorio) */}
+              {estaDisponible && (
                 <div className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start">
                   {esDecant && !mililitros && (
                     <p className="text-sm font-semibold text-gray-600">
-                      Elige tus mililitros 👆 para agregar
+                      Elige tus mililitros 👇 para agregar
                     </p>
                   )}
                   <button
@@ -402,6 +381,30 @@ export default function ProductDetail() {
                       Ver carrito →
                     </button>
                   )}
+                </div>
+              )}
+
+              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
+              {esDecant && estaDisponible && (
+                <div>
+                  <MililitrosGrid
+                    parfum={parfum}
+                    value={mililitros}
+                    onChange={setMililitros}
+                  />
+
+                  {mililitros && (
+                    <div className="text-[#A47E3B] mt-4 font-semibold">
+                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* FORMULARIO AVÍSAME (si no está Disponible) */}
+              {!estaDisponible && (
+                <div className="mt-4">
+                  <AvisameFormulario parfum={parfum} />
                 </div>
               )}
 
