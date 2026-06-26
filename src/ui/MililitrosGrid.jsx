@@ -2,6 +2,7 @@ import {
   getOpcionesMililitros,
   calcularPrecioDecant,
 } from "../functions/pricingDecant";
+import { formatPrecio } from "../functions/formatPrecio";
 
 /**
  * Selector de mililitros en formato grid: muestra cada medida con su precio,
@@ -39,7 +40,7 @@ export default function MililitrosGrid({ parfum, value, onChange }) {
                   seleccionado ? "text-white/90" : "text-gray-500"
                 }`}
               >
-                ${precio.toFixed(2)}
+                ${formatPrecio(precio)}
               </span>
             </button>
           );
