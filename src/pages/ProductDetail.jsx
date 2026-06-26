@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { slugify } from "../functions/slugify";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
 import { formatPrecio } from "../functions/formatPrecio";
+import { registrarVisto } from "../functions/vistosRecientes";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import MililitrosGrid from "../ui/MililitrosGrid";
@@ -13,6 +14,7 @@ import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
 import AvisameFormulario from "../ui/AvisameFormulario";
 import PerfumesRelacionados from "../ui/PerfumesRelacionados";
+import RecentlyViewed from "../ui/RecentlyViewed";
 import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 import { useCart } from "../context/CartContext";
 import CustomSelect from "../ui/CustomSelect";
@@ -28,6 +30,8 @@ export default function ProductDetail() {
   const [botellas, setBotellas] = useState(1);
   const [added, setAdded] = useState(false);
   const [yaAgrego, setYaAgrego] = useState(false);
+  const addBlockRef = useRef(null);
+  const [mostrarFloating, setMostrarFloating] = useState(false);
   const { addToCart, openCart } = useCart();
 
   useEffect(() => {
@@ -39,6 +43,7 @@ export default function ProductDetail() {
           setError("Perfume no encontrado");
         } else {
           setParfum(found);
+          registrarVisto(found);
         }
       } catch (err) {
         console.error(err);
@@ -55,6 +60,22 @@ export default function ProductDetail() {
     setMililitros(null);
     setBotellas(1);
     setYaAgrego(false);
+  }, [parfum]);
+
+  // #7 — Muestra el botón flotante (escritorio) cuando el botón principal
+  // de "Añadir al carrito" se sale de la vista al hacer scroll.
+  useEffect(() => {
+    const el = addBlockRef.current;
+    if (!el) {
+      setMostrarFloating(false);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([entry]) => setMostrarFloating(!entry.isIntersecting),
+      { rootMargin: "0px 0px -40% 0px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
   }, [parfum]);
 
   if (loading) return <LoadingSpinner />;
@@ -75,6 +96,10 @@ export default function ProductDetail() {
   const esBotellaCompleta = parfum.stock === true;
   const esDecant = parfum.stock === false;
   const estaDisponible = parfum.disponible === "Disponible";
+  const puedeAgregar =
+    (!esDecant || mililitros) &&
+    (!esBotellaCompleta ||
+      (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1));
 
   const totalPrice = esBotellaCompleta
     ? parfum.precio * botellas
@@ -338,7 +363,10 @@ export default function ProductDetail() {
 
               {/* BOTÓN añadir — arriba del selector (escritorio) */}
               {estaDisponible && (
-                <div className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start">
+                <div
+                  ref={addBlockRef}
+                  className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start"
+                >
                   {esDecant && mililitros && (
                     <div className="text-[#A47E3B] font-semibold">
                       Total: ${formatPrecio(totalPrice)} por {mililitros} ml
@@ -392,6 +420,16 @@ export default function ProductDetail() {
               {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
               {esDecant && estaDisponible && (
                 <div>
+                  <details className="mb-3">
+                    <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
+                      ¿Qué es un decant?
+                    </summary>
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                      Un decant es una porción del perfume original, traspasada a
+                      un atomizador más pequeño. Así pruebas la misma fragancia
+                      desde 1 ml, sin pagar la botella completa.
+                    </p>
+                  </details>
                   <MililitrosGrid
                     parfum={parfum}
                     value={mililitros}
@@ -414,6 +452,8 @@ export default function ProductDetail() {
       </div>
 
       <PerfumesRelacionados casa={parfum.casa} excluirId={parfum.id} />
+
+      <RecentlyViewed excluirId={parfum.id} />
 
       <TestimoniosSeccion />
 
@@ -485,6 +525,48 @@ export default function ProductDetail() {
             </div>
           </div>
         </>
+      )}
+
+      {/* #7 — Botón flotante en escritorio cuando el principal se va de vista */}
+      {estaDisponible && mostrarFloating && (
+        <div className="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-30 items-center gap-4 bg-white border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.18)] rounded-full pl-6 pr-2 py-2">
+          <div className="text-sm font-semibold text-gray-800 whitespace-nowrap">
+            {esDecant && !mililitros ? (
+              <span className="text-gray-600">Elige tus mililitros</span>
+            ) : (
+              <>
+                Total:{" "}
+                <span className="text-[#A47E3B]">
+                  ${formatPrecio(totalPrice)}
+                </span>
+                {esDecant ? ` / ${mililitros} ml` : ""}
+              </>
+            )}
+          </div>
+          <button
+            onClick={handleAddToCart}
+            disabled={added || !puedeAgregar}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors ${
+              added
+                ? "bg-green-500 text-white cursor-default"
+                : puedeAgregar
+                  ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A]"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            {added ? (
+              <>
+                <CheckCircle size={16} />
+                Agregado
+              </>
+            ) : (
+              <>
+                <ShoppingCart size={16} />
+                Añadir
+              </>
+            )}
+          </button>
+        </div>
       )}
 
       </>
