@@ -38,19 +38,32 @@ function Header({ onSearchResult }) {
 
   return (
     <header className="w-full border-b border-gray-200 bg-gray-200">
-      {/* Fila superior: Logo + Buscador + Carrito */}
-      <div className="flex flex-row justify-between items-center px-3 sm:px-6 pt-4 pb-0 gap-3">
+      {/* Fila superior: Logo + (menú en xl) + Buscador + Carrito */}
+      <div className="flex flex-row justify-between items-center px-3 sm:px-6 pt-4 pb-0 xl:py-2 gap-3">
         {/* Logo */}
-        <Link to="/" className="flex sm:gap-2 items-center">
+        <Link to="/" className="flex sm:gap-2 items-center flex-shrink-0">
           <img
             src="https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/perfumes-de-diego-letras-horizontal.png"
             alt="Logo"
-            className="sm:h-20 sm:w-48 w-24 my-3"
+            className="sm:h-20 sm:w-48 w-24 my-3 xl:h-14 xl:w-40 xl:my-0"
           />
         </Link>
 
+        {/* Menú en la misma fila — solo en pantallas grandes (aprovecha el hueco) */}
+        <nav className="hidden xl:flex items-center gap-6">
+          {categorias.map((cat, index) => (
+            <button
+              key={index}
+              onClick={cat.accion}
+              className="text-gray-700 hover:text-[#A47E3B] font-medium text-sm tracking-wide transition-colors whitespace-nowrap"
+            >
+              {cat.nombre}
+            </button>
+          ))}
+        </nav>
+
         {/* Search + Carrito */}
-        <div className="flex items-center gap-6 text-[#F5F5F5] mt-3 sm:mt-0">
+        <div className="flex items-center gap-6 text-[#F5F5F5] mt-3 sm:mt-0 flex-shrink-0">
           <SearchBar onSearchResult={onSearchResult} />
 
           <div className="relative">
@@ -66,8 +79,8 @@ function Header({ onSearchResult }) {
         </div>
       </div>
 
-      {/* Menú de categorías - SOLO ESCRITORIO */}
-      <div className="hidden sm:block px-6 pb-3">
+      {/* Menú de categorías - escritorio chico/mediano (en su propia fila) */}
+      <div className="hidden sm:block xl:hidden px-6 pb-3">
         <div className="flex items-center gap-8">
           {categorias.map((cat, index) => (
             <button

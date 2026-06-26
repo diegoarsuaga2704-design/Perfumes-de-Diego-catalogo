@@ -121,7 +121,7 @@ function SearchBar({ onSearchResult }) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full sm:w-[500px] my-3 sm:mt-0"
+      className="relative w-full sm:w-[500px] xl:w-[360px] my-3 sm:mt-0"
     >
       <form onSubmit={handleSubmit} className="flex items-center w-full">
         <div className="relative w-full">
