@@ -56,8 +56,8 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
 Descuento aplicado (${discountCode}): −$${formatPrecio(
           safeSubtotal - safeTotalWithDiscount,
         )}
-Total con descuento: $${formatPrecio(safeTotalWithDiscount)}`
-      : `Total del pedido: $${formatPrecio(safeTotalCartPrice)}`;
+Total con descuento: $${formatPrecio(safeTotalWithDiscount)} (no incluye envío)`
+      : `Total del pedido: $${formatPrecio(safeTotalCartPrice)} (no incluye envío)`;
 
     return `Hola Diego, me gustaría realizar mi pedido:
 
@@ -124,6 +124,13 @@ Gracias!`;
     setTimeout(() => setCopiado(false), 2500);
   };
 
+  // Intento directo en navegador in-app: location.href abre WhatsApp en más
+  // casos que window.open (que suele bloquearse). Si no abre, quedan los pasos.
+  const intentarAbrirWhatsApp = () => {
+    track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
+    window.location.href = enlaceWhatsApp;
+  };
+
   const trustLine = (
     <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-500">
       Productos 100% originales · Envío por DHL · Pago seguro
@@ -147,8 +154,20 @@ Gracias!`;
         ) : (
           <>
             <p className="font-semibold text-gray-900 mb-3">
-              Desde {inAppInfo.source || "aquí"} no se abre WhatsApp solo. Tienes
-              dos formas:
+              Envía tu pedido por WhatsApp:
+            </p>
+
+            <button
+              type="button"
+              onClick={intentarAbrirWhatsApp}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md font-semibold bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30] transition-colors mb-3"
+            >
+              Abrir WhatsApp
+            </button>
+
+            <p className="text-gray-700 mb-3">
+              ¿No se abrió? A veces {inAppInfo.source || "el navegador de la app"}{" "}
+              lo bloquea. Usa una de estas:
             </p>
 
             <p className="font-medium text-gray-900">
