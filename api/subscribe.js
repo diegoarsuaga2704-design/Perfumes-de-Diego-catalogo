@@ -36,9 +36,10 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${API_KEY}`,
         },
-        // status "subscribed" = alta directa. Cambia a "pending" si activas
-        // doble opt-in en la lista (envía correo de confirmación).
-        body: JSON.stringify({ email_address: email, status: "subscribed" }),
+        // status "pending" = doble opt-in: EmailOctopus envía un correo de
+        // confirmación (REQUIERE tener doble opt-in activado en la lista).
+        // Cambia a "subscribed" si vuelves a alta directa (opt-in simple).
+        body: JSON.stringify({ email_address: email, status: "pending" }),
       },
     );
 

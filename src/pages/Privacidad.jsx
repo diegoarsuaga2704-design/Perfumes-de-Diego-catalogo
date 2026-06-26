@@ -41,7 +41,8 @@ export default function Privacidad() {
             Para procesar tus pedidos y atender tus solicitudes podemos recabar:
             tu nombre, número de teléfono o WhatsApp, código postal y domicilio
             de entrega, y el correo electrónico que nos proporciones (por ejemplo,
-            al pedir aviso de disponibilidad de un producto). No recabamos datos
+            al pedir aviso de disponibilidad de un producto o al suscribirte a
+            nuestro boletín de novedades y promociones). No recabamos datos
             personales sensibles ni datos financieros a través del sitio.
           </p>
         </section>
@@ -69,6 +70,11 @@ export default function Privacidad() {
             puedes indicárnoslo por WhatsApp o al correo de contacto; tu negativa
             no afecta la atención de tus pedidos.
           </p>
+          <p>
+            Si te suscribiste a nuestro boletín, puedes darte de baja en
+            cualquier momento desde el enlace de cancelación incluido en cada
+            correo que te enviemos.
+          </p>
         </section>
 
         <h2 className="text-xl font-bold text-gray-900 mt-12 mb-4">
@@ -79,8 +85,10 @@ export default function Privacidad() {
             No vendemos ni rentamos tus datos personales. Para operar el sitio
             utilizamos proveedores tecnológicos que actúan como encargados del
             tratamiento, entre ellos servicios de alojamiento y base de datos
-            (como Vercel y Supabase) y empresas de paquetería para realizar los
-            envíos. Estos terceros únicamente tratan tus datos para prestarnos su
+            (como Vercel y Supabase), plataformas de email marketing para el
+            envío de nuestro boletín (como EmailOctopus) y empresas de paquetería
+            para realizar los envíos. Estos terceros únicamente tratan tus datos
+            para prestarnos su
             servicio y conforme a sus propias políticas de privacidad.
           </p>
         </section>

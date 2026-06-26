@@ -56,8 +56,8 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
 Descuento aplicado (${discountCode}): −$${formatPrecio(
           safeSubtotal - safeTotalWithDiscount,
         )}
-Total con descuento: $${formatPrecio(safeTotalWithDiscount)} (no incluye envío)`
-      : `Total del pedido: $${formatPrecio(safeTotalCartPrice)} (no incluye envío)`;
+Total con descuento: $${formatPrecio(safeTotalWithDiscount)}`
+      : `Total del pedido: $${formatPrecio(safeTotalCartPrice)}`;
 
     return `Hola Diego, me gustaría realizar mi pedido:
 
