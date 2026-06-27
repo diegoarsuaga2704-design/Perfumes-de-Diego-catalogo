@@ -15,7 +15,7 @@ import LoadingSpinner from "./LoadingSpinner";
 function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 overflow-x-clip">
       <InAppBrowserModal />
       <ScrollToTop />
       <TopBanner />

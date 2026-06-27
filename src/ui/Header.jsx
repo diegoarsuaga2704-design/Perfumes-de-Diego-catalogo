@@ -63,7 +63,7 @@ function Header({ onSearchResult }) {
         </nav>
 
         {/* Search + Carrito */}
-        <div className="flex items-center gap-6 text-[#F5F5F5] mt-3 sm:mt-0 flex-shrink-0">
+        <div className="flex items-center gap-3 sm:gap-6 text-[#F5F5F5] mt-3 sm:mt-0 flex-1 min-w-0 justify-end xl:flex-none">
           <SearchBar onSearchResult={onSearchResult} />
 
           <div className="relative">
