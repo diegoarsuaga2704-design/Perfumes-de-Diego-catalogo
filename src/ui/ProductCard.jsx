@@ -4,6 +4,7 @@ import { FaTiktok } from "react-icons/fa";
 import { Package } from "lucide-react";
 import { slugify } from "../functions/slugify";
 import { getBadgeEstatus } from "../functions/getBadgeEstatus";
+import { formatPrecio } from "../functions/formatPrecio";
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ function ProductCard({ parfum }) {
         </div>
         <div className="border-t border-gray-200 pt-4 flex flex-col justify-between">
           <span className="text-gray-800 text-sm font-semibold">
-            Precio: ${parfum.precio}
+            Precio: ${formatPrecio(parfum.precio)}
             {!parfum.stock && "/ml"}
           </span>
           <span className="hidden sm:block text-xs text-gray-600">
