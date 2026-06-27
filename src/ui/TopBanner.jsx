@@ -28,7 +28,7 @@ function TopBanner() {
           to   { transform: translateX(-50%); }
         }
         .pdd-marquee {
-          animation: pdd-marquee 50s linear infinite;
+          animation: pdd-marquee 70s linear infinite;
           will-change: transform;
         }
         @media (prefers-reduced-motion: reduce) {
