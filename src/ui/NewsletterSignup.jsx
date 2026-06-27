@@ -28,7 +28,7 @@ export default function NewsletterSignup() {
   };
 
   return (
-    <section className="bg-[#A47E3B] text-white">
+    <section className="bg-[#2C2C2C] text-white">
       <div className="max-w-3xl mx-auto px-6 py-10 text-center">
         <h2 className="text-xl sm:text-2xl font-bold">
           Promos y nuevos perfumes, directo a tu correo
@@ -66,7 +66,7 @@ export default function NewsletterSignup() {
             <button
               type="submit"
               disabled={estado === "enviando"}
-              className="px-6 py-3 rounded-md bg-white text-[#A47E3B] font-semibold hover:bg-gray-100 transition-colors whitespace-nowrap disabled:opacity-70"
+              className="px-6 py-3 rounded-md bg-[#A47E3B] text-white font-semibold hover:bg-[#D4AF7A] active:bg-[#8B6A30] transition-colors whitespace-nowrap disabled:opacity-70"
             >
               {estado === "enviando" ? "Enviando..." : "Suscribirme"}
             </button>
