@@ -1,7 +1,8 @@
 const MENSAJES = [
   "Envío GRATIS en decants desde $1,950",
   "Prueba desde 1 ml antes de tu botella completa",
-  "Envíos a todo México con DHL",
+  "La mejor tienda para comprar tus perfumes y decants",
+  "Envíos a todo México",
 ];
 
 // Repetimos los mensajes en DOS mitades idénticas: la animación recorre -50%
@@ -27,7 +28,7 @@ function TopBanner() {
           to   { transform: translateX(-50%); }
         }
         .pdd-marquee {
-          animation: pdd-marquee 30s linear infinite;
+          animation: pdd-marquee 50s linear infinite;
           will-change: transform;
         }
         @media (prefers-reduced-motion: reduce) {
