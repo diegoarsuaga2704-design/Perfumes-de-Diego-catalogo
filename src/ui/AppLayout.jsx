@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import NewsletterSignup from "./NewsletterSignup";
+import NewsletterPopup from "./NewsletterPopup";
 import WhatsAppFlotante from "./WhatsAppFlotante";
 import ShoppingCart from "./ShoppingCart";
 import TopBanner from "./TopBanner";
@@ -31,6 +32,7 @@ function AppLayout() {
       <NewsletterSignup />
       <Footer />
       <WhatsAppFlotante />
+      <NewsletterPopup />
     </div>
   );
 }
