@@ -38,9 +38,7 @@ export default function NewsletterSignup() {
         </p>
 
         {estado === "ok" ? (
-          <p className="mt-5 font-semibold">
-            ¡Casi listo! Revisa tu correo y confirma tu suscripción.
-          </p>
+          <p className="mt-5 font-semibold">¡Listo! Quedaste suscrito. 🎉</p>
         ) : (
           <form
             onSubmit={handleSubmit}
