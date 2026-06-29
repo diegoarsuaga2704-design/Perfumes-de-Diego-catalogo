@@ -2,7 +2,7 @@ const MENSAJES = [
   "Envío GRATIS en decants desde $1,950",
   "Toda la perfumería nicho que buscas",
   "Prueba desde 1 ml antes de tu botella completa",
-  "La mejor tienda para comprar tus perfumes y decants",
+  "La mejor tienda para comprar tus perfumes y decants nicho",
   "Envíos a todo México",
 ];
 
