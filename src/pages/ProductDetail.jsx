@@ -367,11 +367,6 @@ export default function ProductDetail() {
                   ref={addBlockRef}
                   className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start"
                 >
-                  {esDecant && mililitros && (
-                    <div className="text-[#A47E3B] font-semibold">
-                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
-                    </div>
-                  )}
                   {esDecant && !mililitros && (
                     <p className="text-sm font-semibold text-gray-600">
                       Elige tus mililitros 👇 para agregar
@@ -405,6 +400,12 @@ export default function ProductDetail() {
                       </>
                     )}
                   </button>
+
+                  {esDecant && mililitros && (
+                    <div className="text-[#A47E3B] font-semibold">
+                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
+                    </div>
+                  )}
 
                   {yaAgrego && (
                     <button

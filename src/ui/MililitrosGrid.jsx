@@ -1,12 +1,8 @@
-import {
-  getOpcionesMililitros,
-  calcularPrecioDecant,
-} from "../functions/pricingDecant";
-import { formatPrecio } from "../functions/formatPrecio";
+import { getOpcionesMililitros } from "../functions/pricingDecant";
 
 /**
- * Selector de mililitros en formato grid: muestra cada medida con su precio,
- * todo visible, un toque para elegir. Reemplaza al dropdown para decants.
+ * Selector de mililitros en formato grid: cada medida en un botón, un toque
+ * para elegir. El precio total se muestra abajo del botón "Añadir al carrito".
  */
 export default function MililitrosGrid({ parfum, value, onChange }) {
   const opciones = getOpcionesMililitros(parfum);
@@ -20,7 +16,6 @@ export default function MililitrosGrid({ parfum, value, onChange }) {
       <div className="grid grid-cols-2 gap-2.5">
         {opciones.map((opt) => {
           const seleccionado = value === opt.value;
-          const precio = calcularPrecioDecant(parfum, opt.value);
 
           return (
             <button
@@ -28,20 +23,13 @@ export default function MililitrosGrid({ parfum, value, onChange }) {
               type="button"
               onClick={() => onChange(opt.value)}
               aria-pressed={seleccionado}
-              className={`flex flex-col items-center justify-center rounded-lg border px-3 py-2.5 transition-colors ${
+              className={`flex items-center justify-center rounded-lg border px-3 py-3 font-semibold transition-colors ${
                 seleccionado
                   ? "bg-[#A47E3B] border-[#A47E3B] text-white shadow-sm"
                   : "bg-white border-gray-300 text-gray-800 hover:border-[#A47E3B] active:bg-[#A47E3B]/5"
               }`}
             >
-              <span className="font-semibold">{opt.label}</span>
-              <span
-                className={`text-sm ${
-                  seleccionado ? "text-white/90" : "text-gray-500"
-                }`}
-              >
-                ${formatPrecio(precio)}
-              </span>
+              {opt.label}
             </button>
           );
         })}
