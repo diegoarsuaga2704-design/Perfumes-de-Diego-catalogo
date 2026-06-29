@@ -5,6 +5,8 @@ import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 import { formatPrecio } from "../functions/formatPrecio";
 import { track } from "@vercel/analytics";
 import { CheckCircle } from "lucide-react";
+import supabase from "../services/supabase";
+import { getCupon, borrarCupon } from "../functions/cuponBienvenida";
 
 function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
   const {
@@ -124,10 +126,21 @@ Gracias!`;
     setTimeout(() => setCopiado(false), 2500);
   };
 
+  // Marca el cupón de bienvenida como usado al enviar el pedido por WhatsApp
+  // (sin importar si paga). Solo si el descuento aplicado es ese cupón.
+  const marcarCuponUsado = () => {
+    const codigo = getCupon();
+    if (!codigo || !isDiscountApplied) return;
+    if ((discountCode || "").toUpperCase() !== codigo.toUpperCase()) return;
+    supabase.rpc("marcar_cupon_usado", { p_codigo: codigo }).catch(() => {});
+    borrarCupon();
+  };
+
   // Intento directo en navegador in-app: location.href abre WhatsApp en más
   // casos que window.open (que suele bloquearse). Si no abre, quedan los pasos.
   const intentarAbrirWhatsApp = () => {
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
+    marcarCuponUsado();
     window.location.href = enlaceWhatsApp;
   };
 
@@ -235,6 +248,7 @@ Gracias!`;
           if (noListo) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
+          marcarCuponUsado();
         }}
         disabled={noListo}
         className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"

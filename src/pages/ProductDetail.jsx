@@ -421,7 +421,12 @@ export default function ProductDetail() {
               {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
               {esDecant && estaDisponible && (
                 <div>
-                  <details className="mb-3">
+                  <MililitrosGrid
+                    parfum={parfum}
+                    value={mililitros}
+                    onChange={setMililitros}
+                  />
+                  <details className="mt-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
                       ¿Qué es un decant?
                     </summary>
@@ -431,11 +436,6 @@ export default function ProductDetail() {
                       desde 1 ml, sin pagar la botella completa.
                     </p>
                   </details>
-                  <MililitrosGrid
-                    parfum={parfum}
-                    value={mililitros}
-                    onChange={setMililitros}
-                  />
                 </div>
               )}
 
