@@ -372,6 +372,11 @@ export default function ProductDetail() {
                       Elige tus mililitros 👇 para agregar
                     </p>
                   )}
+                  {esDecant && mililitros && (
+                    <div className="text-[#A47E3B] font-semibold">
+                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
+                    </div>
+                  )}
                   <button
                     onClick={handleAddToCart}
                     disabled={
@@ -400,12 +405,6 @@ export default function ProductDetail() {
                       </>
                     )}
                   </button>
-
-                  {esDecant && mililitros && (
-                    <div className="text-[#A47E3B] font-semibold">
-                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
-                    </div>
-                  )}
 
                   {yaAgrego && (
                     <button
