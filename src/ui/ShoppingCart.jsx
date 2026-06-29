@@ -206,9 +206,13 @@ export default function ShoppingCart() {
                 </div>
 
                 {isDiscountApplied && (
-                  <div className="flex justify-between text-green-700 font-medium mb-2">
-                    <span>Descuento aplicado ({discountCode})</span>
-                    <span>− ${formatPrecio(subtotal - totalWithDiscount)}</span>
+                  <div className="flex justify-between items-start gap-2 text-green-700 font-medium mb-2">
+                    <span className="min-w-0 break-words">
+                      Descuento aplicado ({discountCode})
+                    </span>
+                    <span className="whitespace-nowrap shrink-0">
+                      −${formatPrecio(subtotal - totalWithDiscount)}
+                    </span>
                   </div>
                 )}
 
