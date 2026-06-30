@@ -1,8 +1,7 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import supabase from "../services/supabase";
 import { useToast } from "./ToastContext";
 import { track } from "@vercel/analytics";
-import { getCupon } from "../functions/cuponBienvenida";
 import {
   calcularPrecioDecantCarrito,
   getIncrementoMililitros,
@@ -359,18 +358,6 @@ export function CartProvider({ children }) {
   };
 
   const totalWithDiscount = calculateDiscount();
-
-  // Auto-aplica el cupón de bienvenida (guardado en localStorage) en cuanto hay
-  // decants en el carrito. Cada código se intenta una sola vez.
-  const cuponesIntentados = useRef(new Set());
-  useEffect(() => {
-    if (isDiscountApplied) return;
-    const codigo = getCupon();
-    if (!codigo || cuponesIntentados.current.has(codigo)) return;
-    if (!cartItems.some((i) => i.tipoVenta === "decant")) return;
-    cuponesIntentados.current.add(codigo);
-    applyDiscountCode(codigo);
-  }, [cartItems, isDiscountApplied]);
 
   return (
     <CartContext.Provider

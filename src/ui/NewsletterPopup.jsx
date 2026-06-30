@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
-import supabase from "../services/supabase";
-import { guardarCupon } from "../functions/cuponBienvenida";
 
 // ⚙️ Ajustables:
 const DELAY_MS = 18000; // ~18 s en la página antes de aparecer
@@ -16,7 +14,6 @@ export default function NewsletterPopup() {
   const [email, setEmail] = useState("");
   const [hp, setHp] = useState(""); // honeypot anti-bot
   const [estado, setEstado] = useState("idle"); // idle | enviando | ok | error
-  const [codigo, setCodigo] = useState(""); // código de bienvenida generado
 
   // Decide si mostrarlo y lo abre tras el retardo
   useEffect(() => {
@@ -68,16 +65,6 @@ export default function NewsletterPopup() {
         try {
           localStorage.setItem(KEY_SUSCRITO, "1");
         } catch {}
-        // Genera el cupón único de bienvenida (10% en decants, un solo uso).
-        try {
-          const { data } = await supabase.rpc("generar_cupon_bienvenida");
-          if (data) {
-            setCodigo(data);
-            guardarCupon(data);
-          }
-        } catch {
-          // si falla, igual quedó suscrito; solo no mostramos cupón
-        }
       } else {
         setEstado("error");
       }
@@ -110,24 +97,13 @@ export default function NewsletterPopup() {
             <p className="text-lg font-bold text-gray-900">
               ¡Listo! Quedaste suscrito 🎉
             </p>
-            {codigo ? (
-              <div className="mt-3">
-                <p className="text-sm text-gray-600">
-                  Tu cupón de <strong>10% en decants</strong>:
-                </p>
-                <p className="mt-1 text-lg font-bold tracking-wide text-[#A47E3B] bg-[#A47E3B]/10 rounded-md py-2 px-3">
-                  {codigo}
-                </p>
-                <p className="mt-2 text-xs text-gray-500">
-                  Un solo uso por persona. Se aplica solo en decants y lo verás
-                  en tu carrito automáticamente.
-                </p>
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-gray-600">
-                Pronto sabrás de lo nuevo antes que nadie.
-              </p>
-            )}
+            <p className="mt-3 text-sm text-gray-600">
+              Te enviamos tu cupón de <strong>10% en decants</strong> a tu
+              correo. Revisa tu bandeja (y la carpeta de spam).
+            </p>
+            <p className="mt-2 text-xs text-gray-500">
+              Es de un solo uso por persona. Aplícalo en tu carrito al pedir.
+            </p>
           </div>
         ) : (
           <>
@@ -135,7 +111,7 @@ export default function NewsletterPopup() {
               10% en tu primer pedido de decants
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Suscríbete y recibe un cupón de 10% en decants —{" "}
+              Suscríbete y te enviamos por correo un cupón de 10% en decants —{" "}
               <strong>un solo uso por persona</strong>. Y entérate de novedades
               antes que nadie. Sin spam.
             </p>
