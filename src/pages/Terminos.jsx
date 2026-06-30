@@ -184,7 +184,7 @@ export default function Terminos() {
           <p>
             Las descripciones, notas olfativas y opiniones son informativas y
             subjetivas; la percepción de un aroma varía entre personas. Si eres
-            sensible a fragancias o tienes alguna condición de la piel, prueba el
+            sensible a perfumes o tienes alguna condición de la piel, prueba el
             producto con precaución. No nos hacemos responsables por reacciones
             derivadas del uso inadecuado de los productos.
           </p>

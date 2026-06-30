@@ -12,7 +12,7 @@ Perfumería nicho y artesanal en México, con opción de probar antes de comprar
 
 ## 2. Quién está detrás
 
-Diego. Ingeniero automotriz desde Puebla, México. Aficionado serio a la perfumería con varios años probando fragancias. **No es perfumista profesional**; es un curador con criterio formado.
+Diego. Ingeniero automotriz desde Puebla, México. Aficionado serio a la perfumería con varios años probando perfumes. **No es perfumista profesional**; es un curador con criterio formado.
 
 Esa distinción importa: el tono nunca debe ser de "experto que te enseña", sino de "alguien que ha probado mucho y comparte lo que descubrió".
 
@@ -54,7 +54,7 @@ Casos especiales de pricing:
 
 ### Cliente avanzado (minoría, pero alto valor)
 
-- Coleccionista de fragancias.
+- Coleccionista de perfumes.
 - Conoce nicho a fondo.
 - Busca casas extremas (Ensar Oud, Toskovat, Stephane Humbert Lucas, Areej Le Doré).
 - Compra decants para explorar antes de invertir en frascos completos.
@@ -63,7 +63,7 @@ Casos especiales de pricing:
 ### Cliente regalo
 
 - No es para él/ella, es para regalar.
-- Necesita guía: no sabe qué fragancia escoger.
+- Necesita guía: no sabe qué perfume escoger.
 - Pide recomendaciones por WhatsApp con base en lo que le gusta a la persona.
 
 ---
@@ -134,7 +134,7 @@ Conversacional, directa, sin adornos. Como contarle a un amigo algo que descubri
 
 ### Para el regalo
 
-> "Te ayudo a elegir. Cuéntame qué le gusta a la persona o qué fragancia conoces que use."
+> "Te ayudo a elegir. Cuéntame qué le gusta a la persona o qué perfumes conoces que use."
 
 ### Para el escéptico
 

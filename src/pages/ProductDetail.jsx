@@ -431,7 +431,7 @@ export default function ProductDetail() {
                     </summary>
                     <p className="mt-2 text-sm text-gray-600 leading-relaxed">
                       Un decant es una porción del perfume original, traspasada a
-                      un atomizador más pequeño. Así pruebas la misma fragancia
+                      un atomizador más pequeño. Así pruebas el mismo perfume
                       desde 1 ml, sin pagar la botella completa.
                     </p>
                   </details>

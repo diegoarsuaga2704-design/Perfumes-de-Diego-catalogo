@@ -7,7 +7,7 @@ const faqs = [
   {
     pregunta: "¿Qué es un decant?",
     respuesta:
-      "Un decant es una porción de perfume transferida desde un frasco original a un envase más pequeño. Te permite probar fragancias exclusivas sin invertir en un frasco completo, o llevar tu perfume favorito de forma práctica.",
+      "Un decant es una porción de perfume transferida desde un frasco original a un envase más pequeño. Te permite probar perfumes exclusivas sin invertir en un frasco completo, o llevar tu perfume favorito de forma práctica.",
   },
   {
     pregunta: "¿Los perfumes son 100% originales?",
