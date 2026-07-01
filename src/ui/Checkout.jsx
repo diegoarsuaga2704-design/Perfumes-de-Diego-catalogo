@@ -6,6 +6,7 @@ import { formatPrecio } from "../functions/formatPrecio";
 import { track } from "@vercel/analytics";
 import { CheckCircle } from "lucide-react";
 import supabase from "../services/supabase";
+import { borrarCupon } from "../functions/cuponBienvenida";
 
 function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
   const {
@@ -126,11 +127,12 @@ Gracias!`;
   };
 
   // Marca el cupón de bienvenida como usado al enviar el pedido por WhatsApp
-  // (sin importar si paga). Solo aplica a los códigos de bienvenida (BIENVENIDA-).
+  // (sin importar si paga). Solo aplica a los códigos de bienvenida (BIENVENIDA).
   const marcarCuponUsado = () => {
     if (!isDiscountApplied || !discountCode) return;
-    if (!discountCode.toUpperCase().startsWith("BIENVENIDA-")) return;
+    if (!discountCode.toUpperCase().startsWith("BIENVENIDA")) return;
     supabase.rpc("marcar_cupon_usado", { p_codigo: discountCode }).catch(() => {});
+    borrarCupon();
   };
 
   // Intento directo en navegador in-app: location.href abre WhatsApp en más

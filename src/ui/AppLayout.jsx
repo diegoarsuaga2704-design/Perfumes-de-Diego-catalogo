@@ -1,5 +1,5 @@
-import { useState, Suspense } from "react";
-import { Outlet } from "react-router-dom";
+import { useState, Suspense, useEffect } from "react";
+import { Outlet, useSearchParams } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import NewsletterSignup from "./NewsletterSignup";
@@ -11,9 +11,27 @@ import MainMenu from "./MainMenu";
 import ScrollToTop from "./ScrollToTop";
 import InAppBrowserModal from "./InAppBrowserModal";
 import LoadingSpinner from "./LoadingSpinner";
+import { useToast } from "../context/ToastContext";
+import { guardarCupon } from "../functions/cuponBienvenida";
 
 function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
+
+  // Cupón por link de correo: ?cupon=BIENVENIDAXXXX -> lo guarda para que se
+  // auto-aplique en el carrito al haber decants, limpia la URL y avisa.
+  useEffect(() => {
+    const cupon = searchParams.get("cupon");
+    if (!cupon) return;
+    const limpio = cupon.trim().toUpperCase();
+    guardarCupon(limpio);
+    const next = new URLSearchParams(searchParams);
+    next.delete("cupon");
+    setSearchParams(next, { replace: true });
+    showToast(`Cupón ${limpio} listo: 10% en decants 🎉`, "success");
+  }, [searchParams, setSearchParams, showToast]);
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 overflow-x-clip">
       <InAppBrowserModal />
