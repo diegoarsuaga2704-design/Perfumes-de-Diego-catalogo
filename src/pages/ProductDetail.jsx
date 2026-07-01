@@ -5,6 +5,7 @@ import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
 import { formatPrecio } from "../functions/formatPrecio";
+import { imagenThumb } from "../functions/imagenThumb";
 import { registrarVisto } from "../functions/vistosRecientes";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -32,6 +33,12 @@ export default function ProductDetail() {
   const [yaAgrego, setYaAgrego] = useState(false);
   const addBlockRef = useRef(null);
   const [mostrarFloating, setMostrarFloating] = useState(false);
+  const [imgOriginal, setImgOriginal] = useState(false);
+
+  // Si cambia el producto, vuelve a intentar la versión optimizada (wsrv).
+  useEffect(() => {
+    setImgOriginal(false);
+  }, [parfum?.image]);
   const { addToCart, openCart } = useCart();
 
   useEffect(() => {
@@ -192,9 +199,10 @@ export default function ProductDetail() {
             </button>
 
             <img
-              src={parfum.image}
+              src={imgOriginal ? parfum.image : imagenThumb(parfum.image, 900)}
               alt={parfum.nombre}
               loading="eager"
+              onError={() => setImgOriginal(true)}
               className="max-h-60 sm:max-h-full mx-auto rounded-xl object-contain"
             />
           </div>

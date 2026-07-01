@@ -31,7 +31,7 @@ export default function NewsletterSignup() {
     <section className="bg-[#2C2C2C] text-white">
       <div className="max-w-3xl mx-auto px-6 py-10 text-center">
         <h2 className="text-xl sm:text-2xl font-bold">
-          10% en tu primer pedido de decants
+          Entérate de las novedades y obten 10% en tu primer pedido de decants
         </h2>
         <p className="mt-2 text-white/90 text-sm sm:text-base">
           Suscríbete y te enviamos por correo un cupón de 10% en decants — un

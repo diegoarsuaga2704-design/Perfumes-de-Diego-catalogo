@@ -5,10 +5,12 @@ import { Package } from "lucide-react";
 import { slugify } from "../functions/slugify";
 import { getBadgeEstatus } from "../functions/getBadgeEstatus";
 import { formatPrecio } from "../functions/formatPrecio";
+import { imagenThumb } from "../functions/imagenThumb";
 
 function ProductCard({ parfum }) {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
+  const [usarOriginal, setUsarOriginal] = useState(false);
 
   // Un solo badge, misma lógica que ProductDetail (fuente única).
   const badge = getBadgeEstatus(parfum);
@@ -36,10 +38,12 @@ function ProductCard({ parfum }) {
 
       {parfum.image && !imgError ? (
         <img
-          src={parfum.image}
+          src={usarOriginal ? parfum.image : imagenThumb(parfum.image, 440)}
           alt={parfum.nombre}
           loading="lazy"
-          onError={() => setImgError(true)}
+          onError={() =>
+            usarOriginal ? setImgError(true) : setUsarOriginal(true)
+          }
           className="w-full h-100 object-cover pt-2"
         />
       ) : (
