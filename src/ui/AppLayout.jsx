@@ -24,7 +24,11 @@ function AppLayout() {
   useEffect(() => {
     const cupon = searchParams.get("cupon");
     if (!cupon) return;
-    const limpio = cupon.trim().toUpperCase();
+    // El rastreo de clics del correo a veces ensucia/duplica el parámetro.
+    // Extraemos el código limpio (BIENVENIDA + 6 caracteres). Si no aparece,
+    // usamos lo que llegó tal cual.
+    const m = cupon.toUpperCase().match(/BIENVENIDA[0-9A-F]{6}/);
+    const limpio = m ? m[0] : cupon.trim().toUpperCase();
     guardarCupon(limpio);
     const next = new URLSearchParams(searchParams);
     next.delete("cupon");
