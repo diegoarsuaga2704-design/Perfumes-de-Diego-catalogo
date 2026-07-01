@@ -31,14 +31,18 @@ export default function NewsletterSignup() {
     <section className="bg-[#2C2C2C] text-white">
       <div className="max-w-3xl mx-auto px-6 py-10 text-center">
         <h2 className="text-xl sm:text-2xl font-bold">
-          Promos y nuevos perfumes, directo a tu correo
+          10% en tu primer pedido de decants
         </h2>
         <p className="mt-2 text-white/90 text-sm sm:text-base">
-          Entérate primero de lanzamientos y ofertas. Sin spam.
+          Suscríbete y te enviamos por correo un cupón de 10% en decants — un
+          solo uso por persona. Y entérate de novedades antes que nadie. Sin
+          spam.
         </p>
 
         {estado === "ok" ? (
-          <p className="mt-5 font-semibold">¡Listo! Quedaste suscrito. 🎉</p>
+          <p className="mt-5 font-semibold">
+            ¡Listo! Te enviamos tu cupón de 10% en decants a tu correo. 🎉
+          </p>
         ) : (
           <form
             onSubmit={handleSubmit}
@@ -60,6 +64,11 @@ export default function NewsletterSignup() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder="tucorreo@ejemplo.com"
               className="flex-1 px-4 py-3 rounded-md text-gray-800 focus:outline-none"
             />
@@ -68,7 +77,7 @@ export default function NewsletterSignup() {
               disabled={estado === "enviando"}
               className="px-6 py-3 rounded-md bg-[#A47E3B] text-white font-semibold hover:bg-[#D4AF7A] active:bg-[#8B6A30] transition-colors whitespace-nowrap disabled:opacity-70"
             >
-              {estado === "enviando" ? "Enviando..." : "Suscribirme"}
+              {estado === "enviando" ? "Enviando..." : "Quiero mi 10%"}
             </button>
           </form>
         )}
