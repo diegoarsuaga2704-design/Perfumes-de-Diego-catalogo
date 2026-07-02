@@ -38,8 +38,17 @@ function ScrollToTop() {
       }
     }
 
-    // PUSH/REPLACE o POP sin posición guardada: ir arriba
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // PUSH/REPLACE (o POP sin posición guardada): ir arriba. Lo hacemos ahora
+    // y también en los siguientes frames, por si el contenido (rutas lazy o
+    // datos async) termina de montar y desplaza el scroll.
+    const irArriba = () =>
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    irArriba();
+    const raf = requestAnimationFrame(() => {
+      irArriba();
+      requestAnimationFrame(irArriba);
+    });
+    return () => cancelAnimationFrame(raf);
   }, [location.key, navigationType]);
 
   return null;
