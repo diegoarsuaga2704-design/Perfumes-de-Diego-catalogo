@@ -15,6 +15,7 @@ const VistoEnTikTok = lazy(() => import("./pages/VistoEnTikTok"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Prehome = lazy(() => import("./pages/Prehome"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const Casas = lazy(() => import("./pages/Casas"));
 const SobreMi = lazy(() => import("./pages/SobreMi"));
 const Terminos = lazy(() => import("./pages/Terminos"));
@@ -47,6 +48,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Prehome /> },
       { path: "/home", element: <Home /> },
+      { path: "/checkout", element: <CheckoutPage /> },
       { path: "/botellas", element: <Home forcedMode="stock" /> },
       { path: "/decants", element: <Home forcedMode="decants" /> },
       { path: "/casa/:slug", element: <Home /> },

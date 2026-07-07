@@ -1,4 +1,5 @@
 import { useCart } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 import { X, ArrowLeft, ShoppingBag } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
@@ -31,6 +32,7 @@ export default function ShoppingCart() {
   const [applying, setApplying] = useState(false);
   const [paso, setPaso] = useState("carrito"); // "carrito" | "cp" | "pedido"
   const [inApp, setInApp] = useState(false);
+  const navigate = useNavigate();
 
   // ¿Los decants del carrito ya califican a envío gratis? Mismo cálculo que la
   // barra de progreso, para que el mensaje del total no se contradiga con ella.
@@ -229,13 +231,14 @@ export default function ShoppingCart() {
                 <button
                   type="button"
                   onClick={() => {
-                    track("continuar_a_cp");
-                    setPaso("cp");
+                    track("ir_a_checkout");
+                    closeCart();
+                    navigate("/checkout");
                   }}
                   disabled={cartItems.length === 0}
                   className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
-                  Continuar
+                  Ir a pagar
                 </button>
               </div>
             </>
