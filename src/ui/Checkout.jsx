@@ -1,4 +1,5 @@
 import { useCart } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
@@ -15,6 +16,8 @@ function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
     subtotal = 0,
     totalWithDiscount = 0,
     discountCode = "",
+    vaciarCarrito = () => {},
+    closeCart = () => {},
   } = useCart() || {};
 
   const [inAppInfo, setInAppInfo] = useState({ isInApp: false, source: null });
@@ -126,6 +129,8 @@ Gracias!`;
     setTimeout(() => setCopiado(false), 2500);
   };
 
+  const navigate = useNavigate();
+
   // Marca el cupón de bienvenida como usado al enviar el pedido por WhatsApp
   // (sin importar si paga). Solo aplica a los códigos de bienvenida (BIENVENIDA).
   const marcarCuponUsado = () => {
@@ -135,11 +140,19 @@ Gracias!`;
     borrarCupon();
   };
 
+  // Tras enviar el pedido: marca el cupón como usado, vacía el carrito y cierra
+  // el panel. El mensaje de WhatsApp ya se abrió con el pedido actual.
+  const finalizarPedido = () => {
+    marcarCuponUsado();
+    vaciarCarrito();
+    closeCart();
+  };
+
   // Intento directo en navegador in-app: location.href abre WhatsApp en más
   // casos que window.open (que suele bloquearse). Si no abre, quedan los pasos.
   const intentarAbrirWhatsApp = () => {
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
-    marcarCuponUsado();
+    finalizarPedido();
     window.location.href = enlaceWhatsApp;
   };
 
@@ -247,7 +260,8 @@ Gracias!`;
           if (noListo) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
-          marcarCuponUsado();
+          finalizarPedido();
+          navigate("/home");
         }}
         disabled={noListo}
         className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"

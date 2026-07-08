@@ -360,6 +360,20 @@ export function CartProvider({ children }) {
 
   const totalWithDiscount = calculateDiscount();
 
+  // Vacía el carrito por completo: items, descuento y lo guardado en el
+  // navegador. Se usa al enviar el pedido por WhatsApp.
+  const vaciarCarrito = () => {
+    setCartItems([]);
+    setDiscountCode("");
+    setDiscountType(null);
+    setDiscountValue(0);
+    setDiscountTarget("ALL");
+    setIsDiscountApplied(false);
+    try {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } catch {}
+  };
+
   // Auto-aplica el cupón guardado (del link del correo) en cuanto hay decants
   // en el carrito. Cada código se intenta una sola vez.
   const cuponesIntentados = useRef(new Set());
@@ -391,6 +405,7 @@ export function CartProvider({ children }) {
         discountTarget,
         isDiscountApplied,
         applyDiscountCode,
+        vaciarCarrito,
         errorMessage,
         setErrorMessage,
       }}
