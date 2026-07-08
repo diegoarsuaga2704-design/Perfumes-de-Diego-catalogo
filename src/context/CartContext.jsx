@@ -269,8 +269,13 @@ export function CartProvider({ children }) {
 
   // 🎟️ Aplicar descuento — valida server-side con la función validar_cupon.
   // (NO aplica a paquetes; ya tienen su propio ahorro)
-  const applyDiscountCode = async (code) => {
+  const applyDiscountCode = async (code, silent = false) => {
     const upperCode = code.trim().toUpperCase();
+    // En modo silencioso (auto-aplicado del cupón guardado) no mostramos
+    // errores al usuario: es un intento en segundo plano.
+    const fail = (msg) => {
+      if (!silent) setErrorMessage(msg);
+    };
 
     // 1) Validar contra Supabase. La lista de códigos nunca sale al navegador.
     const { data, error } = await supabase.rpc("validar_cupon", {
@@ -279,7 +284,7 @@ export function CartProvider({ children }) {
 
     if (error) {
       console.error("Error validando cupón:", error);
-      setErrorMessage("Hubo un problema al validar el código. Intenta de nuevo.");
+      fail("Hubo un problema al validar el código. Intenta de nuevo.");
       return;
     }
 
@@ -287,9 +292,7 @@ export function CartProvider({ children }) {
 
     // 2) Si no es válido, mostramos el motivo y MANTENEMOS el descuento previo si lo había.
     if (!resultado || !resultado.valido) {
-      setErrorMessage(
-        resultado?.mensaje || `El código "${upperCode}" no es válido.`,
-      );
+      fail(resultado?.mensaje || `El código "${upperCode}" no es válido.`);
       return;
     }
 
@@ -309,9 +312,7 @@ export function CartProvider({ children }) {
     });
 
     if (applicableItems.length === 0) {
-      setErrorMessage(
-        `El código ${upperCode} no aplica a los productos de tu carrito.`,
-      );
+      fail(`El código ${upperCode} no aplica a los productos de tu carrito.`);
       return;
     }
 
@@ -383,7 +384,7 @@ export function CartProvider({ children }) {
     if (!codigo || cuponesIntentados.current.has(codigo)) return;
     if (!cartItems.some((i) => i.tipoVenta === "decant")) return;
     cuponesIntentados.current.add(codigo);
-    applyDiscountCode(codigo);
+    applyDiscountCode(codigo, true);
   }, [cartItems, isDiscountApplied]);
 
   return (

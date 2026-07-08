@@ -34,6 +34,7 @@ export default function CheckoutPage() {
   // Cierra el panel del carrito si venía abierto.
   useEffect(() => {
     closeCart?.();
+    setErrorMessage?.("");
     // Sube al tope siempre — incluso después de que el carrito restaure su
     // posición al cerrarse (por eso reintentamos en los siguientes frames).
     const irArriba = () => window.scrollTo(0, 0);
