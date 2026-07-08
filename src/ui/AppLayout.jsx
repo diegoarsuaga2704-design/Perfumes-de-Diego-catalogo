@@ -1,5 +1,5 @@
 import { useState, Suspense, useEffect } from "react";
-import { Outlet, useSearchParams } from "react-router-dom";
+import { Outlet, useSearchParams, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import NewsletterSignup from "./NewsletterSignup";
@@ -18,6 +18,10 @@ function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
+
+  // Checkout sin distracciones: ocultamos banner, menú, newsletter, footer, etc.
+  const { pathname } = useLocation();
+  const esCheckout = pathname === "/checkout";
 
   // Cupón por link de correo: ?cupon=BIENVENIDAXXXX -> lo guarda para que se
   // auto-aplique en el carrito al haber decants, limpia la URL y avisa.
@@ -40,10 +44,10 @@ function AppLayout() {
     <div className="flex flex-col min-h-screen bg-gray-50 overflow-x-clip">
       <InAppBrowserModal />
       <ScrollToTop />
-      <TopBanner />
+      {!esCheckout && <TopBanner />}
       <div className="sticky top-0 z-30 shadow-sm">
         <Header onSearchResult={setSearchResult} />
-        <MainMenu />
+        {!esCheckout && <MainMenu />}
       </div>
       <main className="flex-1">
         <Suspense fallback={<LoadingSpinner />}>
@@ -51,10 +55,14 @@ function AppLayout() {
         </Suspense>
       </main>
       <ShoppingCart />
-      <NewsletterSignup />
-      <Footer />
-      <WhatsAppFlotante />
-      <NewsletterPopup />
+      {!esCheckout && (
+        <>
+          <NewsletterSignup />
+          <Footer />
+          <WhatsAppFlotante />
+          <NewsletterPopup />
+        </>
+      )}
     </div>
   );
 }

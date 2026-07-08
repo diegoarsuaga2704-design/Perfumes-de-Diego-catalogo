@@ -34,6 +34,15 @@ export default function CheckoutPage() {
   // Cierra el panel del carrito si venía abierto.
   useEffect(() => {
     closeCart?.();
+    // Sube al tope siempre — incluso después de que el carrito restaure su
+    // posición al cerrarse (por eso reintentamos en los siguientes frames).
+    const irArriba = () => window.scrollTo(0, 0);
+    irArriba();
+    const raf = requestAnimationFrame(() => {
+      irArriba();
+      requestAnimationFrame(irArriba);
+    });
+    return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
