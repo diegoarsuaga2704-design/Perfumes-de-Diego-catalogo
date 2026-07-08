@@ -101,7 +101,7 @@ export default function ShoppingCart() {
 
         <div className="flex flex-col h-[calc(100%-70px)]">
           {/* Lista de productos: lo ÚNICO que se mueve con el scroll */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {cartItems.length > 0 && <EnvioGratisProgress />}
             <ShoppingCartProduct />
             {cartItems.length === 0 && (
