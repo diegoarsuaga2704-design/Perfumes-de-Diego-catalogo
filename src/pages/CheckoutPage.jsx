@@ -123,17 +123,17 @@ export default function CheckoutPage() {
           {/* Envío gratis */}
           <EnvioGratisProgress />
 
-          {/* Código postal */}
+          {/* Código postal (opcional) */}
           <div>
             <label
               htmlFor="cp"
               className="text-sm font-medium text-gray-700"
             >
-              Tu código postal (5 dígitos)
+              Tu código postal (opcional)
             </label>
             <p className="text-xs text-gray-500 mt-1 mb-1">
-              Lo necesito para cotizar tu envío, o aplicar tu envío gratis si tus
-              decants ya califican.
+              Si lo pones, te cotizo el envío de una vez. Si no, lo vemos por
+              WhatsApp.
             </p>
             <input
               id="cp"
@@ -143,15 +143,11 @@ export default function CheckoutPage() {
               placeholder="Ej. 72000"
               inputMode="numeric"
               maxLength={5}
-              className={`w-full border rounded-md px-3 py-3 text-base focus:ring-2 focus:ring-[#A47E3B] focus:outline-none transition-colors ${
-                isPostalCodeValid
-                  ? "bg-white border-gray-300 text-gray-800"
-                  : "bg-red-50 border-red-300 text-gray-800 placeholder:text-gray-400"
-              }`}
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base bg-white text-gray-800 focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
             />
-            {!isPostalCodeValid && postalCode.length > 0 && (
-              <p className="text-xs text-red-500 mt-1">
-                El código postal debe tener 5 dígitos.
+            {postalCode.length > 0 && !isPostalCodeValid && (
+              <p className="text-xs text-gray-500 mt-1">
+                El código postal tiene 5 dígitos.
               </p>
             )}
           </div>
@@ -213,13 +209,10 @@ export default function CheckoutPage() {
           </div>
 
           {/* Enviar por WhatsApp */}
-          <div className={!isPostalCodeValid ? "opacity-50" : ""}>
-            <Checkout
-              totalCartPrice={totalWithDiscount}
-              postalCode={postalCode}
-              disabled={!isPostalCodeValid}
-            />
-          </div>
+          <Checkout
+            totalCartPrice={totalWithDiscount}
+            postalCode={postalCode}
+          />
         </div>
       </div>
     </div>

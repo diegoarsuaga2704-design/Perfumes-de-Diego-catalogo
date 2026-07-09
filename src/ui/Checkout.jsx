@@ -9,7 +9,7 @@ import { CheckCircle } from "lucide-react";
 import supabase from "../services/supabase";
 import { borrarCupon } from "../functions/cuponBienvenida";
 
-function Checkout({ totalCartPrice = 0, postalCode = "", disabled = false }) {
+function Checkout({ totalCartPrice = 0, postalCode = "" }) {
   const {
     cartItems = [],
     isDiscountApplied = false,
@@ -64,13 +64,18 @@ Descuento aplicado (${discountCode}): −$${formatPrecio(
 Total con descuento: $${formatPrecio(safeTotalWithDiscount)}`
       : `Total del pedido: $${formatPrecio(safeTotalCartPrice)}`;
 
+    const cpValido = String(postalCode).trim().length === 5;
+    const lineaCP = cpValido
+      ? `Para calcular el costo de envío, este es mi CP: ${postalCode}`
+      : `Te paso mi código postal por aquí para calcular el envío.`;
+
     return `Hola Diego, me gustaría realizar mi pedido:
 
 ${productos}
 
 ${resumenPrecio}
 
-Para calcular el costo de envío, este es mi CP: ${postalCode}
+${lineaCP}
 Gracias!`;
   }, [
     cartItems,
@@ -86,9 +91,9 @@ Gracias!`;
     mensajePedido,
   )}`;
 
-  // No se puede pedir todavía: carrito vacío o CP inválido (disabled lo envía
-  // el carrito según el código postal).
-  const noListo = !cartItems.length || disabled;
+  // Lo único que impide pedir es un carrito vacío. El código postal es
+  // opcional: si no lo ponen, se acuerda por WhatsApp.
+  const noListo = !cartItems.length;
 
   const copiarTexto = async (texto) => {
     // 1) API moderna (necesita contexto seguro; a veces bloqueada en in-app)
@@ -178,15 +183,10 @@ Gracias!`;
 
     return (
       <div className="rounded-md border border-[#A47E3B]/40 bg-[#FBF7F0] p-4 text-sm text-gray-700">
-        {disabled ? (
-          <p className="text-gray-700">
-            Ingresa tu código postal arriba para continuar con tu pedido.
+        <>
+          <p className="font-semibold text-gray-900 mb-3">
+            Envía tu pedido por WhatsApp:
           </p>
-        ) : (
-          <>
-            <p className="font-semibold text-gray-900 mb-3">
-              Envía tu pedido por WhatsApp:
-            </p>
 
             <button
               type="button"
@@ -245,7 +245,6 @@ Gracias!`;
 
             {trustLine}
           </>
-        )}
 
         <style>{`
           @keyframes copiadoPop {
