@@ -113,40 +113,15 @@ export default function CheckoutPage() {
         {/* Resumen del pedido */}
         <div>
           <h2 className="font-semibold text-gray-900 mb-3">Tu pedido</h2>
-          <EnvioGratisProgress />
-          <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden">
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
             <ShoppingCartProduct />
           </div>
         </div>
 
         {/* Datos, total y envío */}
         <div className="flex flex-col gap-5">
-          {/* Código de descuento */}
-          <div>
-            <label className="text-sm font-medium text-gray-700">
-              Código de descuento
-            </label>
-            <div className="flex items-center gap-2 mt-1">
-              <input
-                value={inputCode}
-                onChange={handleInputChange}
-                placeholder="Código de descuento"
-                autoCapitalize="characters"
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleApplyCode}
-                disabled={applying}
-                className="bg-[#A47E3B] text-white px-4 py-2 rounded-md text-sm hover:bg-[#8b6d32] disabled:opacity-50 whitespace-nowrap"
-              >
-                {applying ? "Validando..." : "Aplicar"}
-              </button>
-            </div>
-            {errorMessage && (
-              <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
-            )}
-          </div>
+          {/* Envío gratis */}
+          <EnvioGratisProgress />
 
           {/* Código postal */}
           <div>
@@ -178,6 +153,33 @@ export default function CheckoutPage() {
               <p className="text-xs text-red-500 mt-1">
                 El código postal debe tener 5 dígitos.
               </p>
+            )}
+          </div>
+
+          {/* Código de descuento */}
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Código de descuento
+            </label>
+            <div className="flex items-center gap-2 mt-1">
+              <input
+                value={inputCode}
+                onChange={handleInputChange}
+                placeholder="Código de descuento"
+                autoCapitalize="characters"
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleApplyCode}
+                disabled={applying}
+                className="bg-[#A47E3B] text-white px-4 py-2 rounded-md text-sm hover:bg-[#8b6d32] disabled:opacity-50 whitespace-nowrap"
+              >
+                {applying ? "Validando..." : "Aplicar"}
+              </button>
+            </div>
+            {errorMessage && (
+              <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
             )}
           </div>
 

@@ -133,26 +133,32 @@ Gracias!`;
 
   // Marca el cupón de bienvenida como usado al enviar el pedido por WhatsApp
   // (sin importar si paga). Solo aplica a los códigos de bienvenida (BIENVENIDA).
-  const marcarCuponUsado = () => {
+  // OJO: supabase.rpc() no es una Promise real y NO tiene .catch(); hay que
+  // esperarlo con await dentro de try/catch, o la llamada nunca se ejecuta.
+  const marcarCuponUsado = async () => {
     if (!isDiscountApplied || !discountCode) return;
     if (!discountCode.toUpperCase().startsWith("BIENVENIDA")) return;
-    supabase.rpc("marcar_cupon_usado", { p_codigo: discountCode }).catch(() => {});
+    try {
+      await supabase.rpc("marcar_cupon_usado", { p_codigo: discountCode });
+    } catch (e) {
+      console.error("No se pudo marcar el cupón como usado:", e);
+    }
     borrarCupon();
   };
 
   // Tras enviar el pedido: marca el cupón como usado, vacía el carrito y cierra
   // el panel. El mensaje de WhatsApp ya se abrió con el pedido actual.
-  const finalizarPedido = () => {
-    marcarCuponUsado();
+  const finalizarPedido = async () => {
+    await marcarCuponUsado();
     vaciarCarrito();
     closeCart();
   };
 
   // Intento directo en navegador in-app: location.href abre WhatsApp en más
   // casos que window.open (que suele bloquearse). Si no abre, quedan los pasos.
-  const intentarAbrirWhatsApp = () => {
+  const intentarAbrirWhatsApp = async () => {
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
-    finalizarPedido();
+    await finalizarPedido();
     window.location.href = enlaceWhatsApp;
   };
 
@@ -256,11 +262,11 @@ Gracias!`;
     <div>
       <button
         type="button"
-        onClick={() => {
+        onClick={async () => {
           if (noListo) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
-          finalizarPedido();
+          await finalizarPedido();
           navigate("/home");
         }}
         disabled={noListo}
