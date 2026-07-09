@@ -36,9 +36,23 @@ function descripcionDescuento(c) {
 }
 
 function estaExpirado(c) {
+  // Vencimiento por hora (cupones de bienvenida, 24 h)
+  if (c.expira_en && new Date(c.expira_en) < new Date()) return true;
+  // Vencimiento por fecha (códigos normales)
   if (!c.expira) return false;
   const fecha = new Date(c.expira + "T12:00:00");
   return fecha < new Date(new Date().toDateString());
+}
+
+// Texto de "Expira": prioriza la hora exacta si existe.
+function textoExpira(c) {
+  if (c.expira_en) {
+    return new Date(c.expira_en).toLocaleString("es-MX", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  }
+  return c.expira || null;
 }
 
 export default function AdminCodigosList() {
@@ -224,9 +238,9 @@ export default function AdminCodigosList() {
                   <div className="text-xs text-gray-500 space-y-0.5 mb-3">
                     <p>
                       Expira:{" "}
-                      {c.expira ? (
+                      {textoExpira(c) ? (
                         <span className={expirado ? "text-red-600 font-semibold" : ""}>
-                          {c.expira}
+                          {textoExpira(c)}
                         </span>
                       ) : (
                         "sin fecha"
