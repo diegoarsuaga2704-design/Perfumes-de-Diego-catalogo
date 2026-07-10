@@ -46,8 +46,8 @@ export default function Casas() {
   return (
     <section className="bg-gray-100 min-h-screen py-10 sm:py-14">
       <SEO
-        title="Casas y marcas de perfumería"
-        description="Explora todas las casas y marcas de perfumería disponibles: nicho, diseñador y árabes. Encuentra los perfumes de tus casas favoritas."
+        title="Casas de perfumería"
+        description="Explora todas las casas  de perfumería disponibles: nicho, diseñador y árabes. Encuentra los perfumes de tus casas favoritas."
       />
       <div className="max-w-7xl mx-auto px-6">
         {/* Botón volver */}

@@ -2,10 +2,10 @@ const DIAS_NUEVO = 7;
 
 /**
  * Fuente ÚNICA de la lógica de badges de estatus.
- * Prioridad: AGOTADO > PRÓXIMAMENTE > MEJOR VENDIDO > NUEVO.
+ * Prioridad: AGOTADO > PRÓXIMAMENTE > NUEVO.
  * Devuelve { texto, color } del badge a mostrar, o null si no aplica ninguno.
- * La info crítica de disponibilidad (agotado/próximamente) gana sobre la
- * promocional (mejor vendido/nuevo).
+ * El badge "MEJOR VENDIDO" se quitó a propósito para no estorbar la imagen
+ * del perfume (el campo esBestSeller sigue usándose en la sección /best-sellers).
  */
 export function getBadgeEstatus(parfum) {
   if (parfum.disponible === "Agotado") {
@@ -13,9 +13,6 @@ export function getBadgeEstatus(parfum) {
   }
   if (parfum.disponible === "Próximamente") {
     return { texto: "PRÓXIMAMENTE", color: "bg-sky-600" };
-  }
-  if (parfum.esBestSeller === true) {
-    return { texto: "MEJOR VENDIDO", color: "bg-[#A47E3B]" };
   }
   if (parfum.disponible_desde) {
     const dias =
