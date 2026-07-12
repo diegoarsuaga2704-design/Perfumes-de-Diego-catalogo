@@ -9,7 +9,7 @@ import { imagenThumb } from "../functions/imagenThumb";
 import { registrarVisto } from "../functions/vistosRecientes";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import SelectMililitros from "../ui/SelectMililitros";
+import MililitrosGrid from "../ui/MililitrosGrid";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
 import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
@@ -297,6 +297,90 @@ export default function ProductDetail() {
                 </div>
               )}
 
+              {/* BOTÓN añadir — arriba del selector (escritorio) */}
+              {estaDisponible && (
+                <div
+                  ref={addBlockRef}
+                  className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start"
+                >
+                  {esDecant && !mililitros && (
+                    <p className="text-sm font-semibold text-gray-600">
+                      Elige tus mililitros 👇 para agregar
+                    </p>
+                  )}
+                  {esDecant && mililitros && (
+                    <div className="text-[#A47E3B] font-semibold">
+                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
+                    </div>
+                  )}
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={
+                      added ||
+                      (esDecant && !mililitros) ||
+                      (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
+                    }
+                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
+                      added
+                        ? "bg-green-500 text-white cursor-default"
+                        : (!esDecant || mililitros) &&
+                            (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
+                          ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {added ? (
+                      <>
+                        <CheckCircle size={18} />
+                        Agregado al carrito
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart size={18} />
+                        Añadir al carrito
+                      </>
+                    )}
+                  </button>
+
+                  {yaAgrego && (
+                    <button
+                      onClick={openCart}
+                      className="text-sm font-semibold text-[#A47E3B] hover:text-[#D4AF7A] hover:underline"
+                    >
+                      Ver carrito →
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
+              {esDecant && estaDisponible && (
+                <div>
+                  <MililitrosGrid
+                    parfum={parfum}
+                    value={mililitros}
+                    onChange={setMililitros}
+                  />
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
+                      ¿Qué es un decant?
+                    </summary>
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                      Un decant es una porción del perfume original, traspasada a
+                      un atomizador más pequeño. Así pruebas el mismo perfume
+                      desde 1 ml, sin pagar la botella completa.
+                    </p>
+                  </details>
+                </div>
+              )}
+
+              {/* FORMULARIO AVÍSAME (si no está Disponible) */}
+              {!estaDisponible && (
+                <div className="mt-4">
+                  <AvisameFormulario parfum={parfum} />
+                </div>
+              )}
+
               {/* DETALLES */}
               <div className="my-6">
                 {parfum.mlBotella && (
@@ -368,90 +452,6 @@ export default function ProductDetail() {
                   </a>
                 )}
               </div>
-
-              {/* BOTÓN añadir — arriba del selector (escritorio) */}
-              {estaDisponible && (
-                <div
-                  ref={addBlockRef}
-                  className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start"
-                >
-                  {esDecant && !mililitros && (
-                    <p className="text-sm font-semibold text-gray-600">
-                      Elige tus mililitros 👇 para agregar
-                    </p>
-                  )}
-                  {esDecant && mililitros && (
-                    <div className="text-[#A47E3B] font-semibold">
-                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
-                    </div>
-                  )}
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={
-                      added ||
-                      (esDecant && !mililitros) ||
-                      (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
-                    }
-                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
-                      added
-                        ? "bg-green-500 text-white cursor-default"
-                        : (!esDecant || mililitros) &&
-                            (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
-                          ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                  >
-                    {added ? (
-                      <>
-                        <CheckCircle size={18} />
-                        Agregado al carrito
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart size={18} />
-                        Añadir al carrito
-                      </>
-                    )}
-                  </button>
-
-                  {yaAgrego && (
-                    <button
-                      onClick={openCart}
-                      className="text-sm font-semibold text-[#A47E3B] hover:text-[#D4AF7A] hover:underline"
-                    >
-                      Ver carrito →
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* SELECTOR DE ML PARA DECANTS — menú desplegable */}
-              {esDecant && estaDisponible && (
-                <div>
-                  <SelectMililitros
-                    parfum={parfum}
-                    value={mililitros}
-                    onChange={setMililitros}
-                  />
-                  <details className="mt-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
-                      ¿Qué es un decant?
-                    </summary>
-                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                      Un decant es una porción del perfume original, traspasada a
-                      un atomizador más pequeño. Así pruebas el mismo perfume
-                      desde 1 ml, sin pagar la botella completa.
-                    </p>
-                  </details>
-                </div>
-              )}
-
-              {/* FORMULARIO AVÍSAME (si no está Disponible) */}
-              {!estaDisponible && (
-                <div className="mt-4">
-                  <AvisameFormulario parfum={parfum} />
-                </div>
-              )}
 
               <BadgesConfianza />
             </div>
