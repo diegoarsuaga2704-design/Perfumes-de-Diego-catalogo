@@ -33,6 +33,7 @@ function InAppBrowserModal() {
 
     setIsOpen(true);
     closeCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInApp, cartItems.length]);
 
   const handleDismiss = () => {

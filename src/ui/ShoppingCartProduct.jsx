@@ -1,6 +1,7 @@
 import { useCart } from "../context/CartContext";
 import { useState } from "react";
 import { Package, Trash2 } from "lucide-react";
+import { imagenThumb } from "../functions/imagenThumb";
 import {
   calcularPrecioDecantCarrito,
   getIncrementoMililitros,
@@ -116,7 +117,7 @@ function ShoppingCartProduct() {
           <div key={itemKey} className="flex gap-4 border-b py-3">
             {item.image || item.imagen ? (
               <img
-                src={item.image || item.imagen}
+                src={imagenThumb(item.image || item.imagen, 200)}
                 alt={item.nombre}
                 loading="lazy"
                 className="w-24 h-32 object-cover rounded-md"

@@ -1,13 +1,20 @@
-import { useEffect, useState } from "react";
-import { getVistosRecientes } from "../functions/vistosRecientes";
+import { useMemo } from "react";
+import { getVistosIds } from "../functions/vistosRecientes";
+import { useParfums } from "../context/ParfumsContext";
 import ProductCard from "./ProductCard";
 
 export default function RecentlyViewed({ excluirId }) {
-  const [vistos, setVistos] = useState([]);
+  const { parfums } = useParfums();
 
-  useEffect(() => {
-    setVistos(getVistosRecientes(excluirId).slice(0, 4));
-  }, [excluirId]);
+  // Rehidrata los IDs guardados con los datos FRESCOS del contexto (precio y
+  // disponibilidad actuales). Si un perfume ya no existe, se descarta.
+  const vistos = useMemo(() => {
+    const ids = getVistosIds(excluirId);
+    return ids
+      .map((id) => parfums.find((p) => String(p.id) === String(id)))
+      .filter(Boolean)
+      .slice(0, 4);
+  }, [excluirId, parfums]);
 
   if (vistos.length === 0) return null;
 

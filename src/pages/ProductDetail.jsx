@@ -9,7 +9,7 @@ import { imagenThumb } from "../functions/imagenThumb";
 import { registrarVisto } from "../functions/vistosRecientes";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import MililitrosGrid from "../ui/MililitrosGrid";
+import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
 import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
@@ -425,10 +425,10 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
+              {/* SELECTOR DE ML PARA DECANTS — menú desplegable */}
               {esDecant && estaDisponible && (
                 <div>
-                  <MililitrosGrid
+                  <SelectMililitros
                     parfum={parfum}
                     value={mililitros}
                     onChange={setMililitros}

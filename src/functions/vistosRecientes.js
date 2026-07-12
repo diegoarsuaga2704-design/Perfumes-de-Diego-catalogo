@@ -1,28 +1,35 @@
-// Guarda y lee los últimos perfumes vistos (localStorage). Guarda el objeto
-// completo para poder pintar la tarjeta sin volver a consultar la base.
+// Guarda solo los IDs de los últimos perfumes vistos (localStorage). Los datos
+// (precio, disponibilidad) se releen FRESCOS desde ParfumsContext al pintar,
+// para no mostrar información congelada.
 const KEY = "vistosRecientes";
 const MAX = 8;
 
-export function leerVistos() {
+// Lee los IDs. Migra en caliente el formato viejo (objetos completos) a IDs.
+function leerIds() {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : [];
+    const arr = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((x) => (x && typeof x === "object" ? x.id : x))
+      .filter((x) => x != null);
   } catch {
     return [];
   }
 }
 
 export function registrarVisto(parfum) {
-  if (!parfum || !parfum.id) return;
+  const id = parfum && typeof parfum === "object" ? parfum.id : parfum;
+  if (id == null) return;
   try {
-    const previos = leerVistos().filter((p) => p.id !== parfum.id);
-    const lista = [parfum, ...previos].slice(0, MAX);
+    const previos = leerIds().filter((x) => String(x) !== String(id));
+    const lista = [id, ...previos].slice(0, MAX);
     localStorage.setItem(KEY, JSON.stringify(lista));
   } catch {
     // localStorage no disponible (modo privado, etc.) — ignorar
   }
 }
 
-export function getVistosRecientes(excluirId) {
-  return leerVistos().filter((p) => p.id !== excluirId);
+export function getVistosIds(excluirId) {
+  return leerIds().filter((x) => String(x) !== String(excluirId));
 }
