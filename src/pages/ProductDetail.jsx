@@ -297,17 +297,33 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              {/* BOTÓN añadir — arriba del selector (escritorio) */}
+              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
+              {esDecant && estaDisponible && (
+                <div className="mt-5">
+                  <SelectMililitros
+                    parfum={parfum}
+                    value={mililitros}
+                    onChange={setMililitros}
+                  />
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
+                      ¿Qué es un decant?
+                    </summary>
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                      Un decant es una porción del perfume original, traspasada a
+                      un atomizador más pequeño. Así pruebas el mismo perfume
+                      desde 1 ml, sin pagar la botella completa.
+                    </p>
+                  </details>
+                </div>
+              )}
+
+              {/* BOTÓN añadir — abajo del selector (escritorio) */}
               {estaDisponible && (
                 <div
                   ref={addBlockRef}
                   className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start"
                 >
-                  {esDecant && !mililitros && (
-                    <p className="text-sm font-semibold text-gray-600">
-                      Elige tus mililitros 👇 para agregar
-                    </p>
-                  )}
                   {esDecant && mililitros && (
                     <div className="text-[#A47E3B] font-semibold">
                       Total: ${formatPrecio(totalPrice)} por {mililitros} ml
@@ -350,27 +366,6 @@ export default function ProductDetail() {
                       Ver carrito →
                     </button>
                   )}
-                </div>
-              )}
-
-              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
-              {esDecant && estaDisponible && (
-                <div className="mt-5">
-                  <SelectMililitros
-                    parfum={parfum}
-                    value={mililitros}
-                    onChange={setMililitros}
-                  />
-                  <details className="mt-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
-                      ¿Qué es un decant?
-                    </summary>
-                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                      Un decant es una porción del perfume original, traspasada a
-                      un atomizador más pequeño. Así pruebas el mismo perfume
-                      desde 1 ml, sin pagar la botella completa.
-                    </p>
-                  </details>
                 </div>
               )}
 
