@@ -355,7 +355,7 @@ export default function ProductDetail() {
 
               {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
               {esDecant && estaDisponible && (
-                <div>
+                <div className="mt-5">
                   <SelectMililitros
                     parfum={parfum}
                     value={mililitros}
