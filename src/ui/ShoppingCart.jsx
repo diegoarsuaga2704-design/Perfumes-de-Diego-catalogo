@@ -4,11 +4,9 @@ import { X, ShoppingBag } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
 import { formatPrecio } from "../functions/formatPrecio";
-import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
+import { getEstadoEnvioGratis } from "../functions/envioGratis";
 import { track } from "@vercel/analytics";
 import { useEffect } from "react";
-
-const UMBRAL_ENVIO_GRATIS = 1950;
 
 export default function ShoppingCart() {
   const {
@@ -26,22 +24,14 @@ export default function ShoppingCart() {
 
   const navigate = useNavigate();
 
-  // ¿Los decants del carrito ya califican a envío gratis? (mismo cálculo que la barra)
-  const subtotalDecants = cartItems
-    .filter((i) => i.tipoVenta === "decant")
-    .reduce((s, i) => s + calcularPrecioDecantCarrito(i), 0);
-  let totalDecants = subtotalDecants;
-  if (
-    isDiscountApplied &&
-    (discountTarget === "ALL" || discountTarget === "DECANT")
-  ) {
-    if (discountType === "percentage")
-      totalDecants = subtotalDecants * (1 - discountValue / 100);
-    else if (discountType === "amount")
-      totalDecants = Math.max(0, subtotalDecants - discountValue);
-  }
-  const decantsCalifican =
-    subtotalDecants > 0 && totalDecants >= UMBRAL_ENVIO_GRATIS;
+  // ¿Los decants del carrito ya califican a envío gratis? (fuente única)
+  const { califica: decantsCalifican } = getEstadoEnvioGratis({
+    cartItems,
+    isDiscountApplied,
+    discountType,
+    discountValue,
+    discountTarget,
+  });
 
   // Bloquear scroll del body al abrir el carrito, preservando la posición.
   useEffect(() => {

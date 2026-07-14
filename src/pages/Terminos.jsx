@@ -115,6 +115,10 @@ export default function Terminos() {
             decants iguales o mayores a $1,950 MXN.
           </p>
           <p>
+            Los decants de 30 ml de Louis Vuitton se venden con precio especial,
+            por lo que no suman para alcanzar el monto mínimo de envío gratis.
+          </p>
+          <p>
             Entregamos tu pedido a la paquetería en un plazo máximo de 48 horas
             hábiles a partir de la confirmación del pago. En la mayoría de los
             casos lo entregamos a la paquetería el mismo día en que se realiza el

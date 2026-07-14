@@ -6,9 +6,7 @@ import ShoppingCartProduct from "../ui/ShoppingCartProduct";
 import EnvioGratisProgress from "../ui/EnvioGratisProgress";
 import Checkout from "../ui/Checkout";
 import { formatPrecio } from "../functions/formatPrecio";
-import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
-
-const UMBRAL_ENVIO_GRATIS = 1950;
+import { getEstadoEnvioGratis } from "../functions/envioGratis";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -53,22 +51,14 @@ export default function CheckoutPage() {
     if (cartItems.length === 0) navigate("/home", { replace: true });
   }, [cartItems.length, navigate]);
 
-  // ¿Los decants ya califican a envío gratis? (mismo cálculo que la barra)
-  const subtotalDecants = cartItems
-    .filter((i) => i.tipoVenta === "decant")
-    .reduce((s, i) => s + calcularPrecioDecantCarrito(i), 0);
-  let totalDecants = subtotalDecants;
-  if (
-    isDiscountApplied &&
-    (discountTarget === "ALL" || discountTarget === "DECANT")
-  ) {
-    if (discountType === "percentage")
-      totalDecants = subtotalDecants * (1 - discountValue / 100);
-    else if (discountType === "amount")
-      totalDecants = Math.max(0, subtotalDecants - discountValue);
-  }
-  const decantsCalifican =
-    subtotalDecants > 0 && totalDecants >= UMBRAL_ENVIO_GRATIS;
+  // ¿Los decants ya califican a envío gratis? (fuente única)
+  const { califica: decantsCalifican } = getEstadoEnvioGratis({
+    cartItems,
+    isDiscountApplied,
+    discountType,
+    discountValue,
+    discountTarget,
+  });
 
   const handleApplyCode = async () => {
     if (!inputCode.trim() || applying) return;
