@@ -9,7 +9,7 @@ import {
 } from "../functions/pricingDecant";
 import { formatPrecio } from "../functions/formatPrecio";
 
-function ShoppingCartProduct() {
+function ShoppingCartProduct({ soloLectura = false }) {
   const {
     cartItems,
     removeFromCart,
@@ -162,8 +162,10 @@ function ShoppingCartProduct() {
               )}
 
               {/* Controles: stepper + eliminar; al confirmar, la confirmación
-                  ocupa toda la fila para que no se corte. */}
-              <div className="flex flex-wrap items-center gap-3 mt-3">
+                  ocupa toda la fila para que no se corte. En el checkout
+                  (soloLectura) no se muestran. */}
+              {!soloLectura && (
+                <div className="flex flex-wrap items-center gap-3 mt-3">
                 {confirmingDelete === itemKey ? (
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-gray-600">¿Eliminar?</span>
@@ -216,7 +218,8 @@ function ShoppingCartProduct() {
                     </button>
                   </>
                 )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         );
