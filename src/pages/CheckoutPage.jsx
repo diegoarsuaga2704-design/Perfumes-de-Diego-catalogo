@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import ShoppingCartProduct from "../ui/ShoppingCartProduct";
 import EnvioGratisProgress from "../ui/EnvioGratisProgress";
@@ -30,6 +30,7 @@ export default function CheckoutPage() {
   const [postalCode, setPostalCode] = useState("");
   const [inputCode, setInputCode] = useState("");
   const [applying, setApplying] = useState(false);
+  const [resumenAbierto, setResumenAbierto] = useState(false); // solo movil
 
   // Cierra el panel del carrito si venía abierto.
   useEffect(() => {
@@ -112,9 +113,40 @@ export default function CheckoutPage() {
       <div className="grid md:grid-cols-2 gap-8">
         {/* Resumen del pedido */}
         <div>
-          <h2 className="font-semibold text-gray-900 mb-3">Tu pedido</h2>
-          <div className="border border-gray-200 rounded-xl overflow-hidden">
-            <ShoppingCartProduct />
+          {/* Barra colapsable - SOLO movil */}
+          <button
+            type="button"
+            onClick={() => setResumenAbierto((v) => !v)}
+            className="md:hidden w-full flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 mb-3 bg-white"
+          >
+            <span className="text-sm font-semibold text-gray-800">
+              Resumen del pedido ({cartItems.length}{" "}
+              {cartItems.length === 1 ? "producto" : "productos"})
+            </span>
+            <span className="flex items-center gap-2 text-gray-900 font-bold">
+              ${formatPrecio(totalWithDiscount)}
+              <ChevronDown
+                size={18}
+                className={`text-gray-500 transition-transform ${
+                  resumenAbierto ? "rotate-180" : ""
+                }`}
+              />
+            </span>
+          </button>
+
+          {/* Titulo - SOLO escritorio */}
+          <h2 className="hidden md:block font-semibold text-gray-900 mb-3">
+            Tu pedido
+          </h2>
+
+          {/* Lista: colapsable en movil, siempre visible en escritorio.
+              Solo lectura (sin controles de +/- ni borrar). */}
+          <div
+            className={`${
+              resumenAbierto ? "block" : "hidden"
+            } md:block border border-gray-200 rounded-xl overflow-hidden`}
+          >
+            <ShoppingCartProduct soloLectura />
           </div>
         </div>
 
