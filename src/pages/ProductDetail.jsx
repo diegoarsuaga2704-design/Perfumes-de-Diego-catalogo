@@ -199,7 +199,7 @@ export default function ProductDetail() {
             </button>
 
             <img
-              src={imgOriginal ? parfum.image : imagenThumb(parfum.image, 900, 82)}
+              src={imgOriginal ? parfum.image : imagenThumb(parfum.image, 900)}
               alt={parfum.nombre}
               loading="eager"
               onError={() => setImgOriginal(true)}

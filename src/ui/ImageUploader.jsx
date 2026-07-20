@@ -41,10 +41,10 @@ export default function ImageUploader({
     if (file.size < 200 * 1024) return file;
 
     const options = {
-      maxSizeMB: 0.5, // objetivo: ~500KB
-      maxWidthOrHeight: 1400, // máximo 1400px del lado más largo
+      maxSizeMB: 0.25, // objetivo: ~250KB
+      maxWidthOrHeight: 1000, // máximo 1000px del lado más largo
       useWebWorker: true,
-      initialQuality: 0.82,
+      initialQuality: 0.8,
     };
 
     try {
