@@ -65,7 +65,6 @@ const router = createBrowserRouter([
       { path: "/recien-llegados", element: <Home forcedMode="recientes" /> },
       { path: "/sobre-mi", element: <SobreMi /> },
       { path: "/pedido-especial", element: <PedidoEspecial /> },
-      { path: "/experiencia-privada", element: <ExperienciaPrivada /> },
       { path: "/terminos", element: <Terminos /> },
       { path: "/privacidad", element: <Privacidad /> },
       { path: "/blog", element: <Blog /> },
@@ -73,6 +72,12 @@ const router = createBrowserRouter([
       { path: "/product/:nombre/:id", element: <ProductDetail /> },
       { path: "*", element: <NotFound /> },
     ],
+  },
+
+  // Experiencia privada (VIP) — sin AppLayout, pantalla completa inmersiva
+  {
+    path: "/experiencia-privada",
+    element: <ExperienciaPrivada />,
   },
 
   // Rutas de admin (sin AppLayout)
