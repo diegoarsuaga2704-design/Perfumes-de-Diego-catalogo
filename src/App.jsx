@@ -11,6 +11,7 @@ const Home = lazy(() => import("./pages/Home"));
 const FAQs = lazy(() => import("./pages/FAQs"));
 const Testimonios = lazy(() => import("./pages/Testimonios"));
 const PedidoEspecial = lazy(() => import("./pages/PedidoEspecial"));
+const ExperienciaPrivada = lazy(() => import("./pages/ExperienciaPrivada"));
 const BestSellers = lazy(() => import("./pages/BestSellers"));
 const VistoEnTikTok = lazy(() => import("./pages/VistoEnTikTok"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: "/recien-llegados", element: <Home forcedMode="recientes" /> },
       { path: "/sobre-mi", element: <SobreMi /> },
       { path: "/pedido-especial", element: <PedidoEspecial /> },
+      { path: "/experiencia-privada", element: <ExperienciaPrivada /> },
       { path: "/terminos", element: <Terminos /> },
       { path: "/privacidad", element: <Privacidad /> },
       { path: "/blog", element: <Blog /> },
