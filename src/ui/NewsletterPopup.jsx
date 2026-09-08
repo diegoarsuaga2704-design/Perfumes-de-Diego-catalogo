@@ -132,6 +132,11 @@ export default function NewsletterPopup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 placeholder="tucorreo@ejemplo.com"
                 className="w-full px-4 py-3 rounded-md border border-gray-300 text-gray-800 focus:outline-none focus:border-[#A47E3B]"
               />
