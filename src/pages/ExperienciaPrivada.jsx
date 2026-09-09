@@ -46,7 +46,7 @@ const fmt = (n) => "$" + (Number(n) || 0).toLocaleString("es-MX");
 
 function puntos(cfg) {
   return [
-    "Sesión personalizada de curación de perfumes, uno a uno, para hasta 3 personas.",
+    "Sesión personalizada de asesoramiento de perfumes, uno a uno, para hasta 3 personas.",
     "Durante la sesión atomizamos una muestra de cada perfume que quieras oler, compartida entre los asistentes.",
     `La inversión mínima es de ${fmt(cfg.inversion_min)} MXN, que se cubren por adelantado (transferencia o efectivo) y son 100% redimibles en decants.`,
     "Ese crédito se usa en cualquier perfume del catálogo, al precio normal de la página, sin límite por perfume. Tu inversión define cuántos perfumes puedes elegir.",
@@ -437,7 +437,7 @@ export default function ExperienciaPrivada() {
 
         <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
         <h2 className="text-2xl sm:text-3xl mt-0 mb-2" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-          Sesión de curación de perfumes
+          Sesión de asesoramiento de perfumes
         </h2>
         <p className="text-gray-400 mb-6" style={{ fontFamily: SERIF, fontSize: "1.1rem" }}>
           Una experiencia guiada, uno a uno, para descubrir tu próximo aroma sin prisa.
