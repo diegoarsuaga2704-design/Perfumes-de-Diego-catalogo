@@ -4,6 +4,7 @@ import getParfums from "../functions/getParfums";
 import { imagenThumb } from "../functions/imagenThumb";
 
 const LS_VIP = "vip_sesion";
+const LS_BORRADOR = "vip_borrador";
 const WHATSAPP = "5212212034647";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const ORO = "#C6A15B";
@@ -118,6 +119,49 @@ export default function ExperienciaPrivada() {
     }
   }, []);
 
+  // Recupera el borrador del formulario (sobrevive recargas).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_BORRADOR);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.numPersonas) setNumPersonas(d.numPersonas);
+        if (Array.isArray(d.asistentes)) setAsistentes(d.asistentes);
+        if (d.monto != null) setMonto(String(d.monto));
+        if (Array.isArray(d.perfumesSel)) setPerfumesSel(d.perfumesSel);
+        if (d.dia) setDia(d.dia);
+        if (d.preferencia) setPreferencia(d.preferencia);
+        if (d.lugar) setLugar(d.lugar);
+        if (d.aceptaTyc) setAceptaTyc(d.aceptaTyc);
+        if (d.nombre) setNombre(d.nombre);
+      }
+    } catch {
+      // ignora borrador corrupto
+    }
+  }, []);
+
+  // Guarda el borrador en cada cambio.
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        LS_BORRADOR,
+        JSON.stringify({
+          numPersonas,
+          asistentes,
+          monto,
+          perfumesSel,
+          dia,
+          preferencia,
+          lugar,
+          aceptaTyc,
+          nombre,
+        }),
+      );
+    } catch {
+      // sin persistencia si falla
+    }
+  }, [numPersonas, asistentes, monto, perfumesSel, dia, preferencia, lugar, aceptaTyc, nombre]);
+
   useEffect(() => {
     supabase
       .from("config_vip")
@@ -187,6 +231,7 @@ export default function ExperienciaPrivada() {
 
   const salir = () => {
     localStorage.removeItem(LS_VIP);
+    localStorage.removeItem(LS_BORRADOR);
     setSesion(null);
     setUsername("");
   };
@@ -443,7 +488,9 @@ export default function ExperienciaPrivada() {
         </div>
 
         {/* Monto con $ y 6 dígitos */}
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">Monto a invertir en decants</label>
+        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">
+          Monto a invertir en decants (mínimo {fmt(cfg.inversion_min)})
+        </label>
         <div className="flex items-center" style={inputStyle}>
           <span className="pl-3 pr-1 text-lg" style={{ color: ORO }}>$</span>
           <input
@@ -451,7 +498,6 @@ export default function ExperienciaPrivada() {
             inputMode="numeric"
             value={monto}
             onChange={(e) => setMonto(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-            placeholder={`Mínimo ${Number(cfg.inversion_min).toLocaleString("es-MX")}`}
             className="w-full py-2.5 pr-3 bg-transparent outline-none"
             style={{ color: "#f4efe6" }}
           />
@@ -466,7 +512,9 @@ export default function ExperienciaPrivada() {
           </p>
         ) : (
           <p className="text-sm mt-2 text-gray-500">
-            100% redimible en decants. El costo de la sesión es aparte.
+            Mientras mayor sea tu inversión, más perfumes podrás elegir para oler
+            (1 por cada {fmt(cfg.inversion_por_perfume)}). 100% redimible en decants;
+            el costo de la sesión es aparte.
           </p>
         )}
 
