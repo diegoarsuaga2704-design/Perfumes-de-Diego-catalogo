@@ -570,9 +570,14 @@ export default function ExperienciaPrivada() {
               <div className="mb-3">
                 <button
                   onClick={() => setPerfumesSel([])}
-                  className="text-xs uppercase tracking-widest text-gray-400 hover:text-red-400 mb-2"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-sm mb-3"
+                  style={{
+                    background: "rgba(220,90,90,0.15)",
+                    color: "#ff8a8a",
+                    border: "1px solid rgba(220,90,90,0.6)",
+                  }}
                 >
-                  Eliminar todas las selecciones ({perfumesSel.length})
+                  ✕ Borrar todas ({perfumesSel.length})
                 </button>
                 <div className="flex flex-wrap gap-2">
                   {perfumesSel.map((p) => (
