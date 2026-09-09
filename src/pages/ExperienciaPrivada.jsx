@@ -319,11 +319,10 @@ export default function ExperienciaPrivada() {
           Monto a invertir en decants
         </label>
         <input
-          type="number"
-          min={cfg.inversion_min}
-          step="1000"
+          type="text"
+          inputMode="numeric"
           value={monto}
-          onChange={(e) => setMonto(e.target.value)}
+          onChange={(e) => setMonto(e.target.value.replace(/[^\d]/g, ""))}
           placeholder={`Mínimo ${fmt(cfg.inversion_min)}`}
           className="w-full py-2.5 px-3 outline-none"
           style={inputStyle}
@@ -363,9 +362,6 @@ export default function ExperienciaPrivada() {
             </button>
           ))}
         </div>
-
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">Nombre de contacto</label>
-        <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full py-2.5 px-3 outline-none" style={inputStyle} />
 
         <button
           onClick={enviar}
