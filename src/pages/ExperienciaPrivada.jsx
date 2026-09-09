@@ -61,6 +61,25 @@ const OPCIONES_DIA = [
   "Cualquier día está bien",
 ];
 
+const OPCIONES_EXPERIENCIA = [
+  "Quiero que me asesores y me platiques de cada perfume",
+  "Prefiero olerlos con calma y decidir por mi cuenta",
+  "Una mezcla de ambas",
+];
+
+const TYC_EXPERIENCIA = [
+  "La experiencia se realiza únicamente dentro de la zona de Angelópolis, Puebla, en el lugar que indique el cliente (casa, oficina u otro).",
+  "El lugar debe estar techado y sin luz solar directa, para proteger la integridad de los perfumes.",
+  "El cliente debe contar con una mesa o superficie segura y estable donde colocar los frascos durante la sesión.",
+  "Los perfumes son propiedad de Perfumes de Diego hasta el momento de su compra. Si el cliente o sus acompañantes derraman, dañan o rompen un frasco, se cobrará el valor completo del perfume.",
+  "El costo de la sesión se cubre por adelantado para confirmar la cita y no es reembolsable.",
+  "La inversión en decants se acuerda y se cubre por adelantado; el crédito no usado no se reembolsa y queda como saldo en tienda.",
+  "Solo participan los asistentes registrados. Personas adicionales se cobran según la tarifa vigente.",
+  "La fecha y el horario se confirman por WhatsApp, sujetos a disponibilidad de ambas partes. Para reagendar, avisa con al menos 24 horas de anticipación.",
+  "Para cuidar el olfato de todos, se recomienda un espacio ventilado pero sin corrientes de aire fuertes, libre de humo, comida con olores intensos o velas encendidas.",
+  "El cliente garantiza un acceso seguro al lugar y la presencia de un adulto responsable durante toda la sesión. Niños y mascotas quedan bajo su responsabilidad, incluidos los daños que pudieran ocasionar.",
+];
+
 export default function ExperienciaPrivada() {
   useVipHead();
   const [sesion, setSesion] = useState(null);
@@ -77,6 +96,9 @@ export default function ExperienciaPrivada() {
   const [casaFiltro, setCasaFiltro] = useState("");
   const [orden, setOrden] = useState("casa");
   const [dia, setDia] = useState("");
+  const [preferencia, setPreferencia] = useState("");
+  const [lugar, setLugar] = useState("");
+  const [aceptaTyc, setAceptaTyc] = useState(false);
   const [monto, setMonto] = useState("");
   const [nombre, setNombre] = useState("");
 
@@ -234,7 +256,11 @@ export default function ExperienciaPrivada() {
     setAsistentes((prev) => prev.map((a, idx) => (idx === i ? val : a)));
 
   const puedeEnviar =
-    montoValido && perfumesSel.length >= 1 && nombre.trim();
+    montoValido &&
+    perfumesSel.length >= 1 &&
+    nombre.trim() &&
+    lugar.trim() &&
+    aceptaTyc;
 
   const enviar = () => {
     if (!puedeEnviar) return;
@@ -249,7 +275,10 @@ export default function ExperienciaPrivada() {
       `Inversión en decants (redimible): ${fmt(montoNum)}`,
       `Perfumes que puede elegir: hasta ${maxPerfumes}`,
       `Perfumes de interés (${perfumesSel.length}): ${perfumesSel.join(", ")}`,
+      `Preferencia de experiencia: ${preferencia || "por definir"}`,
+      `Lugar (Angelópolis): ${lugar.trim() || "por definir"}`,
       `Preferencia de días: ${dia || "por definir"}`,
+      "Acepta los términos de la experiencia: Sí",
     ];
     window.open(
       `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`,
@@ -517,6 +546,40 @@ export default function ExperienciaPrivada() {
           </>
         )}
 
+        {/* Preferencia de experiencia */}
+        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-3 mt-10">
+          ¿Cómo prefieres vivir la sesión?
+        </label>
+        <div className="flex flex-col gap-2">
+          {OPCIONES_EXPERIENCIA.map((o) => (
+            <button
+              key={o}
+              onClick={() => setPreferencia(o)}
+              className="py-2.5 px-3 text-sm text-left"
+              style={preferencia === o ? { background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 } : { ...inputStyle, color: "#e8e4dc" }}
+            >
+              {o}
+            </button>
+          ))}
+        </div>
+
+        {/* Lugar */}
+        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">
+          Lugar de la sesión (dentro de Angelópolis)
+        </label>
+        <input
+          type="text"
+          value={lugar}
+          onChange={(e) => setLugar(e.target.value)}
+          placeholder="Casa, oficina, dirección o referencia…"
+          className="w-full py-2.5 px-3 outline-none"
+          style={inputStyle}
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Debe ser un espacio techado, sin luz solar directa, con una mesa o
+          superficie segura para colocar los perfumes.
+        </p>
+
         {/* Preferencia de día */}
         <label className="block text-xs uppercase tracking-widest text-gray-400 mb-3 mt-8">Preferencia de días</label>
         <div className="flex flex-col sm:flex-row gap-2">
@@ -527,17 +590,42 @@ export default function ExperienciaPrivada() {
           ))}
         </div>
 
+        {/* Términos de la experiencia */}
+        <h3 className="text-xl mt-12 mb-3" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+          Términos de la experiencia
+        </h3>
+        <div className="border-y py-1" style={{ borderColor: "rgba(198,161,91,0.20)" }}>
+          {TYC_EXPERIENCIA.map((t, i) => (
+            <div key={i} className="flex gap-3 py-2.5 border-b last:border-b-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+              <span style={{ color: ORO }}>—</span>
+              <span className="text-gray-400 text-[13px] leading-relaxed">{t}</span>
+            </div>
+          ))}
+        </div>
+        <label className="flex items-start gap-3 mt-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={aceptaTyc}
+            onChange={(e) => setAceptaTyc(e.target.checked)}
+            className="mt-1 accent-[#C6A15B] w-4 h-4"
+          />
+          <span className="text-sm text-gray-300">
+            He leído y acepto los términos de la experiencia.
+          </span>
+        </label>
+
         <button
           onClick={enviar}
           disabled={!puedeEnviar}
-          className="w-full mt-10 py-3.5 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
+          className="w-full mt-8 py-3.5 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
           style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
         >
           Solicitar por WhatsApp
         </button>
         {!puedeEnviar && (
           <p className="text-center text-xs text-gray-500 mt-3">
-            Indica al menos {fmt(cfg.inversion_min)} de inversión y elige mínimo 1 perfume.
+            Completa tu inversión, elige mínimo 1 perfume, indica el lugar y
+            acepta los términos para solicitar tu sesión.
           </p>
         )}
 
