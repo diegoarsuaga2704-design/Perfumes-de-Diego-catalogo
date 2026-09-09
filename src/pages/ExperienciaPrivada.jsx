@@ -433,7 +433,10 @@ export default function ExperienciaPrivada() {
           </div>
         )}
 
-        <h2 className="text-2xl sm:text-3xl mt-14 mb-2" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+        <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
+
+        <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
+        <h2 className="text-2xl sm:text-3xl mt-0 mb-2" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
           Sesión de curación de perfumes
         </h2>
         <p className="text-gray-400 mb-6" style={{ fontFamily: SERIF, fontSize: "1.1rem" }}>
@@ -466,7 +469,12 @@ export default function ExperienciaPrivada() {
           </div>
         </div>
 
-        <h2 className="text-2xl sm:text-3xl mt-14 mb-6" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+        </section>
+
+        <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
+
+        <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
+        <h2 className="text-2xl sm:text-3xl mt-0 mb-6" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
           Agenda tu sesión
         </h2>
 
@@ -638,8 +646,13 @@ export default function ExperienciaPrivada() {
           ))}
         </div>
 
+        </section>
+
+        <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
+
+        <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
         {/* Términos de la experiencia */}
-        <h3 className="text-xl mt-12 mb-3" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+        <h3 className="text-xl mt-0 mb-3" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
           Términos de la experiencia
         </h3>
         <div className="border-y py-1" style={{ borderColor: "rgba(198,161,91,0.20)" }}>
@@ -661,6 +674,7 @@ export default function ExperienciaPrivada() {
             He leído y acepto los términos de la experiencia.
           </span>
         </label>
+        </section>
 
         <button
           onClick={enviar}
