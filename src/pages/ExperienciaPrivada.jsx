@@ -567,13 +567,21 @@ export default function ExperienciaPrivada() {
 
             {/* Seleccionados */}
             {perfumesSel.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {perfumesSel.map((p) => (
-                  <span key={p} className="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-sm" style={{ background: "rgba(198,161,91,0.15)", color: "#f4efe6", border: `1px solid ${ORO}` }}>
-                    {p}
-                    <button onClick={() => togglePerfume(p)} style={{ color: ORO }}>×</button>
-                  </span>
-                ))}
+              <div className="mb-3">
+                <button
+                  onClick={() => setPerfumesSel([])}
+                  className="text-xs uppercase tracking-widest text-gray-400 hover:text-red-400 mb-2"
+                >
+                  Eliminar todas las selecciones ({perfumesSel.length})
+                </button>
+                <div className="flex flex-wrap gap-2">
+                  {perfumesSel.map((p) => (
+                    <span key={p} className="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-sm" style={{ background: "rgba(198,161,91,0.15)", color: "#f4efe6", border: `1px solid ${ORO}` }}>
+                      {p}
+                      <button onClick={() => togglePerfume(p)} style={{ color: ORO }}>×</button>
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
