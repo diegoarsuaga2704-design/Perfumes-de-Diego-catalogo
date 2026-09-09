@@ -6,6 +6,7 @@ export default function ConfigVipControl() {
     inversion_min: 15000,
     costo_sesion: 1100,
     costo_extra: 500,
+    inversion_por_perfume: 1000,
   });
   const [cargando, setCargando] = useState(true);
   const [msg, setMsg] = useState("");
@@ -14,7 +15,7 @@ export default function ConfigVipControl() {
     (async () => {
       const { data } = await supabase
         .from("config_vip")
-        .select("inversion_min, costo_sesion, costo_extra")
+        .select("inversion_min, costo_sesion, costo_extra, inversion_por_perfume")
         .eq("id", 1)
         .single();
       if (data)
@@ -22,6 +23,7 @@ export default function ConfigVipControl() {
           inversion_min: Number(data.inversion_min) || 15000,
           costo_sesion: Number(data.costo_sesion) || 1100,
           costo_extra: Number(data.costo_extra) || 500,
+          inversion_por_perfume: Number(data.inversion_por_perfume) || 1000,
         });
       setCargando(false);
     })();
@@ -35,6 +37,7 @@ export default function ConfigVipControl() {
         inversion_min: Number(cfg.inversion_min) || 0,
         costo_sesion: Number(cfg.costo_sesion) || 0,
         costo_extra: Number(cfg.costo_extra) || 0,
+        inversion_por_perfume: Number(cfg.inversion_por_perfume) || 1000,
         actualizado_en: new Date().toISOString(),
       })
       .eq("id", 1);
@@ -83,6 +86,7 @@ export default function ConfigVipControl() {
         {campo("Inversión mínima en decants", "inversion_min", "Redimible")}
         {campo("Costo fijo de sesión (hasta 3)", "costo_sesion", "No redimible")}
         {campo("Costo por persona extra", "costo_extra", "A partir de la 4a")}
+        {campo("Inversión por perfume", "inversion_por_perfume", "1 perfume por cada $X")}
         {msg && <span className="text-xs text-gray-500 self-center">{msg}</span>}
       </div>
     </div>
