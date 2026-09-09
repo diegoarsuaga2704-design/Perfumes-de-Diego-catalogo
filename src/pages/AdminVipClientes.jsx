@@ -155,9 +155,12 @@ export default function AdminVipClientes() {
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900 truncate">
+                    <Link
+                      to={`/admin/vip/${c.id}`}
+                      className="font-semibold text-gray-900 truncate hover:underline"
+                    >
                       {c.nombre}
-                    </p>
+                    </Link>
                     {!c.activo && (
                       <span className="text-[10px] font-bold uppercase bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">
                         Inactivo
