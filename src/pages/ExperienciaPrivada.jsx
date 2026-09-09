@@ -5,7 +5,7 @@ const LS_VIP = "vip_sesion";
 const WHATSAPP = "5212212034647";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const ORO = "#C6A15B";
-const INVERSION_MIN = 15000;
+const CFG_DEFAULT = { inversion_min: 15000, costo_sesion: 1100, costo_extra: 500 };
 
 function useVipHead() {
   useEffect(() => {
@@ -34,15 +34,19 @@ function useVipHead() {
   }, []);
 }
 
-const PUNTOS = [
-  "Sesión personalizada de curación de perfumes, uno a uno, para hasta 3 personas.",
-  "Durante la sesión atomizamos una muestra de cada perfume que quieras oler, compartida entre los asistentes.",
-  "La inversión mínima es de $15,000 MXN, que se cubren por adelantado (transferencia o efectivo) y son 100% redimibles en decants.",
-  "Ese crédito se usa en cualquier perfume del catálogo, al precio normal de la página, sin límite por perfume. Tu inversión define cuántos decants puedes elegir.",
-  "El crédito no usado no se reembolsa: queda como saldo en tienda para futuros decants (o, como última opción, en una botella disponible o bajo pedido).",
-  "Si durante la sesión quieres llevarte decants por un valor mayor a tu inversión, puedes hacerlo pagando la diferencia en ese momento.",
-  "Experiencia disponible únicamente en Puebla, sujeta a disponibilidad de agenda (nuestra y tuya).",
-];
+const fmt = (n) => "$" + (Number(n) || 0).toLocaleString("es-MX");
+
+function puntos(cfg) {
+  return [
+    "Sesión personalizada de curación de perfumes, uno a uno, para hasta 3 personas.",
+    "Durante la sesión atomizamos una muestra de cada perfume que quieras oler, compartida entre los asistentes.",
+    `La inversión mínima es de ${fmt(cfg.inversion_min)} MXN, que se cubren por adelantado (transferencia o efectivo) y son 100% redimibles en decants.`,
+    "Ese crédito se usa en cualquier perfume del catálogo, al precio normal de la página, sin límite por perfume. Tu inversión define cuántos decants puedes elegir.",
+    "El crédito no usado no se reembolsa: queda como saldo en tienda para futuros decants (o, como última opción, en una botella disponible o bajo pedido).",
+    "Si durante la sesión quieres llevarte decants por un valor mayor a tu inversión, puedes hacerlo pagando la diferencia en ese momento.",
+    "Experiencia disponible únicamente en Puebla, sujeta a disponibilidad de agenda (Tuya y mía).",
+  ];
+}
 
 const OPCIONES_DIA = [
   "Prefiero entre semana",
@@ -56,13 +60,14 @@ export default function ExperienciaPrivada() {
   const [username, setUsername] = useState("");
   const [verificando, setVerificando] = useState(false);
   const [error, setError] = useState("");
+  const [cfg, setCfg] = useState(CFG_DEFAULT);
 
   const [numPersonas, setNumPersonas] = useState(1);
+  const [asistentes, setAsistentes] = useState([""]);
   const [perfumesTexto, setPerfumesTexto] = useState("");
   const [dia, setDia] = useState("");
   const [monto, setMonto] = useState("");
   const [nombre, setNombre] = useState("");
-  const [telefono, setTelefono] = useState("");
 
   useEffect(() => {
     try {
@@ -72,13 +77,42 @@ export default function ExperienciaPrivada() {
         if (d?.username) {
           setSesion(d);
           setNombre(d.nombre || "");
-          setTelefono(d.telefono || "");
+          setAsistentes([d.nombre || ""]);
         }
       }
     } catch {
       // ignora datos corruptos
     }
   }, []);
+
+  // Config de montos (pública). Si falla, usa los valores por defecto.
+  useEffect(() => {
+    supabase
+      .from("config_vip")
+      .select("inversion_min, costo_sesion, costo_extra")
+      .eq("id", 1)
+      .single()
+      .then(({ data }) => {
+        if (data)
+          setCfg({
+            inversion_min: Number(data.inversion_min) || CFG_DEFAULT.inversion_min,
+            costo_sesion: Number(data.costo_sesion) || CFG_DEFAULT.costo_sesion,
+            costo_extra: Number(data.costo_extra) || CFG_DEFAULT.costo_extra,
+          });
+      })
+      .catch(() => {});
+  }, []);
+
+  // Ajusta la lista de asistentes al número de personas.
+  useEffect(() => {
+    setAsistentes((prev) => {
+      const n = Math.max(1, Number(numPersonas) || 1);
+      const copia = [...prev];
+      while (copia.length < n) copia.push("");
+      copia.length = n;
+      return copia;
+    });
+  }, [numPersonas]);
 
   const entrar = async () => {
     const u = username.trim();
@@ -95,13 +129,12 @@ export default function ExperienciaPrivada() {
         const nueva = {
           username: u,
           nombre: cliente.nombre,
-          telefono: cliente.telefono || "",
           saldo: Number(cliente.saldo) || 0,
         };
         localStorage.setItem(LS_VIP, JSON.stringify(nueva));
         setSesion(nueva);
         setNombre(nueva.nombre);
-        setTelefono(nueva.telefono);
+        setAsistentes([nueva.nombre]);
       } else {
         setError("Acceso no válido. Verifica tu clave de acceso.");
       }
@@ -120,23 +153,27 @@ export default function ExperienciaPrivada() {
 
   const costoSesion = useMemo(() => {
     const n = Math.max(1, Number(numPersonas) || 1);
-    return 1100 + Math.max(0, n - 3) * 500;
-  }, [numPersonas]);
+    return Number(cfg.costo_sesion) + Math.max(0, n - 3) * Number(cfg.costo_extra);
+  }, [numPersonas, cfg]);
 
   const montoNum = Number(monto) || 0;
-  const montoValido = montoNum >= INVERSION_MIN;
-  const puedeEnviar = montoValido && nombre.trim() && telefono.trim();
+  const montoValido = montoNum >= Number(cfg.inversion_min);
+  const puedeEnviar = montoValido && nombre.trim();
+
+  const setAsistente = (i, val) =>
+    setAsistentes((prev) => prev.map((a, idx) => (idx === i ? val : a)));
 
   const enviar = () => {
     if (!puedeEnviar) return;
+    const nombres = asistentes.map((a) => a.trim()).filter(Boolean);
     const lineas = [
       "Hola Diego, quiero agendar una Experiencia Privada.",
       "",
       `Cliente: ${nombre || "-"}`,
-      `Teléfono: ${telefono || "-"}`,
       `Personas: ${numPersonas}`,
-      `Costo de sesión (no redimible): $${costoSesion.toLocaleString("es-MX")}`,
-      `Inversión en decants (redimible): $${montoNum.toLocaleString("es-MX")}`,
+      `Asistentes: ${nombres.length ? nombres.join(", ") : "por definir"}`,
+      `Costo de sesión (no redimible): ${fmt(costoSesion)}`,
+      `Inversión en decants (redimible): ${fmt(montoNum)}`,
       `Perfumes de interés: ${perfumesTexto.trim() || "por definir"}`,
       `Preferencia de días: ${dia || "por definir"}`,
     ];
@@ -160,7 +197,6 @@ export default function ExperienciaPrivada() {
     borderRadius: 2,
   };
 
-  // ---------- Acceso ----------
   if (!sesion) {
     return (
       <div style={fondo} className="flex items-center justify-center px-6">
@@ -199,7 +235,6 @@ export default function ExperienciaPrivada() {
     );
   }
 
-  // ---------- Dentro ----------
   return (
     <div style={fondo}>
       <div className="max-w-2xl mx-auto w-full px-6 py-16">
@@ -213,9 +248,7 @@ export default function ExperienciaPrivada() {
         {sesion.saldo > 0 && (
           <div className="mt-6 inline-block border rounded-sm px-5 py-3" style={{ borderColor: "rgba(198,161,91,0.35)" }}>
             <span className="text-[11px] uppercase tracking-widest text-gray-400">Saldo en tienda</span>
-            <div className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
-              ${sesion.saldo.toLocaleString("es-MX")}
-            </div>
+            <div className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>{fmt(sesion.saldo)}</div>
           </div>
         )}
 
@@ -227,7 +260,7 @@ export default function ExperienciaPrivada() {
         </p>
 
         <div className="border-y py-2" style={{ borderColor: "rgba(198,161,91,0.20)" }}>
-          {PUNTOS.map((p, i) => (
+          {puntos(cfg).map((p, i) => (
             <div key={i} className="flex gap-3 py-3 border-b last:border-b-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
               <span style={{ color: ORO }}>—</span>
               <span className="text-gray-300 text-[15px] leading-relaxed">{p}</span>
@@ -235,25 +268,23 @@ export default function ExperienciaPrivada() {
           ))}
         </div>
 
-        {/* Cómo se compone la inversión */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
           <div className="rounded-sm px-5 py-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(198,161,91,0.25)" }}>
             <p className="text-[11px] uppercase tracking-widest text-gray-400">Costo de la sesión</p>
-            <p className="text-xl mt-1" style={{ fontFamily: SERIF, color: "#f4efe6" }}>$1,100 MXN</p>
+            <p className="text-xl mt-1" style={{ fontFamily: SERIF, color: "#f4efe6" }}>{fmt(cfg.costo_sesion)} MXN</p>
             <p className="text-sm text-gray-400 mt-1">
-              Fijos, hasta 3 asistentes (+$500 por persona extra). Cubre la experiencia y <strong>no</strong> es redimible en productos.
+              Fijos, hasta 3 asistentes (+{fmt(cfg.costo_extra)} por persona extra). Cubre la experiencia y <strong>no</strong> es redimible en productos.
             </p>
           </div>
           <div className="rounded-sm px-5 py-4" style={{ background: "rgba(198,161,91,0.08)", border: "1px solid rgba(198,161,91,0.35)" }}>
             <p className="text-[11px] uppercase tracking-widest" style={{ color: ORO }}>Inversión en decants</p>
-            <p className="text-xl mt-1" style={{ fontFamily: SERIF, color: ORO }}>Desde $15,000 MXN</p>
+            <p className="text-xl mt-1" style={{ fontFamily: SERIF, color: ORO }}>Desde {fmt(cfg.inversion_min)} MXN</p>
             <p className="text-sm text-gray-300 mt-1">
               Mínimo para agendar. Es <strong>100% redimible</strong> en decants del catálogo y define cuántos puedes elegir.
             </p>
           </div>
         </div>
 
-        {/* Agendado */}
         <h2 className="text-2xl sm:text-3xl mt-14 mb-6" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
           Agenda tu sesión
         </h2>
@@ -263,26 +294,43 @@ export default function ExperienciaPrivada() {
           <button onClick={() => setNumPersonas((n) => Math.max(1, Number(n) - 1))} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>−</button>
           <span className="text-xl w-8 text-center" style={{ color: "#f4efe6" }}>{numPersonas}</span>
           <button onClick={() => setNumPersonas((n) => Number(n) + 1)} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>+</button>
-          <span className="text-sm text-gray-400 ml-2">Sesión: ${costoSesion.toLocaleString("es-MX")}</span>
+          <span className="text-sm text-gray-400 ml-2">Sesión: {fmt(costoSesion)}</span>
         </div>
 
-        {/* Monto a invertir (obligatorio) */}
+        {/* Nombres de los asistentes */}
+        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">
+          Nombre de cada asistente
+        </label>
+        <div className="flex flex-col gap-2">
+          {asistentes.map((a, i) => (
+            <input
+              key={i}
+              type="text"
+              value={a}
+              onChange={(e) => setAsistente(i, e.target.value)}
+              placeholder={`Asistente ${i + 1}`}
+              className="w-full py-2.5 px-3 outline-none"
+              style={inputStyle}
+            />
+          ))}
+        </div>
+
         <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">
           Monto a invertir en decants
         </label>
         <input
           type="number"
-          min={INVERSION_MIN}
+          min={cfg.inversion_min}
           step="1000"
           value={monto}
           onChange={(e) => setMonto(e.target.value)}
-          placeholder="Mínimo $15,000"
+          placeholder={`Mínimo ${fmt(cfg.inversion_min)}`}
           className="w-full py-2.5 px-3 outline-none"
           style={inputStyle}
         />
         {monto && !montoValido ? (
           <p className="text-sm mt-2" style={{ color: "#d98c8c" }}>
-            La inversión mínima para agendar es de $15,000 MXN.
+            La inversión mínima para agendar es de {fmt(cfg.inversion_min)} MXN.
           </p>
         ) : (
           <p className="text-sm mt-2 text-gray-500">
@@ -290,7 +338,6 @@ export default function ExperienciaPrivada() {
           </p>
         )}
 
-        {/* Perfumes de interés (texto libre, simple) */}
         <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">
           Perfumes de interés (opcional)
         </label>
@@ -303,7 +350,6 @@ export default function ExperienciaPrivada() {
           style={inputStyle}
         />
 
-        {/* Preferencia de día */}
         <label className="block text-xs uppercase tracking-widest text-gray-400 mb-3 mt-8">Preferencia de días</label>
         <div className="flex flex-col sm:flex-row gap-2">
           {OPCIONES_DIA.map((o) => (
@@ -318,17 +364,8 @@ export default function ExperienciaPrivada() {
           ))}
         </div>
 
-        {/* Nombre y teléfono */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
-          <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2">Nombre</label>
-            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full py-2.5 px-3 outline-none" style={inputStyle} />
-          </div>
-          <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2">Teléfono</label>
-            <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} className="w-full py-2.5 px-3 outline-none" style={inputStyle} />
-          </div>
-        </div>
+        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">Nombre de contacto</label>
+        <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full py-2.5 px-3 outline-none" style={inputStyle} />
 
         <button
           onClick={enviar}
@@ -340,7 +377,7 @@ export default function ExperienciaPrivada() {
         </button>
         {!montoValido && (
           <p className="text-center text-xs text-gray-500 mt-3">
-            Indica un monto de al menos $15,000 para solicitar tu sesión.
+            Indica un monto de al menos {fmt(cfg.inversion_min)} para solicitar tu sesión.
           </p>
         )}
 

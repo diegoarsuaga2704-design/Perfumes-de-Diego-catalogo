@@ -15,6 +15,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
 import MinDecantControl from "../ui/MinDecantControl";
+import ConfigVipControl from "../ui/ConfigVipControl";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -259,6 +260,10 @@ export default function AdminPanel() {
         {/* Modo Bazar — hasta el fondo del panel */}
         <div className="mt-8">
           <MinDecantControl />
+        </div>
+
+        <div className="mt-8">
+          <ConfigVipControl />
         </div>
 
 
