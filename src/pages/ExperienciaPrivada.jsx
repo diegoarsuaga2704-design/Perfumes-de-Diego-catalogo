@@ -62,6 +62,54 @@ const OPCIONES_DIA = [
   "Cualquier día está bien",
 ];
 
+// Dropdown oscuro propio (los <select> nativos se ven mal en tema oscuro).
+function DropdownOscuro({ value, onChange, opciones, placeholder }) {
+  const [abierto, setAbierto] = useState(false);
+  const actual = opciones.find((o) => o.value === value);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setAbierto((a) => !a)}
+        className="w-full flex items-center justify-between gap-2 py-2 px-3 text-sm"
+        style={{
+          color: "#f4efe6",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(198,161,91,0.30)",
+          borderRadius: 2,
+        }}
+      >
+        <span className="truncate">{actual ? actual.label : placeholder}</span>
+        <span style={{ color: ORO }}>▾</span>
+      </button>
+      {abierto && (
+        <>
+          <div className="fixed inset-0 z-20" onClick={() => setAbierto(false)} />
+          <div
+            className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto"
+            style={{ background: "#151316", border: `1px solid ${ORO}`, borderRadius: 2 }}
+          >
+            {opciones.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => {
+                  onChange(o.value);
+                  setAbierto(false);
+                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-white/10"
+                style={{ color: o.value === value ? ORO : "#e8e4dc" }}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 const OPCIONES_EXPERIENCIA = [
   "Quiero que me asesores y me platiques de cada perfume",
   "Prefiero olerlos con calma y decidir por mi cuenta",
@@ -85,10 +133,11 @@ const TYC_EXPERIENCIA = [
 // no las 142 en cada clic (antes se sentía lento y sin respuesta).
 const TarjetaPerfume = memo(function TarjetaPerfume({ p, sel, bloqueado, onToggle }) {
   return (
-    <button
-      onClick={() => onToggle(p.nombre)}
-      disabled={bloqueado}
-      className="flex items-center gap-3 p-2 text-left transition-colors disabled:opacity-30 w-full"
+    <div
+      onClick={() => !bloqueado && onToggle(p.nombre)}
+      className={`flex items-center gap-3 p-2 transition-colors w-full ${
+        bloqueado ? "opacity-30" : "cursor-pointer"
+      }`}
       style={{
         border: sel ? `1px solid ${ORO}` : "1px solid rgba(255,255,255,0.08)",
         background: sel ? "rgba(198,161,91,0.12)" : "rgba(255,255,255,0.02)",
@@ -112,8 +161,20 @@ const TarjetaPerfume = memo(function TarjetaPerfume({ p, sel, bloqueado, onToggl
           {fmt(p.precio)}{!p.stock ? "/ml" : ""}
         </p>
       </div>
+      {p.fraganticaLink && (
+        <a
+          href={p.fraganticaLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-[11px] uppercase tracking-wider px-2 py-1 rounded-sm shrink-0"
+          style={{ color: ORO, border: "1px solid rgba(198,161,91,0.4)" }}
+        >
+          + info
+        </a>
+      )}
       {sel && <span style={{ color: ORO }}>✓</span>}
-    </button>
+    </div>
   );
 });
 
@@ -392,6 +453,7 @@ export default function ExperienciaPrivada() {
       `Asistentes: ${nombres.length ? nombres.join(", ") : "por definir"}`,
       `Costo de sesión (no redimible): ${fmt(costoSesion)}`,
       `Inversión en decants (redimible): ${fmt(montoNum)}`,
+      `TOTAL a cubrir: ${fmt(costoSesion + montoNum)}`,
       `Perfumes que puede elegir: hasta ${maxPerfumes}`,
       `Perfumes de interés (${perfumesSel.length}): ${perfumesSel.join(", ")}`,
       `Preferencia de experiencia: ${preferencia || "por definir"}`,
@@ -627,6 +689,33 @@ export default function ExperienciaPrivada() {
           </p>
         )}
 
+        {montoValido && (
+          <div
+            className="mt-4 rounded-sm px-5 py-4"
+            style={{ background: "rgba(198,161,91,0.10)", border: `1px solid ${ORO}` }}
+          >
+            <div className="flex justify-between text-sm text-gray-300">
+              <span>Costo de sesión ({numPersonas} {numPersonas === 1 ? "persona" : "personas"})</span>
+              <span>{fmt(costoSesion)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-300 mt-1">
+              <span>Inversión en decants</span>
+              <span>{fmt(montoNum)}</span>
+            </div>
+            <div
+              className="flex justify-between items-baseline mt-3 pt-3"
+              style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
+            >
+              <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
+                Total a cubrir
+              </span>
+              <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
+                {fmt(costoSesion + montoNum)}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Perfumes de interés — catálogo */}
         <div className="flex items-center justify-between mt-10 mb-3">
           <label className="block text-xs uppercase tracking-widest text-gray-400">
@@ -653,17 +742,29 @@ export default function ExperienciaPrivada() {
                 className="flex-1 py-2 px-3 outline-none text-sm"
                 style={inputStyle}
               />
-              <select value={casaFiltro} onChange={(e) => setCasaFiltro(e.target.value)} className="py-2 px-3 text-sm" style={inputStyle}>
-                <option value="">Todas las casas</option>
-                {casas.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <select value={orden} onChange={(e) => setOrden(e.target.value)} className="py-2 px-3 text-sm" style={inputStyle}>
-                <option value="casa">Casa (A-Z)</option>
-                <option value="precio_asc">Precio: menor a mayor</option>
-                <option value="precio_desc">Precio: mayor a menor</option>
-              </select>
+              <div className="sm:w-52">
+                <DropdownOscuro
+                  value={casaFiltro}
+                  onChange={setCasaFiltro}
+                  placeholder="Todas las casas"
+                  opciones={[
+                    { value: "", label: "Todas las casas" },
+                    ...casas.map((c) => ({ value: c, label: c })),
+                  ]}
+                />
+              </div>
+              <div className="sm:w-52">
+                <DropdownOscuro
+                  value={orden}
+                  onChange={setOrden}
+                  placeholder="Ordenar"
+                  opciones={[
+                    { value: "casa", label: "Casa (A-Z)" },
+                    { value: "precio_asc", label: "Precio: menor a mayor" },
+                    { value: "precio_desc", label: "Precio: mayor a menor" },
+                  ]}
+                />
+              </div>
             </div>
 
             {/* Seleccionados */}
