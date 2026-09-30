@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, memo } from "react";
 import supabase from "../services/supabase";
 import getParfums from "../functions/getParfums";
 import { imagenThumb } from "../functions/imagenThumb";
@@ -81,6 +81,42 @@ const TYC_EXPERIENCIA = [
   "El cliente garantiza un acceso seguro al lugar y la presencia de un adulto responsable durante toda la sesión. Niños y mascotas quedan bajo su responsabilidad, incluidos los daños que pudieran ocasionar.",
 ];
 
+// Tarjeta de perfume memorizada: solo se re-dibuja la que cambia,
+// no las 142 en cada clic (antes se sentía lento y sin respuesta).
+const TarjetaPerfume = memo(function TarjetaPerfume({ p, sel, bloqueado, onToggle }) {
+  return (
+    <button
+      onClick={() => onToggle(p.nombre)}
+      disabled={bloqueado}
+      className="flex items-center gap-3 p-2 text-left transition-colors disabled:opacity-30 w-full"
+      style={{
+        border: sel ? `1px solid ${ORO}` : "1px solid rgba(255,255,255,0.08)",
+        background: sel ? "rgba(198,161,91,0.12)" : "rgba(255,255,255,0.02)",
+        borderRadius: 2,
+      }}
+    >
+      <img
+        src={imagenThumb(p.image, 120)}
+        alt={p.nombre}
+        loading="lazy"
+        decoding="async"
+        width={48}
+        height={48}
+        className="w-12 h-12 object-cover rounded-sm shrink-0"
+        style={{ background: "rgba(255,255,255,0.06)" }}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{p.nombre}</p>
+        <p className="text-xs text-gray-400 truncate">{p.casa}</p>
+        <p className="text-xs" style={{ color: ORO }}>
+          {fmt(p.precio)}{!p.stock ? "/ml" : ""}
+        </p>
+      </div>
+      {sel && <span style={{ color: ORO }}>✓</span>}
+    </button>
+  );
+});
+
 export default function ExperienciaPrivada() {
   useVipHead();
   const [sesion, setSesion] = useState(null);
@@ -102,6 +138,19 @@ export default function ExperienciaPrivada() {
   const [aceptaTyc, setAceptaTyc] = useState(false);
   const [monto, setMonto] = useState("");
   const [nombre, setNombre] = useState("");
+  const [sesiones, setSesiones] = useState([]);
+  const [enviando, setEnviando] = useState(false);
+
+  const cargarSesiones = async (u) => {
+    const user = (u || sesion?.username || "").trim();
+    if (!user) return;
+    try {
+      const { data } = await supabase.rpc("vip_sesiones", { p_username: user });
+      setSesiones(Array.isArray(data) ? data : []);
+    } catch {
+      setSesiones([]);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -112,6 +161,7 @@ export default function ExperienciaPrivada() {
           setSesion(d);
           setNombre(d.nombre || "");
           setAsistentes([d.nombre || ""]);
+          cargarSesiones(d.username);
         }
       }
     } catch {
@@ -219,6 +269,7 @@ export default function ExperienciaPrivada() {
         setSesion(nueva);
         setNombre(nueva.nombre);
         setAsistentes([nueva.nombre]);
+        cargarSesiones(nueva.username);
       } else {
         setError("Acceso no válido. Verifica tu clave de acceso.");
       }
@@ -233,6 +284,7 @@ export default function ExperienciaPrivada() {
     localStorage.removeItem(LS_VIP);
     localStorage.removeItem(LS_BORRADOR);
     setSesion(null);
+    setSesiones([]);
     setUsername("");
   };
 
@@ -289,13 +341,16 @@ export default function ExperienciaPrivada() {
   }, [listaFiltrada, orden]);
 
   const seleccionado = (nombrePerf) => perfumesSel.includes(nombrePerf);
-  const togglePerfume = (nombrePerf) => {
-    setPerfumesSel((prev) => {
-      if (prev.includes(nombrePerf)) return prev.filter((x) => x !== nombrePerf);
-      if (prev.length >= maxPerfumes) return prev; // no pasar del límite
-      return [...prev, nombrePerf];
-    });
-  };
+  const togglePerfume = useCallback(
+    (nombrePerf) => {
+      setPerfumesSel((prev) => {
+        if (prev.includes(nombrePerf)) return prev.filter((x) => x !== nombrePerf);
+        if (prev.length >= maxPerfumes) return prev; // no pasar del límite
+        return [...prev, nombrePerf];
+      });
+    },
+    [maxPerfumes],
+  );
 
   const setAsistente = (i, val) =>
     setAsistentes((prev) => prev.map((a, idx) => (idx === i ? val : a)));
@@ -307,9 +362,28 @@ export default function ExperienciaPrivada() {
     lugar.trim() &&
     aceptaTyc;
 
-  const enviar = () => {
-    if (!puedeEnviar) return;
+  const enviar = async () => {
+    if (!puedeEnviar || enviando) return;
+    setEnviando(true);
     const nombres = asistentes.map((a) => a.trim()).filter(Boolean);
+
+    // Crea la sesión pendiente (para que el cliente la vea en su espacio).
+    try {
+      await supabase.rpc("vip_agendar", {
+        p_username: sesion.username,
+        p_num_personas: Number(numPersonas) || 1,
+        p_perfumes: perfumesSel,
+        p_inversion: montoNum,
+        p_preferencia: preferencia || null,
+        p_lugar: lugar.trim() || null,
+        p_dia: dia || null,
+      });
+      await cargarSesiones(sesion.username);
+    } catch {
+      // aunque falle el guardado, seguimos con el aviso por WhatsApp
+    }
+    setEnviando(false);
+
     const lineas = [
       "Hola Diego, quiero agendar una Experiencia Privada.",
       "",
@@ -383,38 +457,15 @@ export default function ExperienciaPrivada() {
     );
   }
 
-  const tarjetaPerfume = (p) => {
-    const sel = seleccionado(p.nombre);
-    const bloqueado = !sel && perfumesSel.length >= maxPerfumes;
-    return (
-      <button
-        key={p.id}
-        onClick={() => togglePerfume(p.nombre)}
-        disabled={bloqueado}
-        className="flex items-center gap-3 p-2 text-left transition-colors disabled:opacity-30"
-        style={{
-          border: sel ? `1px solid ${ORO}` : "1px solid rgba(255,255,255,0.08)",
-          background: sel ? "rgba(198,161,91,0.12)" : "rgba(255,255,255,0.02)",
-          borderRadius: 2,
-        }}
-      >
-        <img
-          src={imagenThumb(p.image, 120)}
-          alt={p.nombre}
-          loading="lazy"
-          className="w-12 h-12 object-cover rounded-sm shrink-0 bg-black/30"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{p.nombre}</p>
-          <p className="text-xs text-gray-400 truncate">{p.casa}</p>
-          <p className="text-xs" style={{ color: ORO }}>
-            {fmt(p.precio)}{!p.stock ? "/ml" : ""}
-          </p>
-        </div>
-        {sel && <span style={{ color: ORO }}>✓</span>}
-      </button>
-    );
-  };
+  const tarjetaPerfume = (p) => (
+    <TarjetaPerfume
+      key={p.id}
+      p={p}
+      sel={perfumesSel.includes(p.nombre)}
+      bloqueado={!perfumesSel.includes(p.nombre) && perfumesSel.length >= maxPerfumes}
+      onToggle={togglePerfume}
+    />
+  );
 
   return (
     <div style={fondo}>
@@ -431,6 +482,56 @@ export default function ExperienciaPrivada() {
             <span className="text-[11px] uppercase tracking-widest text-gray-400">Saldo en tienda</span>
             <div className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>{fmt(sesion.saldo)}</div>
           </div>
+        )}
+
+        {/* Mis sesiones */}
+        {sesiones.length > 0 && (
+          <>
+            <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
+            <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
+              <h2 className="text-2xl sm:text-3xl mt-0 mb-4" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+                Mis sesiones
+              </h2>
+              <div className="space-y-2">
+                {sesiones.map((s) => {
+                  const realizada = s.estado === "realizada";
+                  const nPerfumes = Array.isArray(s.perfumes) ? s.perfumes.length : 0;
+                  return (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between gap-3 p-3 rounded-sm"
+                      style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full"
+                            style={
+                              realizada
+                                ? { background: "rgba(255,255,255,0.08)", color: "#aaa" }
+                                : { background: "rgba(198,161,91,0.15)", color: ORO }
+                            }
+                          >
+                            {realizada ? "Realizada" : "Próxima"}
+                          </span>
+                          <span className="text-sm text-gray-300">
+                            {new Date(s.creado_en).toLocaleDateString("es-MX")}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {s.num_personas} {s.num_personas === 1 ? "persona" : "personas"} · {nPerfumes} perfumes de interés
+                          {s.pedido_enviado ? " · pedido enviado" : ""}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 mt-4">
+                (Pronto podrás anotar cada perfume y hacer tu pedido desde aquí.)
+              </p>
+            </section>
+          </>
         )}
 
         <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
@@ -691,11 +792,11 @@ export default function ExperienciaPrivada() {
 
         <button
           onClick={enviar}
-          disabled={!puedeEnviar}
+          disabled={!puedeEnviar || enviando}
           className="w-full mt-8 py-3.5 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
           style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
         >
-          Solicitar por WhatsApp
+          {enviando ? "Agendando…" : "Solicitar por WhatsApp"}
         </button>
         {!puedeEnviar && (
           <p className="text-center text-xs text-gray-500 mt-3">
