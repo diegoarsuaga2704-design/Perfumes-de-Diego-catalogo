@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, memo, useRef } from "react";
 import supabase from "../services/supabase";
 import getParfums from "../functions/getParfums";
+import { useParfums } from "../context/ParfumsContext";
 import { imagenThumb } from "../functions/imagenThumb";
 import {
   calcularPrecioDecant,
@@ -44,6 +45,20 @@ function useVipHead() {
       if (m) m.remove();
     };
   }, []);
+}
+
+// Fecha que ve el cliente: la acordada con Diego, o "por confirmar".
+function fechaSesionTexto(sx) {
+  if (sx?.fecha_acordada) {
+    return new Date(sx.fecha_acordada).toLocaleString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  return null;
 }
 
 const fmt = (n) => "$" + (Number(n) || 0).toLocaleString("es-MX");
@@ -190,7 +205,7 @@ const VEREDICTOS = [
 
 // Detalle de una sesión: notas + veredicto por perfume (autoguardado)
 // y pedido final con cualquier decant del catálogo.
-function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, onVolver, onActualizado }) {
+function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minSiempre = 0, onVolver, onActualizado }) {
   const perfumesInteres = Array.isArray(sesionData.perfumes) ? sesionData.perfumes : [];
   const esPendiente = sesionData.estado !== "realizada";
   const maxSel = Math.floor(
@@ -313,7 +328,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, onVo
 
   const agregarAlPedido = (p) => {
     if (pedido.some((l) => l.id === p.id)) return;
-    const ml = getOpcionesMililitros(p)[0]?.value || 1;
+    const ml = getOpcionesMililitros(p, { minSiempre })[0]?.value || 1;
     setPedido((prev) => [
       ...prev,
       { id: p.id, nombre: p.nombre, casa: p.casa, ml, monto: calcularPrecioDecant(p, ml) },
@@ -361,7 +376,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, onVo
         "Hola Diego, este es mi pedido final de la Experiencia Privada.",
         "",
         `Cliente: ${nombre || "-"}`,
-        `Sesión del ${new Date(sesionData.creado_en).toLocaleDateString("es-MX")}`,
+        `Sesión: ${fechaSesionTexto(sesionData) || "solicitada el " + new Date(sesionData.creado_en).toLocaleDateString("es-MX")}`,
         "",
         ...pedidoLimpio.map((l) => `• ${l.nombre} (${l.casa}) · ${l.ml} ml — ${fmt(l.monto)}`),
         "",
@@ -411,13 +426,22 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, onVo
       </button>
 
       <h2 className="text-3xl sm:text-4xl" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-        Sesión del {new Date(sesionData.creado_en).toLocaleDateString("es-MX")}
+        {fechaSesionTexto(sesionData) ? (
+          <span className="capitalize">{fechaSesionTexto(sesionData)}</span>
+        ) : (
+          "Fecha por confirmar"
+        )}
       </h2>
       <p className="text-sm text-gray-400 mt-2">
         {sesionData.num_personas} {sesionData.num_personas === 1 ? "persona" : "personas"} ·
         Inversión acordada: <span style={{ color: ORO }}>{fmt(credito)}</span>
         {sesionData.lugar ? ` · ${sesionData.lugar}` : ""}
       </p>
+      {Array.isArray(sesionData.asistentes) && sesionData.asistentes.length > 0 && (
+        <p className="text-sm text-gray-500 mt-1">
+          Asistentes: {sesionData.asistentes.join(", ")}
+        </p>
+      )}
 
       {divisor}
 
@@ -655,7 +679,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, onVo
           <div className="mt-4 space-y-2">
             {pedido.map((l) => {
               const p = parfumPorId(l.id);
-              const opciones = p ? getOpcionesMililitros(p) : [{ value: l.ml, label: `${l.ml} ml` }];
+              const opciones = p ? getOpcionesMililitros(p, { minSiempre }) : [{ value: l.ml, label: `${l.ml} ml` }];
               return (
                 <div
                   key={l.id}
@@ -743,6 +767,7 @@ export default function ExperienciaPrivada() {
   const [verificando, setVerificando] = useState(false);
   const [error, setError] = useState("");
   const [cfg, setCfg] = useState(CFG_DEFAULT);
+  const { minDecantSiempre = 0 } = useParfums() || {};
 
   const [parfums, setParfums] = useState([]);
   const [numPersonas, setNumPersonas] = useState(1);
@@ -998,6 +1023,7 @@ export default function ExperienciaPrivada() {
         p_preferencia: preferencia || null,
         p_lugar: lugar.trim() || null,
         p_dia: dia || null,
+        p_asistentes: nombres,
       });
       await cargarSesiones(sesion.username);
     } catch {
@@ -1104,6 +1130,7 @@ export default function ExperienciaPrivada() {
             nombre={nombre}
             parfums={parfums}
             porPerfume={cfg.inversion_por_perfume}
+            minSiempre={minDecantSiempre}
             onVolver={() => setSesionAbiertaId(null)}
             onActualizado={() => cargarSesiones(sesion.username)}
           />
@@ -1163,8 +1190,9 @@ export default function ExperienciaPrivada() {
                           >
                             {realizada ? "Realizada" : "Próxima"}
                           </span>
-                          <span className="text-sm text-gray-300">
-                            {new Date(s.creado_en).toLocaleDateString("es-MX")}
+                          <span className="text-sm text-gray-300 capitalize">
+                            {fechaSesionTexto(s) ||
+                              `Por confirmar · solicitada el ${new Date(s.creado_en).toLocaleDateString("es-MX")}`}
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
