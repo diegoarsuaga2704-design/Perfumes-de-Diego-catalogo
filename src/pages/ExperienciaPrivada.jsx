@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useState, useCallback, memo } from "react";
+import { useEffect, useMemo, useState, useCallback, memo, useRef } from "react";
 import supabase from "../services/supabase";
 import getParfums from "../functions/getParfums";
 import { imagenThumb } from "../functions/imagenThumb";
+import {
+  calcularPrecioDecant,
+  getOpcionesMililitros,
+} from "../functions/pricingDecant";
 
 const LS_VIP = "vip_sesion";
 const LS_BORRADOR = "vip_borrador";
@@ -178,6 +182,373 @@ const TarjetaPerfume = memo(function TarjetaPerfume({ p, sel, bloqueado, onToggl
   );
 });
 
+const VEREDICTOS = [
+  { value: "gusto", label: "Me gustó" },
+  { value: "tal_vez", label: "Tal vez" },
+  { value: "no", label: "No" },
+];
+
+// Detalle de una sesión: notas + veredicto por perfume (autoguardado)
+// y pedido final con cualquier decant del catálogo.
+function DetalleSesion({ sesionData, username, nombre, parfums, onVolver, onActualizado }) {
+  const perfumesInteres = Array.isArray(sesionData.perfumes) ? sesionData.perfumes : [];
+  const [notas, setNotas] = useState(() => sesionData.anotaciones || {});
+  const [estadoGuardado, setEstadoGuardado] = useState("");
+  const [pedido, setPedido] = useState(() =>
+    Array.isArray(sesionData.pedido_final) ? sesionData.pedido_final : [],
+  );
+  const [busq, setBusq] = useState("");
+  const [enviandoPedido, setEnviandoPedido] = useState(false);
+  const [msgPedido, setMsgPedido] = useState("");
+  const primeraCarga = useRef(true);
+
+  // Autoguardado de notas (espera a que deje de escribir).
+  useEffect(() => {
+    if (primeraCarga.current) {
+      primeraCarga.current = false;
+      return;
+    }
+    setEstadoGuardado("Guardando…");
+    const t = setTimeout(async () => {
+      try {
+        const { error } = await supabase.rpc("vip_guardar_anotaciones", {
+          p_username: username,
+          p_sesion_id: sesionData.id,
+          p_anotaciones: notas,
+        });
+        setEstadoGuardado(error ? "No se pudo guardar" : "Guardado ✓");
+        if (!error) onActualizado?.();
+      } catch {
+        setEstadoGuardado("No se pudo guardar");
+      }
+    }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notas]);
+
+  const setNota = (perf, campo, val) =>
+    setNotas((prev) => ({ ...prev, [perf]: { ...(prev[perf] || {}), [campo]: val } }));
+
+  // Solo decants (el crédito es redimible en decants).
+  const decants = useMemo(
+    () =>
+      parfums
+        .filter((p) => p.stock === false && p.disponible !== "Agotado")
+        .sort(
+          (a, b) =>
+            (a.casa || "").localeCompare(b.casa || "", "es") ||
+            (a.nombre || "").localeCompare(b.nombre || "", "es"),
+        ),
+    [parfums],
+  );
+  const sugerencias = useMemo(() => {
+    const q = busq.trim().toLowerCase();
+    if (!q) return [];
+    return decants
+      .filter(
+        (p) => p.nombre?.toLowerCase().includes(q) || p.casa?.toLowerCase().includes(q),
+      )
+      .slice(0, 8);
+  }, [busq, decants]);
+
+  const parfumPorId = (id) => parfums.find((p) => p.id === id);
+
+  const agregarAlPedido = (p) => {
+    if (pedido.some((l) => l.id === p.id)) return;
+    const ml = getOpcionesMililitros(p)[0]?.value || 1;
+    setPedido((prev) => [
+      ...prev,
+      { id: p.id, nombre: p.nombre, casa: p.casa, ml, monto: calcularPrecioDecant(p, ml) },
+    ]);
+    setBusq("");
+    setMsgPedido("");
+  };
+
+  const cambiarMl = (id, ml) =>
+    setPedido((prev) =>
+      prev.map((l) => {
+        if (l.id !== id) return l;
+        const p = parfumPorId(id);
+        const n = Number(ml);
+        return { ...l, ml: n, monto: p ? calcularPrecioDecant(p, n) : l.monto };
+      }),
+    );
+
+  const quitarDelPedido = (id) => setPedido((prev) => prev.filter((l) => l.id !== id));
+
+  const totalPedido = pedido.reduce((s, l) => s + (Number(l.monto) || 0), 0);
+  const credito = Number(sesionData.inversion_declarada) || 0;
+  const diferencia = totalPedido - credito;
+
+  const enviarPedido = async () => {
+    if (pedido.length === 0 || enviandoPedido) return;
+    setEnviandoPedido(true);
+    setMsgPedido("");
+    const pedidoLimpio = pedido.map(({ id, nombre: n, casa, ml, monto }) => ({
+      id,
+      nombre: n,
+      casa,
+      ml,
+      monto,
+    }));
+    try {
+      const { error } = await supabase.rpc("vip_enviar_pedido", {
+        p_username: username,
+        p_sesion_id: sesionData.id,
+        p_pedido: pedidoLimpio,
+      });
+      if (error) throw error;
+      onActualizado?.();
+      const lineas = [
+        "Hola Diego, este es mi pedido final de la Experiencia Privada.",
+        "",
+        `Cliente: ${nombre || "-"}`,
+        `Sesión del ${new Date(sesionData.creado_en).toLocaleDateString("es-MX")}`,
+        "",
+        ...pedidoLimpio.map((l) => `• ${l.nombre} (${l.casa}) · ${l.ml} ml — ${fmt(l.monto)}`),
+        "",
+        `Total del pedido: ${fmt(totalPedido)}`,
+        `Inversión acordada: ${fmt(credito)}`,
+        diferencia > 0
+          ? `Diferencia a cubrir: ${fmt(diferencia)}`
+          : `Crédito restante (saldo en tienda): ${fmt(-diferencia)}`,
+      ];
+      window.open(
+        `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      setMsgPedido("Pedido enviado ✓");
+    } catch {
+      setMsgPedido("No se pudo enviar el pedido. Intenta de nuevo.");
+    } finally {
+      setEnviandoPedido(false);
+    }
+  };
+
+  const panel = {
+    border: "1px solid rgba(198,161,91,0.18)",
+    background: "rgba(255,255,255,0.02)",
+  };
+  const inputStyle = {
+    color: "#f4efe6",
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(198,161,91,0.30)",
+    borderRadius: 2,
+  };
+  const divisor = (
+    <div
+      className="my-10 h-px"
+      style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }}
+    />
+  );
+
+  return (
+    <div>
+      <button
+        onClick={onVolver}
+        className="text-xs uppercase tracking-widest text-gray-400 hover:text-gray-200 mb-6"
+      >
+        ← Volver a mis sesiones
+      </button>
+
+      <h2 className="text-3xl sm:text-4xl" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+        Sesión del {new Date(sesionData.creado_en).toLocaleDateString("es-MX")}
+      </h2>
+      <p className="text-sm text-gray-400 mt-2">
+        {sesionData.num_personas} {sesionData.num_personas === 1 ? "persona" : "personas"} ·
+        Inversión acordada: <span style={{ color: ORO }}>{fmt(credito)}</span>
+        {sesionData.lugar ? ` · ${sesionData.lugar}` : ""}
+      </p>
+
+      {divisor}
+
+      {/* Notas por perfume */}
+      <section className="rounded-md p-5 sm:p-6" style={panel}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-2xl" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+            Tus perfumes y notas
+          </h3>
+          {estadoGuardado && <span className="text-xs text-gray-500">{estadoGuardado}</span>}
+        </div>
+        <p className="text-sm text-gray-400 mb-5">
+          Anota lo que te pareció cada perfume durante la sesión. Se guarda solo.
+        </p>
+
+        {perfumesInteres.length === 0 ? (
+          <p className="text-sm text-gray-500">Esta sesión no tiene perfumes registrados.</p>
+        ) : (
+          <div className="space-y-3">
+            {perfumesInteres.map((perf) => {
+              const n = notas[perf] || {};
+              return (
+                <div
+                  key={perf}
+                  className="p-3 rounded-sm"
+                  style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <p className="text-sm mb-2" style={{ color: "#f4efe6" }}>{perf}</p>
+                  <div className="flex gap-2 mb-2">
+                    {VEREDICTOS.map((v) => (
+                      <button
+                        key={v.value}
+                        onClick={() =>
+                          setNota(perf, "veredicto", n.veredicto === v.value ? "" : v.value)
+                        }
+                        className="flex-1 py-1.5 text-xs"
+                        style={
+                          n.veredicto === v.value
+                            ? { background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }
+                            : { ...inputStyle, color: "#e8e4dc" }
+                        }
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={n.nota || ""}
+                    onChange={(e) => setNota(perf, "nota", e.target.value)}
+                    placeholder="¿Qué te pareció?"
+                    className="w-full py-2 px-3 text-sm outline-none resize-none"
+                    style={inputStyle}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {divisor}
+
+      {/* Pedido final */}
+      <section className="rounded-md p-5 sm:p-6" style={panel}>
+        <h3 className="text-2xl mb-1" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
+          Tu pedido final
+        </h3>
+        <p className="text-sm text-gray-400 mb-5">
+          Elige los decants que quieres llevarte, de cualquier perfume del catálogo, al
+          precio normal de la página.
+          {sesionData.pedido_enviado ? " Ya enviaste un pedido; si lo cambias, vuelve a enviarlo." : ""}
+        </p>
+
+        <input
+          type="text"
+          value={busq}
+          onChange={(e) => setBusq(e.target.value)}
+          placeholder="Busca un perfume o casa para agregar…"
+          className="w-full py-2.5 px-3 text-sm outline-none"
+          style={inputStyle}
+        />
+        {busq.trim() && (
+          <div className="mt-1" style={{ border: "1px solid rgba(198,161,91,0.2)", borderRadius: 2 }}>
+            {sugerencias.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-gray-500">Sin resultados.</p>
+            ) : (
+              sugerencias.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => agregarAlPedido(p)}
+                  className="w-full flex items-center justify-between gap-2 text-left px-3 py-2 text-sm hover:bg-white/5"
+                  style={{ color: "#e8e4dc" }}
+                >
+                  <span className="truncate">
+                    {p.nombre} <span className="text-gray-500">· {p.casa}</span>
+                  </span>
+                  <span className="shrink-0" style={{ color: ORO }}>{fmt(p.precio)}/ml</span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+
+        {pedido.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {pedido.map((l) => {
+              const p = parfumPorId(l.id);
+              const opciones = p ? getOpcionesMililitros(p) : [{ value: l.ml, label: `${l.ml} ml` }];
+              return (
+                <div
+                  key={l.id}
+                  className="flex items-center gap-3 p-2 rounded-sm"
+                  style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{l.nombre}</p>
+                    <p className="text-xs text-gray-500 truncate">{l.casa}</p>
+                  </div>
+                  <select
+                    value={l.ml}
+                    onChange={(e) => cambiarMl(l.id, e.target.value)}
+                    className="py-1.5 px-2 text-sm"
+                    style={{ ...inputStyle, background: "#151316" }}
+                  >
+                    {opciones.map((o) => (
+                      <option key={o.value} value={o.value} style={{ background: "#151316", color: "#f4efe6" }}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-sm w-20 text-right" style={{ color: ORO }}>{fmt(l.monto)}</span>
+                  <button
+                    onClick={() => quitarDelPedido(l.id)}
+                    className="text-gray-500 hover:text-red-400 px-1"
+                    title="Quitar"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+
+            <div
+              className="mt-4 rounded-sm px-5 py-4"
+              style={{ background: "rgba(198,161,91,0.10)", border: `1px solid ${ORO}` }}
+            >
+              <div className="flex justify-between text-sm text-gray-300">
+                <span>Total del pedido</span>
+                <span>{fmt(totalPedido)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-300 mt-1">
+                <span>Inversión acordada</span>
+                <span>{fmt(credito)}</span>
+              </div>
+              <div
+                className="flex justify-between items-baseline mt-3 pt-3"
+                style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
+              >
+                <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
+                  {diferencia > 0 ? "Diferencia a cubrir" : "Crédito restante"}
+                </span>
+                <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
+                  {fmt(Math.abs(diferencia))}
+                </span>
+              </div>
+              {diferencia < 0 && (
+                <p className="text-xs text-gray-400 mt-2">
+                  El crédito restante queda como saldo en tienda para futuros decants.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={enviarPedido}
+          disabled={pedido.length === 0 || enviandoPedido}
+          className="w-full mt-6 py-3.5 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
+          style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
+        >
+          {enviandoPedido ? "Enviando…" : "Enviar pedido final"}
+        </button>
+        {msgPedido && <p className="text-sm text-center mt-3" style={{ color: ORO }}>{msgPedido}</p>}
+      </section>
+    </div>
+  );
+}
+
 export default function ExperienciaPrivada() {
   useVipHead();
   const [sesion, setSesion] = useState(null);
@@ -201,6 +572,7 @@ export default function ExperienciaPrivada() {
   const [nombre, setNombre] = useState("");
   const [sesiones, setSesiones] = useState([]);
   const [enviando, setEnviando] = useState(false);
+  const [sesionAbiertaId, setSesionAbiertaId] = useState(null);
 
   const cargarSesiones = async (u) => {
     const user = (u || sesion?.username || "").trim();
@@ -346,6 +718,7 @@ export default function ExperienciaPrivada() {
     localStorage.removeItem(LS_BORRADOR);
     setSesion(null);
     setSesiones([]);
+    setSesionAbiertaId(null);
     setUsername("");
   };
 
@@ -529,6 +902,28 @@ export default function ExperienciaPrivada() {
     />
   );
 
+  const sesionAbierta = sesiones.find((x) => x.id === sesionAbiertaId);
+  if (sesionAbierta) {
+    return (
+      <div style={fondo}>
+        <div className="max-w-2xl mx-auto w-full px-6 py-16">
+          <p className="uppercase text-xs tracking-[0.35em] mb-5" style={{ color: ORO }}>
+            Experiencia privada
+          </p>
+          <DetalleSesion
+            key={sesionAbierta.id}
+            sesionData={sesionAbierta}
+            username={sesion.username}
+            nombre={nombre}
+            parfums={parfums}
+            onVolver={() => setSesionAbiertaId(null)}
+            onActualizado={() => cargarSesiones(sesion.username)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={fondo}>
       <div className="max-w-2xl mx-auto w-full px-6 py-16">
@@ -559,9 +954,13 @@ export default function ExperienciaPrivada() {
                   const realizada = s.estado === "realizada";
                   const nPerfumes = Array.isArray(s.perfumes) ? s.perfumes.length : 0;
                   return (
-                    <div
+                    <button
                       key={s.id}
-                      className="flex items-center justify-between gap-3 p-3 rounded-sm"
+                      onClick={() => {
+                        setSesionAbiertaId(s.id);
+                        window.scrollTo(0, 0);
+                      }}
+                      className="w-full text-left flex items-center justify-between gap-3 p-3 rounded-sm hover:bg-white/5"
                       style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
                     >
                       <div className="min-w-0">
@@ -585,12 +984,15 @@ export default function ExperienciaPrivada() {
                           {s.pedido_enviado ? " · pedido enviado" : ""}
                         </p>
                       </div>
-                    </div>
+                      <span className="text-xs uppercase tracking-widest shrink-0" style={{ color: ORO }}>
+                        Abrir →
+                      </span>
+                    </button>
                   );
                 })}
               </div>
               <p className="text-xs text-gray-500 mt-4">
-                (Pronto podrás anotar cada perfume y hacer tu pedido desde aquí.)
+                Abre una sesión para anotar cada perfume y hacer tu pedido final.
               </p>
             </section>
           </>
