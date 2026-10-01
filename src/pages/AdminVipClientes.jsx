@@ -3,7 +3,16 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Copy, Trash2 } from "lucide-react";
 import supabase from "../services/supabase";
 
-// Genera un username tipo "Diego-VIP-482" a partir del nombre.
+// Caracteres de la clave: sin 0/O, 1/I/L para que no se confundan al dictarla.
+const ALFABETO_CLAVE = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function bloqueAleatorio(n) {
+  const bytes = crypto.getRandomValues(new Uint8Array(n));
+  return Array.from(bytes, (b) => ALFABETO_CLAVE[b % ALFABETO_CLAVE.length]).join("");
+}
+
+// Genera una clave tipo "Diego-K7QM-4XPZ" a partir del nombre.
+// 8 caracteres aleatorios: imposible de adivinar (las de "Nombre-VIP-482"
+// solo tenían 900 combinaciones).
 function generarUsername(nombre) {
   const base =
     (nombre || "")
@@ -13,8 +22,7 @@ function generarUsername(nombre) {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-zA-Z0-9]/g, "") || "Cliente";
   const cap = base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
-  const num = Math.floor(100 + Math.random() * 900);
-  return `${cap}-VIP-${num}`;
+  return `${cap}-${bloqueAleatorio(4)}-${bloqueAleatorio(4)}`;
 }
 
 export default function AdminVipClientes() {
@@ -25,6 +33,7 @@ export default function AdminVipClientes() {
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState("");
   const [confirmarBorrar, setConfirmarBorrar] = useState(null);
+  const [confirmarClave, setConfirmarClave] = useState(null);
 
   const cargar = async () => {
     setCargando(true);
@@ -70,6 +79,26 @@ export default function AdminVipClientes() {
     }
   };
 
+  // Cambia la clave del cliente. La anterior deja de funcionar al momento.
+  const nuevaClave = async (c) => {
+    setConfirmarClave(null);
+    for (let intento = 0; intento < 5; intento++) {
+      const username = generarUsername(c.nombre);
+      const { error } = await supabase
+        .from("clientes_vip")
+        .update({ username })
+        .eq("id", c.id);
+      if (!error) {
+        copiar(username);
+        setMsg(`Nueva clave de ${c.nombre}: ${username} (copiada)`);
+        cargar();
+        return;
+      }
+      if (!/duplicate|unique/i.test(error.message)) break;
+    }
+    setMsg("No se pudo cambiar la clave. Revisa permisos (RLS) o conexión.");
+  };
+
   const toggleActivo = async (c) => {
     await supabase
       .from("clientes_vip")
@@ -88,7 +117,7 @@ export default function AdminVipClientes() {
     try {
       navigator.clipboard.writeText(texto);
       setMsg(`Copiado: ${texto}`);
-      setTimeout(() => setMsg(""), 2000);
+      setTimeout(() => setMsg(""), 4000);
     } catch {
       // sin portapapeles
     }
@@ -179,6 +208,30 @@ export default function AdminVipClientes() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
+                  {confirmarClave === c.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => nuevaClave(c)}
+                        className="text-xs font-semibold text-white bg-[#A47E3B] px-2 py-1.5 rounded-md"
+                      >
+                        Cambiar clave
+                      </button>
+                      <button
+                        onClick={() => setConfirmarClave(null)}
+                        className="text-xs text-gray-500 px-1"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmarClave(c.id)}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50"
+                      title="Genera una clave nueva; la anterior deja de funcionar"
+                    >
+                      Nueva clave
+                    </button>
+                  )}
                   <button
                     onClick={() => toggleActivo(c)}
                     className={`text-xs font-semibold px-3 py-1.5 rounded-md border ${
