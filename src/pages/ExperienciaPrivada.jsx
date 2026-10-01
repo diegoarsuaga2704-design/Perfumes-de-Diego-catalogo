@@ -190,8 +190,66 @@ const VEREDICTOS = [
 
 // Detalle de una sesión: notas + veredicto por perfume (autoguardado)
 // y pedido final con cualquier decant del catálogo.
-function DetalleSesion({ sesionData, username, nombre, parfums, onVolver, onActualizado }) {
+function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, onVolver, onActualizado }) {
   const perfumesInteres = Array.isArray(sesionData.perfumes) ? sesionData.perfumes : [];
+  const esPendiente = sesionData.estado !== "realizada";
+  const maxSel = Math.floor(
+    (Number(sesionData.inversion_declarada) || 0) / (Number(porPerfume) || 1000),
+  );
+  const [editando, setEditando] = useState(false);
+  const [seleccion, setSeleccion] = useState(perfumesInteres);
+  const [busqEdit, setBusqEdit] = useState("");
+  const [guardandoSel, setGuardandoSel] = useState(false);
+  const [msgSel, setMsgSel] = useState("");
+  const [notaAbierta, setNotaAbierta] = useState({});
+
+  const imagenDe = (perf) => parfums.find((x) => x.nombre === perf)?.image;
+
+  const sugerenciasEdit = useMemo(() => {
+    const q = busqEdit.trim().toLowerCase();
+    if (!q) return [];
+    return parfums
+      .filter(
+        (x) =>
+          !seleccion.includes(x.nombre) &&
+          (x.nombre?.toLowerCase().includes(q) || x.casa?.toLowerCase().includes(q)),
+      )
+      .slice(0, 8);
+  }, [busqEdit, parfums, seleccion]);
+
+  const empezarEdicion = () => {
+    setSeleccion(perfumesInteres);
+    setBusqEdit("");
+    setMsgSel("");
+    setEditando(true);
+  };
+
+  const guardarSeleccion = async () => {
+    if (seleccion.length < 1) {
+      setMsgSel("Elige al menos un perfume.");
+      return;
+    }
+    if (seleccion.length > maxSel) {
+      setMsgSel(`Tu inversión te permite hasta ${maxSel} perfumes.`);
+      return;
+    }
+    setGuardandoSel(true);
+    setMsgSel("");
+    try {
+      const { error } = await supabase.rpc("vip_actualizar_perfumes", {
+        p_username: username,
+        p_sesion_id: sesionData.id,
+        p_perfumes: seleccion,
+      });
+      if (error) throw error;
+      setEditando(false);
+      onActualizado?.();
+    } catch {
+      setMsgSel("No se pudo guardar. Intenta de nuevo.");
+    } finally {
+      setGuardandoSel(false);
+    }
+  };
   const [notas, setNotas] = useState(() => sesionData.anotaciones || {});
   const [estadoGuardado, setEstadoGuardado] = useState("");
   const [pedido, setPedido] = useState(() =>
@@ -375,19 +433,139 @@ function DetalleSesion({ sesionData, username, nombre, parfums, onVolver, onActu
           Anota lo que te pareció cada perfume durante la sesión. Se guarda solo.
         </p>
 
+        {/* Editar perfumes (solo pendiente) */}
+        {esPendiente && !editando && (
+          <button
+            onClick={empezarEdicion}
+            className="mb-4 text-xs uppercase tracking-widest px-3 py-2 rounded-sm"
+            style={{ color: ORO, border: "1px solid rgba(198,161,91,0.5)" }}
+          >
+            Editar perfumes ({perfumesInteres.length} / {maxSel})
+          </button>
+        )}
+
+        {editando && (
+          <div
+            className="mb-5 p-4 rounded-sm"
+            style={{ border: `1px solid ${ORO}`, background: "rgba(198,161,91,0.06)" }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm" style={{ color: "#f4efe6" }}>Editar perfumes de la sesión</p>
+              <span className="text-sm" style={{ color: ORO }}>
+                {seleccion.length} / {maxSel}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={busqEdit}
+              onChange={(e) => setBusqEdit(e.target.value)}
+              placeholder="Busca un perfume o casa para agregar…"
+              className="w-full py-2 px-3 text-sm outline-none"
+              style={inputStyle}
+            />
+            {busqEdit.trim() && (
+              <div className="mt-1" style={{ border: "1px solid rgba(198,161,91,0.2)", borderRadius: 2 }}>
+                {sugerenciasEdit.length === 0 ? (
+                  <p className="px-3 py-2 text-sm text-gray-500">Sin resultados.</p>
+                ) : (
+                  sugerenciasEdit.map((x) => {
+                    const lleno = seleccion.length >= maxSel;
+                    return (
+                      <button
+                        key={x.id}
+                        disabled={lleno}
+                        onClick={() => {
+                          setSeleccion((prev) => [...prev, x.nombre]);
+                          setBusqEdit("");
+                        }}
+                        className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm hover:bg-white/5 disabled:opacity-30"
+                        style={{ color: "#e8e4dc" }}
+                      >
+                        <img
+                          src={imagenThumb(x.image, 80)}
+                          alt=""
+                          loading="lazy"
+                          className="w-8 h-8 object-cover rounded-sm shrink-0"
+                          style={{ background: "rgba(255,255,255,0.06)" }}
+                        />
+                        <span className="truncate">
+                          {x.nombre} <span className="text-gray-500">· {x.casa}</span>
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {seleccion.map((perf) => (
+                <span
+                  key={perf}
+                  className="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-sm"
+                  style={{ background: "rgba(198,161,91,0.15)", color: "#f4efe6", border: `1px solid ${ORO}` }}
+                >
+                  {perf}
+                  <button
+                    onClick={() => setSeleccion((prev) => prev.filter((x) => x !== perf))}
+                    style={{ color: ORO }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={guardarSeleccion}
+                disabled={guardandoSel}
+                className="px-5 py-2 text-sm uppercase tracking-widest disabled:opacity-40"
+                style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
+              >
+                {guardandoSel ? "Guardando…" : "Guardar cambios"}
+              </button>
+              <button
+                onClick={() => setEditando(false)}
+                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200"
+              >
+                Cancelar
+              </button>
+            </div>
+            {msgSel && <p className="text-sm mt-3" style={{ color: "#d98c8c" }}>{msgSel}</p>}
+          </div>
+        )}
+
         {perfumesInteres.length === 0 ? (
           <p className="text-sm text-gray-500">Esta sesión no tiene perfumes registrados.</p>
         ) : (
           <div className="space-y-3">
             {perfumesInteres.map((perf) => {
               const n = notas[perf] || {};
+              const img = imagenDe(perf);
+              const abierta = notaAbierta[perf] ?? Boolean(n.nota);
               return (
                 <div
                   key={perf}
                   className="p-3 rounded-sm"
                   style={{ border: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  <p className="text-sm mb-2" style={{ color: "#f4efe6" }}>{perf}</p>
+                  <div className="flex items-center gap-3 mb-2">
+                    {img ? (
+                      <img
+                        src={imagenThumb(img, 96)}
+                        alt={perf}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-10 h-10 object-cover rounded-sm shrink-0"
+                        style={{ background: "rgba(255,255,255,0.06)" }}
+                      />
+                    ) : (
+                      <div
+                        className="w-10 h-10 rounded-sm shrink-0"
+                        style={{ background: "rgba(255,255,255,0.06)" }}
+                      />
+                    )}
+                    <p className="text-sm" style={{ color: "#f4efe6" }}>{perf}</p>
+                  </div>
                   <div className="flex gap-2 mb-2">
                     {VEREDICTOS.map((v) => (
                       <button
@@ -406,14 +584,23 @@ function DetalleSesion({ sesionData, username, nombre, parfums, onVolver, onActu
                       </button>
                     ))}
                   </div>
-                  <textarea
-                    rows={2}
-                    value={n.nota || ""}
-                    onChange={(e) => setNota(perf, "nota", e.target.value)}
-                    placeholder="¿Qué te pareció?"
-                    className="w-full py-2 px-3 text-sm outline-none resize-none"
-                    style={inputStyle}
-                  />
+                  <button
+                    onClick={() => setNotaAbierta((prev) => ({ ...prev, [perf]: !abierta }))}
+                    className="text-xs uppercase tracking-widest"
+                    style={{ color: ORO }}
+                  >
+                    {abierta ? "▴ Ocultar nota" : n.nota ? "▾ Ver nota" : "+ Agregar nota"}
+                  </button>
+                  {abierta && (
+                    <textarea
+                      rows={2}
+                      value={n.nota || ""}
+                      onChange={(e) => setNota(perf, "nota", e.target.value)}
+                      placeholder="¿Qué te pareció?"
+                      className="w-full mt-2 py-2 px-3 text-sm outline-none resize-none"
+                      style={inputStyle}
+                    />
+                  )}
                 </div>
               );
             })}
@@ -916,6 +1103,7 @@ export default function ExperienciaPrivada() {
             username={sesion.username}
             nombre={nombre}
             parfums={parfums}
+            porPerfume={cfg.inversion_por_perfume}
             onVolver={() => setSesionAbiertaId(null)}
             onActualizado={() => cargarSesiones(sesion.username)}
           />
