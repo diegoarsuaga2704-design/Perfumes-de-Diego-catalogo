@@ -1160,12 +1160,8 @@ export default function ExperienciaPrivada() {
       } else {
         setError("Acceso no válido. Verifica tu clave de acceso.");
       }
-    } catch (err) {
-      setError(
-        /demasiados intentos/i.test(err?.message || "")
-          ? "Demasiados intentos. Espera 15 minutos e intenta de nuevo."
-          : "No pudimos validar tu acceso. Intenta de nuevo en un momento.",
-      );
+    } catch {
+      setError("No pudimos validar tu acceso. Intenta de nuevo en un momento.");
     } finally {
       setVerificando(false);
     }
@@ -1295,7 +1291,7 @@ export default function ExperienciaPrivada() {
     setEnviando(true);
     setMsgAgenda(null);
     try {
-      const { data: nuevaId, error: rpcError } = await supabase.rpc("vip_agendar", {
+      const { error: rpcError } = await supabase.rpc("vip_agendar", {
         p_username: sesion.username,
         p_num_personas: Number(numPersonas) || 1,
         p_perfumes: perfumesSel,
@@ -1305,8 +1301,7 @@ export default function ExperienciaPrivada() {
         p_dia: dia || null,
         p_asistentes: nombres,
       });
-      // Sin id = la clave ya no es válida: la sesión no se creó.
-      if (rpcError || !nuevaId) throw rpcError || new Error("sin id");
+      if (rpcError) throw rpcError;
       await cargarSesiones(sesion.username);
       // Limpia el formulario: evita agendar la misma sesión dos veces.
       setNumPersonas(1);
