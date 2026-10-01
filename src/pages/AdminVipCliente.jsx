@@ -1,1533 +1,648 @@
-import { useEffect, useMemo, useState, useCallback, memo, useRef } from "react";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import supabase from "../services/supabase";
-import getParfums from "../functions/getParfums";
-import { useParfums } from "../context/ParfumsContext";
-import { imagenThumb } from "../functions/imagenThumb";
-import {
-  calcularPrecioDecant,
-  getOpcionesMililitros,
-} from "../functions/pricingDecant";
 
-const LS_VIP = "vip_sesion";
-const LS_BORRADOR = "vip_borrador";
-const WHATSAPP = "5212212034647";
-const SERIF = "'Cormorant Garamond', Georgia, serif";
-const ORO = "#C6A15B";
-const CFG_DEFAULT = {
-  inversion_min: 15000,
-  costo_sesion: 1100,
-  costo_extra: 500,
-  inversion_por_perfume: 1000,
-};
-
-function useVipHead() {
-  useEffect(() => {
-    const fid = "font-cormorant-vip";
-    if (!document.getElementById(fid)) {
-      const l = document.createElement("link");
-      l.id = fid;
-      l.rel = "stylesheet";
-      l.href =
-        "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap";
-      document.head.appendChild(l);
-    }
-    document.title = "Experiencia privada";
-    const mid = "robots-noindex-vip";
-    if (!document.getElementById(mid)) {
-      const m = document.createElement("meta");
-      m.id = mid;
-      m.name = "robots";
-      m.content = "noindex,nofollow";
-      document.head.appendChild(m);
-    }
-    return () => {
-      const m = document.getElementById(mid);
-      if (m) m.remove();
-    };
-  }, []);
-}
-
-// Fecha que ve el cliente: la acordada con Diego, o "por confirmar".
-function fechaSesionTexto(sx) {
-  if (sx?.fecha_acordada) {
-    return new Date(sx.fecha_acordada).toLocaleString("es-MX", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-  return null;
-}
-
+const hoy = () => new Date().toISOString().slice(0, 10);
 const fmt = (n) => "$" + (Number(n) || 0).toLocaleString("es-MX");
 
-function puntos(cfg) {
-  return [
-    "Sesión personalizada de curación de perfumes, uno a uno, para hasta 3 personas.",
-    "Durante la sesión atomizamos una muestra de cada perfume que quieras oler, compartida entre los asistentes.",
-    `La inversión mínima es de ${fmt(cfg.inversion_min)} MXN, que se cubren por adelantado (transferencia o efectivo) y son 100% redimibles en decants.`,
-    "Ese crédito se usa en cualquier perfume del catálogo, al precio normal de la página, sin límite por perfume. Tu inversión define cuántos perfumes puedes elegir.",
-    "El crédito no usado no se reembolsa: queda como saldo en tienda para futuros decants (o, como última opción, en una botella disponible o bajo pedido).",
-    "Si durante la sesión quieres llevarte decants por un valor mayor a tu inversión, puedes hacerlo pagando la diferencia en ese momento.",
-    "Experiencia disponible únicamente en Puebla, sujeta a disponibilidad de agenda (nuestra y tuya).",
-  ];
-}
+const VEREDICTO_LABEL = { gusto: "Me gustó", tal_vez: "Tal vez", no: "No" };
+const VEREDICTO_COLOR = {
+  gusto: "bg-green-100 text-green-700",
+  tal_vez: "bg-amber-100 text-amber-700",
+  no: "bg-red-100 text-red-700",
+};
 
-const OPCIONES_DIA = [
-  "Prefiero entre semana",
-  "Prefiero fines de semana",
-  "Cualquier día está bien",
-];
-
-// Dropdown oscuro propio (los <select> nativos se ven mal en tema oscuro).
-function DropdownOscuro({ value, onChange, opciones, placeholder }) {
-  const [abierto, setAbierto] = useState(false);
-  const actual = opciones.find((o) => o.value === value);
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setAbierto((a) => !a)}
-        className="w-full flex items-center justify-between gap-2 py-2 px-3 text-sm"
-        style={{
-          color: "#f4efe6",
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(198,161,91,0.30)",
-          borderRadius: 2,
-        }}
-      >
-        <span className="truncate">{actual ? actual.label : placeholder}</span>
-        <span style={{ color: ORO }}>▾</span>
-      </button>
-      {abierto && (
-        <>
-          <div className="fixed inset-0 z-20" onClick={() => setAbierto(false)} />
-          <div
-            className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto"
-            style={{ background: "#151316", border: `1px solid ${ORO}`, borderRadius: 2 }}
-          >
-            {opciones.map((o) => (
-              <button
-                key={o.value}
-                type="button"
-                onClick={() => {
-                  onChange(o.value);
-                  setAbierto(false);
-                }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-white/10"
-                style={{ color: o.value === value ? ORO : "#e8e4dc" }}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+// Formulario para marcar realizada una sesión, prellenado con lo que
+// declaró el cliente (inversión) y su pedido final (gasto). Editable.
+function CerrarSesion({ s, onCancelar, onCerrada }) {
+  const [recarga, setRecarga] = useState(String(Number(s.inversion_declarada) || ""));
+  const [filas, setFilas] = useState(() =>
+    Array.isArray(s.pedido_final) && s.pedido_final.length > 0
+      ? s.pedido_final.map((d) => ({
+          nombre: d.nombre || "",
+          ml: d.ml != null ? String(d.ml) : "",
+          monto: d.monto != null ? String(d.monto) : "",
+        }))
+      : [{ nombre: "", ml: "", monto: "" }],
   );
-}
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState("");
 
-const OPCIONES_EXPERIENCIA = [
-  "Quiero que me asesores y me platiques de cada perfume",
-  "Prefiero olerlos con calma y decidir por mi cuenta",
-  "Una mezcla de ambas",
-];
+  const setFila = (i, campo, val) =>
+    setFilas((prev) => prev.map((f, idx) => (idx === i ? { ...f, [campo]: val } : f)));
+  const gasto = filas.reduce((acc, f) => acc + (Number(f.monto) || 0), 0);
 
-const TYC_EXPERIENCIA = [
-  "La experiencia se realiza únicamente dentro de la zona de Angelópolis, Puebla, en el lugar que indique el cliente (casa, oficina u otro).",
-  "El lugar debe estar techado y sin luz solar directa, para proteger la integridad de los perfumes.",
-  "El cliente debe contar con una mesa o superficie segura y estable donde colocar los frascos durante la sesión.",
-  "Los perfumes son propiedad de Perfumes de Diego hasta el momento de su compra. Si el cliente o sus acompañantes derraman, dañan o rompen un frasco, se cobrará el valor completo del perfume.",
-  "El costo de la sesión se cubre por adelantado para confirmar la cita y no es reembolsable.",
-  "La inversión en decants se acuerda y se cubre por adelantado; el crédito no usado no se reembolsa y queda como saldo en tienda.",
-  "Solo participan los asistentes registrados. Personas adicionales se cobran según la tarifa vigente.",
-  "La fecha y el horario se confirman por WhatsApp, sujetos a disponibilidad de ambas partes. Para reagendar, avisa con al menos 24 horas de anticipación.",
-  "Para cuidar el olfato de todos, se recomienda un espacio ventilado pero sin corrientes de aire fuertes, libre de humo, comida con olores intensos o velas encendidas.",
-  "El cliente garantiza un acceso seguro al lugar y la presencia de un adulto responsable durante toda la sesión. Niños y mascotas quedan bajo su responsabilidad, incluidos los daños que pudieran ocasionar.",
-];
-
-// Tarjeta de perfume memorizada: solo se re-dibuja la que cambia,
-// no las 142 en cada clic (antes se sentía lento y sin respuesta).
-const TarjetaPerfume = memo(function TarjetaPerfume({ p, sel, bloqueado, onToggle }) {
-  return (
-    <div
-      onClick={() => !bloqueado && onToggle(p.nombre)}
-      className={`flex items-center gap-3 p-2 transition-colors w-full ${
-        bloqueado ? "opacity-30" : "cursor-pointer"
-      }`}
-      style={{
-        border: sel ? `1px solid ${ORO}` : "1px solid rgba(255,255,255,0.08)",
-        background: sel ? "rgba(198,161,91,0.12)" : "rgba(255,255,255,0.02)",
-        borderRadius: 2,
-      }}
-    >
-      <img
-        src={imagenThumb(p.image, 120)}
-        alt={p.nombre}
-        loading="lazy"
-        decoding="async"
-        width={48}
-        height={48}
-        className="w-12 h-12 object-cover rounded-sm shrink-0"
-        style={{ background: "rgba(255,255,255,0.06)" }}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{p.nombre}</p>
-        <p className="text-xs text-gray-400 truncate">{p.casa}</p>
-        <p className="text-xs" style={{ color: ORO }}>
-          {fmt(p.precio)}{!p.stock ? "/ml" : ""}
-        </p>
-      </div>
-      {p.fraganticaLink && (
-        <a
-          href={p.fraganticaLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="text-[11px] uppercase tracking-wider px-2 py-1 rounded-sm shrink-0"
-          style={{ color: ORO, border: "1px solid rgba(198,161,91,0.4)" }}
-        >
-          + info
-        </a>
-      )}
-      {sel && <span style={{ color: ORO }}>✓</span>}
-    </div>
-  );
-});
-
-const VEREDICTOS = [
-  { value: "gusto", label: "Me gustó" },
-  { value: "tal_vez", label: "Tal vez" },
-  { value: "no", label: "No" },
-];
-
-// Detalle de una sesión: notas + veredicto por perfume (autoguardado)
-// y pedido final con cualquier decant del catálogo.
-function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minSiempre = 0, onVolver, onActualizado }) {
-  const perfumesInteres = Array.isArray(sesionData.perfumes) ? sesionData.perfumes : [];
-  const esPendiente = sesionData.estado !== "realizada";
-  const maxSel = Math.floor(
-    (Number(sesionData.inversion_declarada) || 0) / (Number(porPerfume) || 1000),
-  );
-  const [editando, setEditando] = useState(false);
-  const [seleccion, setSeleccion] = useState(perfumesInteres);
-  const [busqEdit, setBusqEdit] = useState("");
-  const [guardandoSel, setGuardandoSel] = useState(false);
-  const [msgSel, setMsgSel] = useState("");
-  const [notaAbierta, setNotaAbierta] = useState({});
-
-  const imagenDe = (perf) => parfums.find((x) => x.nombre === perf)?.image;
-
-  const sugerenciasEdit = useMemo(() => {
-    const q = busqEdit.trim().toLowerCase();
-    if (!q) return [];
-    return parfums
-      .filter(
-        (x) =>
-          !seleccion.includes(x.nombre) &&
-          (x.nombre?.toLowerCase().includes(q) || x.casa?.toLowerCase().includes(q)),
-      )
-      .slice(0, 8);
-  }, [busqEdit, parfums, seleccion]);
-
-  const empezarEdicion = () => {
-    setSeleccion(perfumesInteres);
-    setBusqEdit("");
-    setMsgSel("");
-    setEditando(true);
-  };
-
-  const guardarSeleccion = async () => {
-    if (seleccion.length < 1) {
-      setMsgSel("Elige al menos un perfume.");
-      return;
-    }
-    if (seleccion.length > maxSel) {
-      setMsgSel(`Tu inversión te permite hasta ${maxSel} perfumes.`);
-      return;
-    }
-    setGuardandoSel(true);
-    setMsgSel("");
-    try {
-      const { error } = await supabase.rpc("vip_actualizar_perfumes", {
-        p_username: username,
-        p_sesion_id: sesionData.id,
-        p_perfumes: seleccion,
-      });
-      if (error) throw error;
-      setEditando(false);
-      onActualizado?.();
-    } catch {
-      setMsgSel("No se pudo guardar. Intenta de nuevo.");
-    } finally {
-      setGuardandoSel(false);
+  const confirmar = async () => {
+    setGuardando(true);
+    setError("");
+    const decants = filas
+      .filter((f) => f.nombre.trim())
+      .map((f) => ({
+        nombre: f.nombre.trim(),
+        ml: Number(f.ml) || null,
+        monto: Number(f.monto) || 0,
+      }));
+    const { error: err } = await supabase
+      .from("sesiones_vip")
+      .update({
+        estado: "realizada",
+        recarga: Number(recarga) || 0,
+        decants,
+        gasto_decants: gasto,
+      })
+      .eq("id", s.id);
+    setGuardando(false);
+    if (err) {
+      setError("No se pudo cerrar la sesión. Revisa permisos (RLS) o conexión.");
+    } else {
+      onCerrada();
     }
   };
-  const [notas, setNotas] = useState(() => sesionData.anotaciones || {});
-  const [estadoGuardado, setEstadoGuardado] = useState("");
-  const [pedido, setPedido] = useState(() =>
-    Array.isArray(sesionData.pedido_final) ? sesionData.pedido_final : [],
-  );
-  const [busq, setBusq] = useState("");
-  const [enviandoPedido, setEnviandoPedido] = useState(false);
-  const [msgPedido, setMsgPedido] = useState("");
-  const primeraCarga = useRef(true);
-
-  // Autoguardado de notas (espera a que deje de escribir).
-  useEffect(() => {
-    if (primeraCarga.current) {
-      primeraCarga.current = false;
-      return;
-    }
-    setEstadoGuardado("Guardando…");
-    const t = setTimeout(async () => {
-      try {
-        const { error } = await supabase.rpc("vip_guardar_anotaciones", {
-          p_username: username,
-          p_sesion_id: sesionData.id,
-          p_anotaciones: notas,
-        });
-        setEstadoGuardado(error ? "No se pudo guardar" : "Guardado ✓");
-        if (!error) onActualizado?.();
-      } catch {
-        setEstadoGuardado("No se pudo guardar");
-      }
-    }, 800);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notas]);
-
-  const setNota = (perf, campo, val) =>
-    setNotas((prev) => ({ ...prev, [perf]: { ...(prev[perf] || {}), [campo]: val } }));
-
-  // Solo decants (el crédito es redimible en decants).
-  const decants = useMemo(
-    () =>
-      parfums
-        .filter((p) => p.stock === false && p.disponible !== "Agotado")
-        .sort(
-          (a, b) =>
-            (a.casa || "").localeCompare(b.casa || "", "es") ||
-            (a.nombre || "").localeCompare(b.nombre || "", "es"),
-        ),
-    [parfums],
-  );
-  const sugerencias = useMemo(() => {
-    const q = busq.trim().toLowerCase();
-    if (!q) return [];
-    return decants
-      .filter(
-        (p) => p.nombre?.toLowerCase().includes(q) || p.casa?.toLowerCase().includes(q),
-      )
-      .slice(0, 8);
-  }, [busq, decants]);
-
-  const parfumPorId = (id) => parfums.find((p) => p.id === id);
-
-  const agregarAlPedido = (p) => {
-    if (pedido.some((l) => l.id === p.id)) return;
-    const ml = getOpcionesMililitros(p, { minSiempre })[0]?.value || 1;
-    setPedido((prev) => [
-      ...prev,
-      { id: p.id, nombre: p.nombre, casa: p.casa, ml, monto: calcularPrecioDecant(p, ml) },
-    ]);
-    setBusq("");
-    setMsgPedido("");
-  };
-
-  const cambiarMl = (id, ml) =>
-    setPedido((prev) =>
-      prev.map((l) => {
-        if (l.id !== id) return l;
-        const p = parfumPorId(id);
-        const n = Number(ml);
-        return { ...l, ml: n, monto: p ? calcularPrecioDecant(p, n) : l.monto };
-      }),
-    );
-
-  const quitarDelPedido = (id) => setPedido((prev) => prev.filter((l) => l.id !== id));
-
-  const totalPedido = pedido.reduce((s, l) => s + (Number(l.monto) || 0), 0);
-  const credito = Number(sesionData.inversion_declarada) || 0;
-  const diferencia = totalPedido - credito;
-
-  const enviarPedido = async () => {
-    if (pedido.length === 0 || enviandoPedido) return;
-    setEnviandoPedido(true);
-    setMsgPedido("");
-    const pedidoLimpio = pedido.map(({ id, nombre: n, casa, ml, monto }) => ({
-      id,
-      nombre: n,
-      casa,
-      ml,
-      monto,
-    }));
-    try {
-      const { error } = await supabase.rpc("vip_enviar_pedido", {
-        p_username: username,
-        p_sesion_id: sesionData.id,
-        p_pedido: pedidoLimpio,
-      });
-      if (error) throw error;
-      onActualizado?.();
-      const lineas = [
-        "Hola Diego, este es mi pedido final de la Experiencia Privada.",
-        "",
-        `Cliente: ${nombre || "-"}`,
-        `Sesión: ${fechaSesionTexto(sesionData) || "solicitada el " + new Date(sesionData.creado_en).toLocaleDateString("es-MX")}`,
-        "",
-        ...pedidoLimpio.map((l) => `• ${l.nombre} (${l.casa}) · ${l.ml} ml — ${fmt(l.monto)}`),
-        "",
-        `Total del pedido: ${fmt(totalPedido)}`,
-        `Inversión acordada: ${fmt(credito)}`,
-        diferencia > 0
-          ? `Diferencia a cubrir: ${fmt(diferencia)}`
-          : `Crédito restante (saldo en tienda): ${fmt(-diferencia)}`,
-      ];
-      window.open(
-        `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`,
-        "_blank",
-        "noopener,noreferrer",
-      );
-      setMsgPedido("Pedido enviado ✓");
-    } catch {
-      setMsgPedido("No se pudo enviar el pedido. Intenta de nuevo.");
-    } finally {
-      setEnviandoPedido(false);
-    }
-  };
-
-  const panel = {
-    border: "1px solid rgba(198,161,91,0.18)",
-    background: "rgba(255,255,255,0.02)",
-  };
-  const inputStyle = {
-    color: "#f4efe6",
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(198,161,91,0.30)",
-    borderRadius: 2,
-  };
-  const divisor = (
-    <div
-      className="my-10 h-px"
-      style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }}
-    />
-  );
 
   return (
-    <div>
-      <button
-        onClick={onVolver}
-        className="text-xs uppercase tracking-widest text-gray-400 hover:text-gray-200 mb-6"
-      >
-        ← Volver a mis sesiones
-      </button>
-
-      <h2 className="text-3xl sm:text-4xl" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-        {fechaSesionTexto(sesionData) ? (
-          <span className="capitalize">{fechaSesionTexto(sesionData)}</span>
-        ) : (
-          "Fecha por confirmar"
-        )}
-      </h2>
-      <p className="text-sm text-gray-400 mt-2">
-        {sesionData.num_personas} {sesionData.num_personas === 1 ? "persona" : "personas"} ·
-        Inversión acordada: <span style={{ color: ORO }}>{fmt(credito)}</span>
-        {sesionData.lugar ? ` · ${sesionData.lugar}` : ""}
+    <div className="mt-4 border-t pt-4">
+      <p className="text-sm font-semibold text-gray-900 mb-1">Cerrar sesión</p>
+      <p className="text-xs text-gray-500 mb-3">
+        Prellenado con la inversión declarada y el pedido final del cliente. Ajusta lo
+        que haga falta antes de confirmar; esto mueve el saldo.
       </p>
-      {Array.isArray(sesionData.asistentes) && sesionData.asistentes.length > 0 && (
-        <p className="text-sm text-gray-500 mt-1">
-          Asistentes: {sesionData.asistentes.join(", ")}
-        </p>
-      )}
-
-      {divisor}
-
-      {/* Notas por perfume */}
-      <section className="rounded-md p-5 sm:p-6" style={panel}>
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-2xl" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-            Tus perfumes y notas
-          </h3>
-          {estadoGuardado && <span className="text-xs text-gray-500">{estadoGuardado}</span>}
-        </div>
-        <p className="text-sm text-gray-400 mb-5">
-          Anota lo que te pareció cada perfume durante la sesión. Se guarda solo.
-        </p>
-
-        {/* Editar perfumes (solo pendiente) */}
-        {esPendiente && !editando && (
-          <button
-            onClick={empezarEdicion}
-            className="mb-4 text-xs uppercase tracking-widest px-3 py-2 rounded-sm"
-            style={{ color: ORO, border: "1px solid rgba(198,161,91,0.5)" }}
-          >
-            Editar perfumes ({perfumesInteres.length} / {maxSel})
-          </button>
-        )}
-
-        {editando && (
-          <div
-            className="mb-5 p-4 rounded-sm"
-            style={{ border: `1px solid ${ORO}`, background: "rgba(198,161,91,0.06)" }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm" style={{ color: "#f4efe6" }}>Editar perfumes de la sesión</p>
-              <span className="text-sm" style={{ color: ORO }}>
-                {seleccion.length} / {maxSel}
-              </span>
-            </div>
+      <label className="block text-xs text-gray-500 mb-1">Inversión / recarga ($)</label>
+      <input
+        type="number"
+        min="0"
+        value={recarga}
+        onChange={(e) => setRecarga(e.target.value)}
+        className="w-40 border border-gray-300 rounded-md px-3 py-2 text-sm mb-3"
+      />
+      <label className="block text-xs text-gray-500 mb-1">Decants entregados</label>
+      <div className="space-y-2">
+        {filas.map((f, i) => (
+          <div key={i} className="flex gap-2">
             <input
               type="text"
-              value={busqEdit}
-              onChange={(e) => setBusqEdit(e.target.value)}
-              placeholder="Busca un perfume o casa para agregar…"
-              className="w-full py-2 px-3 text-sm outline-none"
-              style={inputStyle}
+              value={f.nombre}
+              onChange={(e) => setFila(i, "nombre", e.target.value)}
+              placeholder="Perfume"
+              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
             />
-            {busqEdit.trim() && (
-              <div className="mt-1" style={{ border: "1px solid rgba(198,161,91,0.2)", borderRadius: 2 }}>
-                {sugerenciasEdit.length === 0 ? (
-                  <p className="px-3 py-2 text-sm text-gray-500">Sin resultados.</p>
-                ) : (
-                  sugerenciasEdit.map((x) => {
-                    const lleno = seleccion.length >= maxSel;
-                    return (
-                      <button
-                        key={x.id}
-                        disabled={lleno}
-                        onClick={() => {
-                          setSeleccion((prev) => [...prev, x.nombre]);
-                          setBusqEdit("");
-                        }}
-                        className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm hover:bg-white/5 disabled:opacity-30"
-                        style={{ color: "#e8e4dc" }}
-                      >
-                        <img
-                          src={imagenThumb(x.image, 80)}
-                          alt=""
-                          loading="lazy"
-                          className="w-8 h-8 object-cover rounded-sm shrink-0"
-                          style={{ background: "rgba(255,255,255,0.06)" }}
-                        />
-                        <span className="truncate">
-                          {x.nombre} <span className="text-gray-500">· {x.casa}</span>
-                        </span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            )}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {seleccion.map((perf) => (
-                <span
-                  key={perf}
-                  className="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-sm"
-                  style={{ background: "rgba(198,161,91,0.15)", color: "#f4efe6", border: `1px solid ${ORO}` }}
-                >
-                  {perf}
-                  <button
-                    onClick={() => setSeleccion((prev) => prev.filter((x) => x !== perf))}
-                    style={{ color: ORO }}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={guardarSeleccion}
-                disabled={guardandoSel}
-                className="px-5 py-2 text-sm uppercase tracking-widest disabled:opacity-40"
-                style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
-              >
-                {guardandoSel ? "Guardando…" : "Guardar cambios"}
-              </button>
-              <button
-                onClick={() => setEditando(false)}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200"
-              >
-                Cancelar
-              </button>
-            </div>
-            {msgSel && <p className="text-sm mt-3" style={{ color: "#d98c8c" }}>{msgSel}</p>}
-          </div>
-        )}
-
-        {perfumesInteres.length === 0 ? (
-          <p className="text-sm text-gray-500">Esta sesión no tiene perfumes registrados.</p>
-        ) : (
-          <div className="space-y-3">
-            {perfumesInteres.map((perf) => {
-              const n = notas[perf] || {};
-              const img = imagenDe(perf);
-              const abierta = notaAbierta[perf] ?? Boolean(n.nota);
-              return (
-                <div
-                  key={perf}
-                  className="p-3 rounded-sm"
-                  style={{ border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    {img ? (
-                      <img
-                        src={imagenThumb(img, 96)}
-                        alt={perf}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-10 h-10 object-cover rounded-sm shrink-0"
-                        style={{ background: "rgba(255,255,255,0.06)" }}
-                      />
-                    ) : (
-                      <div
-                        className="w-10 h-10 rounded-sm shrink-0"
-                        style={{ background: "rgba(255,255,255,0.06)" }}
-                      />
-                    )}
-                    <p className="text-sm" style={{ color: "#f4efe6" }}>{perf}</p>
-                  </div>
-                  <div className="flex gap-2 mb-2">
-                    {VEREDICTOS.map((v) => (
-                      <button
-                        key={v.value}
-                        onClick={() =>
-                          setNota(perf, "veredicto", n.veredicto === v.value ? "" : v.value)
-                        }
-                        className="flex-1 py-1.5 text-xs"
-                        style={
-                          n.veredicto === v.value
-                            ? { background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }
-                            : { ...inputStyle, color: "#e8e4dc" }
-                        }
-                      >
-                        {v.label}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => setNotaAbierta((prev) => ({ ...prev, [perf]: !abierta }))}
-                    className="text-xs uppercase tracking-widest"
-                    style={{ color: ORO }}
-                  >
-                    {abierta ? "▴ Ocultar nota" : n.nota ? "▾ Ver nota" : "+ Agregar nota"}
-                  </button>
-                  {abierta && (
-                    <textarea
-                      rows={2}
-                      value={n.nota || ""}
-                      onChange={(e) => setNota(perf, "nota", e.target.value)}
-                      placeholder="¿Qué te pareció?"
-                      className="w-full mt-2 py-2 px-3 text-sm outline-none resize-none"
-                      style={inputStyle}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {divisor}
-
-      {/* Pedido final */}
-      <section className="rounded-md p-5 sm:p-6" style={panel}>
-        <h3 className="text-2xl mb-1" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-          Tu pedido final
-        </h3>
-        <p className="text-sm text-gray-400 mb-5">
-          Elige los decants que quieres llevarte, de cualquier perfume del catálogo, al
-          precio normal de la página.
-          {sesionData.pedido_enviado ? " Ya enviaste un pedido; si lo cambias, vuelve a enviarlo." : ""}
-        </p>
-
-        <input
-          type="text"
-          value={busq}
-          onChange={(e) => setBusq(e.target.value)}
-          placeholder="Busca un perfume o casa para agregar…"
-          className="w-full py-2.5 px-3 text-sm outline-none"
-          style={inputStyle}
-        />
-        {busq.trim() && (
-          <div className="mt-1" style={{ border: "1px solid rgba(198,161,91,0.2)", borderRadius: 2 }}>
-            {sugerencias.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-gray-500">Sin resultados.</p>
-            ) : (
-              sugerencias.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => agregarAlPedido(p)}
-                  className="w-full flex items-center justify-between gap-2 text-left px-3 py-2 text-sm hover:bg-white/5"
-                  style={{ color: "#e8e4dc" }}
-                >
-                  <span className="truncate">
-                    {p.nombre} <span className="text-gray-500">· {p.casa}</span>
-                  </span>
-                  <span className="shrink-0" style={{ color: ORO }}>{fmt(p.precio)}/ml</span>
-                </button>
-              ))
-            )}
-          </div>
-        )}
-
-        {pedido.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {pedido.map((l) => {
-              const p = parfumPorId(l.id);
-              const opciones = p ? getOpcionesMililitros(p, { minSiempre }) : [{ value: l.ml, label: `${l.ml} ml` }];
-              return (
-                <div
-                  key={l.id}
-                  className="flex items-center gap-3 p-2 rounded-sm"
-                  style={{ border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{l.nombre}</p>
-                    <p className="text-xs text-gray-500 truncate">{l.casa}</p>
-                  </div>
-                  <select
-                    value={l.ml}
-                    onChange={(e) => cambiarMl(l.id, e.target.value)}
-                    className="py-1.5 px-2 text-sm"
-                    style={{ ...inputStyle, background: "#151316" }}
-                  >
-                    {opciones.map((o) => (
-                      <option key={o.value} value={o.value} style={{ background: "#151316", color: "#f4efe6" }}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-sm w-20 text-right" style={{ color: ORO }}>{fmt(l.monto)}</span>
-                  <button
-                    onClick={() => quitarDelPedido(l.id)}
-                    className="text-gray-500 hover:text-red-400 px-1"
-                    title="Quitar"
-                  >
-                    ×
-                  </button>
-                </div>
-              );
-            })}
-
-            <div
-              className="mt-4 rounded-sm px-5 py-4"
-              style={{ background: "rgba(198,161,91,0.10)", border: `1px solid ${ORO}` }}
+            <input
+              type="number"
+              value={f.ml}
+              onChange={(e) => setFila(i, "ml", e.target.value)}
+              placeholder="ml"
+              className="w-16 border border-gray-300 rounded-md px-2 py-2 text-sm"
+            />
+            <input
+              type="number"
+              value={f.monto}
+              onChange={(e) => setFila(i, "monto", e.target.value)}
+              placeholder="$"
+              className="w-24 border border-gray-300 rounded-md px-2 py-2 text-sm"
+            />
+            <button
+              onClick={() => setFilas((prev) => prev.filter((_, idx) => idx !== i))}
+              className="text-gray-400 hover:text-red-600 px-1"
             >
-              <div className="flex justify-between text-sm text-gray-300">
-                <span>Total del pedido</span>
-                <span>{fmt(totalPedido)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-300 mt-1">
-                <span>Inversión acordada</span>
-                <span>{fmt(credito)}</span>
-              </div>
-              <div
-                className="flex justify-between items-baseline mt-3 pt-3"
-                style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
-              >
-                <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
-                  {diferencia > 0 ? "Diferencia a cubrir" : "Crédito restante"}
-                </span>
-                <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
-                  {fmt(Math.abs(diferencia))}
-                </span>
-              </div>
-              {diferencia < 0 && (
-                <p className="text-xs text-gray-400 mt-2">
-                  El crédito restante queda como saldo en tienda para futuros decants.
-                </p>
-              )}
-            </div>
+              <Trash2 size={16} />
+            </button>
           </div>
-        )}
-
+        ))}
+      </div>
+      <button
+        onClick={() => setFilas((prev) => [...prev, { nombre: "", ml: "", monto: "" }])}
+        className="mt-2 text-sm text-[#A47E3B] flex items-center gap-1 hover:underline"
+      >
+        <Plus size={14} /> Agregar decant
+      </button>
+      <p className="text-sm text-gray-600 mt-3">
+        Recarga <strong>{fmt(recarga)}</strong> − Gasto <strong>{fmt(gasto)}</strong> ={" "}
+        <strong>{fmt((Number(recarga) || 0) - gasto)}</strong> al saldo
+      </p>
+      <div className="flex gap-2 mt-3">
         <button
-          onClick={enviarPedido}
-          disabled={pedido.length === 0 || enviandoPedido}
-          className="w-full mt-6 py-3.5 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
-          style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
+          onClick={confirmar}
+          disabled={guardando}
+          className="bg-[#A47E3B] text-white px-5 py-2 rounded-md text-sm font-semibold hover:bg-[#8b6d32] disabled:bg-gray-300"
         >
-          {enviandoPedido ? "Enviando…" : "Enviar pedido final"}
+          {guardando ? "Guardando…" : "Confirmar y marcar realizada"}
         </button>
-        {msgPedido && <p className="text-sm text-center mt-3" style={{ color: ORO }}>{msgPedido}</p>}
-      </section>
+        <button onClick={onCancelar} className="text-sm text-gray-500 px-3">
+          Cancelar
+        </button>
+      </div>
+      {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
     </div>
   );
 }
 
-export default function ExperienciaPrivada() {
-  useVipHead();
-  const [sesion, setSesion] = useState(null);
-  const [username, setUsername] = useState("");
-  const [verificando, setVerificando] = useState(false);
-  const [error, setError] = useState("");
-  const [cfg, setCfg] = useState(CFG_DEFAULT);
-  const { minDecantSiempre = 0 } = useParfums() || {};
+// Convierte ISO a valor de <input type="datetime-local"> en hora local.
+function isoALocal(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
-  const [parfums, setParfums] = useState([]);
-  const [numPersonas, setNumPersonas] = useState(1);
-  const [asistentes, setAsistentes] = useState([""]);
-  const [perfumesSel, setPerfumesSel] = useState([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [casaFiltro, setCasaFiltro] = useState("");
-  const [orden, setOrden] = useState("casa");
-  const [dia, setDia] = useState("");
-  const [preferencia, setPreferencia] = useState("");
-  const [lugar, setLugar] = useState("");
-  const [aceptaTyc, setAceptaTyc] = useState(false);
-  const [monto, setMonto] = useState("");
-  const [nombre, setNombre] = useState("");
+function FechaAcordada({ s, onGuardada }) {
+  const [valor, setValor] = useState(isoALocal(s.fecha_acordada));
+  const [estado, setEstado] = useState("");
+
+  const guardar = async () => {
+    setEstado("Guardando…");
+    const { error } = await supabase
+      .from("sesiones_vip")
+      .update({ fecha_acordada: valor ? new Date(valor).toISOString() : null })
+      .eq("id", s.id);
+    if (error) {
+      setEstado("No se pudo guardar");
+    } else {
+      setEstado("Guardado ✓");
+      onGuardada();
+    }
+  };
+
+  return (
+    <div className="mt-3 flex items-center gap-2 flex-wrap">
+      <label className="text-xs text-gray-500">Fecha y hora acordada</label>
+      <input
+        type="datetime-local"
+        value={valor}
+        onChange={(e) => setValor(e.target.value)}
+        className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+      />
+      <button
+        onClick={guardar}
+        className="text-xs font-semibold text-white bg-gray-900 px-3 py-1.5 rounded-md hover:bg-gray-700"
+      >
+        Guardar fecha
+      </button>
+      {estado && <span className="text-xs text-gray-500">{estado}</span>}
+    </div>
+  );
+}
+
+export default function AdminVipCliente() {
+  const { id } = useParams();
+  const [cliente, setCliente] = useState(null);
   const [sesiones, setSesiones] = useState([]);
-  const [enviando, setEnviando] = useState(false);
-  const [sesionAbiertaId, setSesionAbiertaId] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [confirmarBorrar, setConfirmarBorrar] = useState(null);
+  const [cerrandoId, setCerrandoId] = useState(null);
 
-  const cargarSesiones = async (u) => {
-    const user = (u || sesion?.username || "").trim();
-    if (!user) return;
-    try {
-      const { data } = await supabase.rpc("vip_sesiones", { p_username: user });
-      setSesiones(Array.isArray(data) ? data : []);
-    } catch {
-      setSesiones([]);
-    }
+  // Formulario de nueva sesión
+  const [fecha, setFecha] = useState(hoy());
+  const [numPersonas, setNumPersonas] = useState(1);
+  const [recarga, setRecarga] = useState("");
+  const [decants, setDecants] = useState([{ nombre: "", ml: "", monto: "" }]);
+  const [perfumesTexto, setPerfumesTexto] = useState("");
+  const [notas, setNotas] = useState("");
+
+  const cargar = async () => {
+    setCargando(true);
+    const [{ data: c }, { data: s }] = await Promise.all([
+      supabase.from("clientes_vip").select("*").eq("id", id).single(),
+      supabase
+        .from("sesiones_vip")
+        .select("*")
+        .eq("cliente_id", id)
+        .order("fecha", { ascending: false })
+        .order("creado_en", { ascending: false }),
+    ]);
+    setCliente(c || null);
+    setSesiones(s || []);
+    setCargando(false);
   };
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_VIP);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d?.username) {
-          setSesion(d);
-          setNombre(d.nombre || "");
-          setAsistentes([d.nombre || ""]);
-          cargarSesiones(d.username);
-        }
-      }
-    } catch {
-      // ignora datos corruptos
-    }
-  }, []);
+    cargar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
-  // Recupera el borrador del formulario (sobrevive recargas).
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_BORRADOR);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.numPersonas) setNumPersonas(d.numPersonas);
-        if (Array.isArray(d.asistentes)) setAsistentes(d.asistentes);
-        if (d.monto != null) setMonto(String(d.monto));
-        if (Array.isArray(d.perfumesSel)) setPerfumesSel(d.perfumesSel);
-        if (d.dia) setDia(d.dia);
-        if (d.preferencia) setPreferencia(d.preferencia);
-        if (d.lugar) setLugar(d.lugar);
-        if (d.aceptaTyc) setAceptaTyc(d.aceptaTyc);
-        if (d.nombre) setNombre(d.nombre);
-      }
-    } catch {
-      // ignora borrador corrupto
-    }
-  }, []);
-
-  // Guarda el borrador en cada cambio.
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        LS_BORRADOR,
-        JSON.stringify({
-          numPersonas,
-          asistentes,
-          monto,
-          perfumesSel,
-          dia,
-          preferencia,
-          lugar,
-          aceptaTyc,
-          nombre,
-        }),
-      );
-    } catch {
-      // sin persistencia si falla
-    }
-  }, [numPersonas, asistentes, monto, perfumesSel, dia, preferencia, lugar, aceptaTyc, nombre]);
-
-  useEffect(() => {
-    supabase
-      .from("config_vip")
-      .select("inversion_min, costo_sesion, costo_extra, inversion_por_perfume")
-      .eq("id", 1)
-      .single()
-      .then(({ data }) => {
-        if (data)
-          setCfg({
-            inversion_min: Number(data.inversion_min) || CFG_DEFAULT.inversion_min,
-            costo_sesion: Number(data.costo_sesion) || CFG_DEFAULT.costo_sesion,
-            costo_extra: Number(data.costo_extra) || CFG_DEFAULT.costo_extra,
-            inversion_por_perfume:
-              Number(data.inversion_por_perfume) || CFG_DEFAULT.inversion_por_perfume,
-          });
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!sesion) return;
-    getParfums()
-      .then((p) => setParfums(p || []))
-      .catch(() => setParfums([]));
-  }, [sesion]);
-
-  useEffect(() => {
-    setAsistentes((prev) => {
-      const n = Math.max(1, Number(numPersonas) || 1);
-      const copia = [...prev];
-      while (copia.length < n) copia.push("");
-      copia.length = n;
-      return copia;
-    });
-  }, [numPersonas]);
-
-  const entrar = async () => {
-    const u = username.trim();
-    if (!u) return;
-    setVerificando(true);
-    setError("");
-    try {
-      const { data, error: rpcError } = await supabase.rpc("validar_vip", {
-        p_username: u,
-      });
-      if (rpcError) throw rpcError;
-      const cliente = Array.isArray(data) ? data[0] : data;
-      if (cliente && cliente.nombre) {
-        const nueva = {
-          username: u,
-          nombre: cliente.nombre,
-          saldo: Number(cliente.saldo) || 0,
-        };
-        localStorage.setItem(LS_VIP, JSON.stringify(nueva));
-        setSesion(nueva);
-        setNombre(nueva.nombre);
-        setAsistentes([nueva.nombre]);
-        cargarSesiones(nueva.username);
-      } else {
-        setError("Acceso no válido. Verifica tu clave de acceso.");
-      }
-    } catch {
-      setError("No pudimos validar tu acceso. Intenta de nuevo en un momento.");
-    } finally {
-      setVerificando(false);
-    }
-  };
-
-  const salir = () => {
-    localStorage.removeItem(LS_VIP);
-    localStorage.removeItem(LS_BORRADOR);
-    setSesion(null);
-    setSesiones([]);
-    setSesionAbiertaId(null);
-    setUsername("");
-  };
-
-  const costoSesion = useMemo(() => {
-    const n = Math.max(1, Number(numPersonas) || 1);
-    return Number(cfg.costo_sesion) + Math.max(0, n - 3) * Number(cfg.costo_extra);
-  }, [numPersonas, cfg]);
-
-  const montoNum = Number(monto) || 0;
-  const montoValido = montoNum >= Number(cfg.inversion_min);
-  const maxPerfumes = Math.floor(
-    montoNum / (Number(cfg.inversion_por_perfume) || 1000),
-  );
-
-  const casas = useMemo(
-    () =>
-      [...new Set(parfums.map((p) => p.casa).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b, "es"),
-      ),
-    [parfums],
-  );
-
-  const listaFiltrada = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    let lista = parfums.filter((p) => {
-      if (casaFiltro && p.casa !== casaFiltro) return false;
-      if (q && !(p.nombre?.toLowerCase().includes(q) || p.casa?.toLowerCase().includes(q)))
-        return false;
-      return true;
-    });
-    if (orden === "precio_asc")
-      lista = [...lista].sort((a, b) => (a.precio || 0) - (b.precio || 0));
-    else if (orden === "precio_desc")
-      lista = [...lista].sort((a, b) => (b.precio || 0) - (a.precio || 0));
-    else
-      lista = [...lista].sort(
-        (a, b) =>
-          (a.casa || "").localeCompare(b.casa || "", "es") ||
-          (a.nombre || "").localeCompare(b.nombre || "", "es"),
-      );
-    return lista;
-  }, [parfums, busqueda, casaFiltro, orden]);
-
-  // Agrupado A-Z por casa (solo cuando el orden es por casa).
-  const grupos = useMemo(() => {
-    if (orden !== "casa") return null;
-    const map = new Map();
-    for (const p of listaFiltrada) {
-      const c = p.casa || "—";
-      if (!map.has(c)) map.set(c, []);
-      map.get(c).push(p);
-    }
-    return [...map.entries()];
-  }, [listaFiltrada, orden]);
-
-  const seleccionado = (nombrePerf) => perfumesSel.includes(nombrePerf);
-  const togglePerfume = useCallback(
-    (nombrePerf) => {
-      setPerfumesSel((prev) => {
-        if (prev.includes(nombrePerf)) return prev.filter((x) => x !== nombrePerf);
-        if (prev.length >= maxPerfumes) return prev; // no pasar del límite
-        return [...prev, nombrePerf];
-      });
-    },
-    [maxPerfumes],
-  );
-
-  const setAsistente = (i, val) =>
-    setAsistentes((prev) => prev.map((a, idx) => (idx === i ? val : a)));
-
-  const puedeEnviar =
-    montoValido &&
-    perfumesSel.length >= 1 &&
-    nombre.trim() &&
-    lugar.trim() &&
-    aceptaTyc;
-
-  const enviar = async () => {
-    if (!puedeEnviar || enviando) return;
-    setEnviando(true);
-    const nombres = asistentes.map((a) => a.trim()).filter(Boolean);
-
-    // Crea la sesión pendiente (para que el cliente la vea en su espacio).
-    try {
-      await supabase.rpc("vip_agendar", {
-        p_username: sesion.username,
-        p_num_personas: Number(numPersonas) || 1,
-        p_perfumes: perfumesSel,
-        p_inversion: montoNum,
-        p_preferencia: preferencia || null,
-        p_lugar: lugar.trim() || null,
-        p_dia: dia || null,
-        p_asistentes: nombres,
-      });
-      await cargarSesiones(sesion.username);
-    } catch {
-      // aunque falle el guardado, seguimos con el aviso por WhatsApp
-    }
-    setEnviando(false);
-
-    const lineas = [
-      "Hola Diego, quiero agendar una Experiencia Privada.",
-      "",
-      `Cliente: ${nombre || "-"}`,
-      `Personas: ${numPersonas}`,
-      `Asistentes: ${nombres.length ? nombres.join(", ") : "por definir"}`,
-      `Costo de sesión (no redimible): ${fmt(costoSesion)}`,
-      `Inversión en decants (redimible): ${fmt(montoNum)}`,
-      `TOTAL a cubrir: ${fmt(costoSesion + montoNum)}`,
-      `Perfumes que puede elegir: hasta ${maxPerfumes}`,
-      `Perfumes de interés (${perfumesSel.length}): ${perfumesSel.join(", ")}`,
-      `Preferencia de experiencia: ${preferencia || "por definir"}`,
-      `Lugar (Angelópolis): ${lugar.trim() || "por definir"}`,
-      `Preferencia de días: ${dia || "por definir"}`,
-      "Acepta los términos de la experiencia: Sí",
-    ];
-    window.open(
-      `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`,
-      "_blank",
-      "noopener,noreferrer",
+  const setDecant = (i, campo, val) =>
+    setDecants((prev) =>
+      prev.map((d, idx) => (idx === i ? { ...d, [campo]: val } : d)),
     );
+  const agregarFila = () =>
+    setDecants((prev) => [...prev, { nombre: "", ml: "", monto: "" }]);
+  const quitarFila = (i) =>
+    setDecants((prev) => prev.filter((_, idx) => idx !== i));
+
+  const gastoDecants = decants.reduce(
+    (s, d) => s + (Number(d.monto) || 0),
+    0,
+  );
+
+  const guardarSesion = async () => {
+    setGuardando(true);
+    setMsg("");
+    const perfumesArr = perfumesTexto
+      .split(/[,\n]/)
+      .map((x) => x.trim())
+      .filter(Boolean);
+    const decantsClean = decants
+      .filter((d) => d.nombre.trim())
+      .map((d) => ({
+        nombre: d.nombre.trim(),
+        ml: Number(d.ml) || null,
+        monto: Number(d.monto) || 0,
+      }));
+    const { error } = await supabase.from("sesiones_vip").insert({
+      cliente_id: id,
+      fecha,
+      num_personas: Number(numPersonas) || 1,
+      perfumes: perfumesArr,
+      decants: decantsClean,
+      gasto_decants: gastoDecants,
+      recarga: Number(recarga) || 0,
+      notas: notas.trim() || null,
+      estado: "realizada",
+    });
+    setGuardando(false);
+    if (error) {
+      setMsg("No se pudo guardar la sesión. Revisa permisos (RLS) o conexión.");
+    } else {
+      setMsg("Sesión registrada ✓");
+      setFecha(hoy());
+      setNumPersonas(1);
+      setRecarga("");
+      setDecants([{ nombre: "", ml: "", monto: "" }]);
+      setPerfumesTexto("");
+      setNotas("");
+      cargar();
+    }
   };
 
-  const fondo = {
-    minHeight: "100vh",
-    background:
-      "radial-gradient(1200px 600px at 50% -10%, rgba(198,161,91,0.10), transparent 60%), #0b0b0d",
-    color: "#e8e4dc",
-  };
-  const inputStyle = {
-    color: "#f4efe6",
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(198,161,91,0.30)",
-    borderRadius: 2,
+  const borrarSesion = async (sid) => {
+    await supabase.from("sesiones_vip").delete().eq("id", sid);
+    setConfirmarBorrar(null);
+    cargar();
   };
 
-  if (!sesion) {
+  if (cargando) {
     return (
-      <div style={fondo} className="flex items-center justify-center px-6">
-        <div className="w-full max-w-md text-center py-20">
-          <div className="mx-auto mb-8 h-px w-16" style={{ background: ORO, opacity: 0.6 }} />
-          <p className="uppercase text-xs tracking-[0.35em] mb-6" style={{ color: ORO }}>
-            Experiencia privada
-          </p>
-          <h1 className="text-4xl sm:text-5xl leading-tight" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-            Acceso exclusivo
-          </h1>
-          <p className="mt-4 mb-10 text-gray-400" style={{ fontFamily: SERIF, fontSize: "1.15rem" }}>
-            Ingresa tu clave de acceso personal para continuar.
-          </p>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && entrar()}
-            placeholder="Tu clave de acceso"
-            className="w-full text-center text-lg tracking-wider py-3 px-4 outline-none"
-            style={inputStyle}
-          />
-          <button
-            onClick={entrar}
-            disabled={verificando || !username.trim()}
-            className="w-full mt-4 py-3 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
-            style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
-          >
-            {verificando ? "Verificando…" : "Entrar"}
-          </button>
-          {error && <p className="text-sm mt-5" style={{ color: "#d98c8c" }}>{error}</p>}
-          <div className="mx-auto mt-12 h-px w-16" style={{ background: ORO, opacity: 0.3 }} />
-        </div>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <p className="text-gray-500 text-sm">Cargando…</p>
       </div>
     );
   }
 
-  const tarjetaPerfume = (p) => (
-    <TarjetaPerfume
-      key={p.id}
-      p={p}
-      sel={perfumesSel.includes(p.nombre)}
-      bloqueado={!perfumesSel.includes(p.nombre) && perfumesSel.length >= maxPerfumes}
-      onToggle={togglePerfume}
-    />
-  );
-
-  const sesionAbierta = sesiones.find((x) => x.id === sesionAbiertaId);
-  if (sesionAbierta) {
+  if (!cliente) {
     return (
-      <div style={fondo}>
-        <div className="max-w-2xl mx-auto w-full px-6 py-16">
-          <p className="uppercase text-xs tracking-[0.35em] mb-5" style={{ color: ORO }}>
-            Experiencia privada
-          </p>
-          <DetalleSesion
-            key={sesionAbierta.id}
-            sesionData={sesionAbierta}
-            username={sesion.username}
-            nombre={nombre}
-            parfums={parfums}
-            porPerfume={cfg.inversion_por_perfume}
-            minSiempre={minDecantSiempre}
-            onVolver={() => setSesionAbiertaId(null)}
-            onActualizado={() => cargarSesiones(sesion.username)}
-          />
-        </div>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <p className="text-gray-600">Cliente no encontrado.</p>
+        <Link to="/admin/vip" className="text-[#A47E3B] underline">
+          Volver
+        </Link>
       </div>
     );
   }
 
   return (
-    <div style={fondo}>
-      <div className="max-w-2xl mx-auto w-full px-6 py-16">
-        <p className="uppercase text-xs tracking-[0.35em] mb-5" style={{ color: ORO }}>
-          Experiencia privada
-        </p>
-        <h1 className="text-4xl sm:text-5xl leading-tight" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-          Bienvenido, {sesion.nombre}
-        </h1>
-
-        {sesion.saldo > 0 && (
-          <div className="mt-6 inline-block border rounded-sm px-5 py-3" style={{ borderColor: "rgba(198,161,91,0.35)" }}>
-            <span className="text-[11px] uppercase tracking-widest text-gray-400">Saldo en tienda</span>
-            <div className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>{fmt(sesion.saldo)}</div>
-          </div>
-        )}
-
-        {/* Mis sesiones */}
-        {sesiones.length > 0 && (
-          <>
-            <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
-            <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
-              <h2 className="text-2xl sm:text-3xl mt-0 mb-4" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-                Mis sesiones
-              </h2>
-              <div className="space-y-2">
-                {sesiones.map((s) => {
-                  const realizada = s.estado === "realizada";
-                  const nPerfumes = Array.isArray(s.perfumes) ? s.perfumes.length : 0;
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => {
-                        setSesionAbiertaId(s.id);
-                        window.scrollTo(0, 0);
-                      }}
-                      className="w-full text-left flex items-center justify-between gap-3 p-3 rounded-sm hover:bg-white/5"
-                      style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full"
-                            style={
-                              realizada
-                                ? { background: "rgba(255,255,255,0.08)", color: "#aaa" }
-                                : { background: "rgba(198,161,91,0.15)", color: ORO }
-                            }
-                          >
-                            {realizada ? "Realizada" : "Próxima"}
-                          </span>
-                          <span className="text-sm text-gray-300 capitalize">
-                            {fechaSesionTexto(s) ||
-                              `Por confirmar · solicitada el ${new Date(s.creado_en).toLocaleDateString("es-MX")}`}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {s.num_personas} {s.num_personas === 1 ? "persona" : "personas"} · {nPerfumes} perfumes de interés
-                          {s.pedido_enviado ? " · pedido enviado" : ""}
-                        </p>
-                      </div>
-                      <span className="text-xs uppercase tracking-widest shrink-0" style={{ color: ORO }}>
-                        Abrir →
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-gray-500 mt-4">
-                Abre una sesión para anotar cada perfume y hacer tu pedido final.
-              </p>
-            </section>
-          </>
-        )}
-
-        <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
-
-        <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
-        <h2 className="text-2xl sm:text-3xl mt-0 mb-2" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-          Sesión de curación de perfumes
-        </h2>
-        <p className="text-gray-400 mb-6" style={{ fontFamily: SERIF, fontSize: "1.1rem" }}>
-          Una experiencia guiada, uno a uno, para descubrir tu próximo aroma sin prisa.
-        </p>
-
-        <div className="border-y py-2" style={{ borderColor: "rgba(198,161,91,0.20)" }}>
-          {puntos(cfg).map((p, i) => (
-            <div key={i} className="flex gap-3 py-3 border-b last:border-b-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-              <span style={{ color: ORO }}>—</span>
-              <span className="text-gray-300 text-[15px] leading-relaxed">{p}</span>
-            </div>
-          ))}
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-gray-900 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <Link to="/admin/vip" className="flex items-center gap-2 hover:text-gray-300">
+            <ArrowLeft size={20} /> Clientes VIP
+          </Link>
+          <h1 className="text-lg font-bold">Perfil del cliente</h1>
         </div>
+      </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-          <div className="rounded-sm px-5 py-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(198,161,91,0.25)" }}>
-            <p className="text-[11px] uppercase tracking-widest text-gray-400">Costo de la sesión</p>
-            <p className="text-xl mt-1" style={{ fontFamily: SERIF, color: "#f4efe6" }}>{fmt(cfg.costo_sesion)} MXN</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Fijos, hasta 3 asistentes (+{fmt(cfg.costo_extra)} por persona extra). Cubre la experiencia y <strong>no</strong> es redimible en productos.
-            </p>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+        {/* Encabezado del cliente */}
+        <div className="bg-white rounded-lg shadow p-5 mb-6 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">{cliente.nombre}</h2>
+            <p className="text-sm text-[#A47E3B]">{cliente.username}</p>
+            {cliente.telefono && (
+              <p className="text-sm text-gray-500">{cliente.telefono}</p>
+            )}
           </div>
-          <div className="rounded-sm px-5 py-4" style={{ background: "rgba(198,161,91,0.08)", border: "1px solid rgba(198,161,91,0.35)" }}>
-            <p className="text-[11px] uppercase tracking-widest" style={{ color: ORO }}>Inversión en decants</p>
-            <p className="text-xl mt-1" style={{ fontFamily: SERIF, color: ORO }}>Desde {fmt(cfg.inversion_min)} MXN</p>
-            <p className="text-sm text-gray-300 mt-1">
-              100% redimible en decants. Por cada {fmt(cfg.inversion_por_perfume)} desbloqueas 1 perfume para elegir.
+          <div className="text-right">
+            <p className="text-[11px] uppercase tracking-widest text-gray-400">
+              Saldo en tienda
+            </p>
+            <p className="text-2xl font-bold text-gray-900">
+              {fmt(cliente.saldo)}
             </p>
           </div>
         </div>
 
-        </section>
+        {/* Registrar sesión */}
+        <div className="bg-white rounded-lg shadow p-5 mb-6">
+          <h3 className="font-bold text-gray-900 mb-4">Registrar sesión</h3>
 
-        <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
-
-        <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
-        <h2 className="text-2xl sm:text-3xl mt-0 mb-6" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-          Agenda tu sesión
-        </h2>
-
-        {/* Personas */}
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2">Número de personas</label>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setNumPersonas((n) => Math.max(1, Number(n) - 1))} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>−</button>
-          <span className="text-xl w-8 text-center" style={{ color: "#f4efe6" }}>{numPersonas}</span>
-          <button onClick={() => setNumPersonas((n) => Number(n) + 1)} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>+</button>
-          <span className="text-sm text-gray-400 ml-2">Sesión: {fmt(costoSesion)}</span>
-        </div>
-
-        {/* Asistentes */}
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">Nombre de cada asistente</label>
-        <div className="flex flex-col gap-2">
-          {asistentes.map((a, i) => (
-            <input key={i} type="text" value={a} onChange={(e) => setAsistente(i, e.target.value)} placeholder={`Asistente ${i + 1}`} className="w-full py-2.5 px-3 outline-none" style={inputStyle} />
-          ))}
-        </div>
-
-        {/* Monto con $ y 6 dígitos */}
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">
-          Monto a invertir en decants (mínimo {fmt(cfg.inversion_min)})
-        </label>
-        <div className="flex items-center" style={inputStyle}>
-          <span className="pl-3 pr-1 text-lg" style={{ color: ORO }}>$</span>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={monto}
-            onChange={(e) => setMonto(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-            className="w-full py-2.5 pr-3 bg-transparent outline-none"
-            style={{ color: "#f4efe6" }}
-          />
-        </div>
-        {monto && !montoValido ? (
-          <p className="text-sm mt-2" style={{ color: "#d98c8c" }}>
-            La inversión mínima para agendar es de {fmt(cfg.inversion_min)} MXN.
-          </p>
-        ) : montoValido ? (
-          <p className="text-sm mt-2" style={{ color: ORO }}>
-            Con esta inversión puedes elegir hasta <strong>{maxPerfumes}</strong> perfumes.
-          </p>
-        ) : (
-          <p className="text-sm mt-2 text-gray-500">
-            Mientras mayor sea tu inversión, más perfumes podrás elegir para oler
-            (1 por cada {fmt(cfg.inversion_por_perfume)}). 100% redimible en decants;
-            el costo de la sesión es aparte.
-          </p>
-        )}
-
-        {montoValido && (
-          <div
-            className="mt-4 rounded-sm px-5 py-4"
-            style={{ background: "rgba(198,161,91,0.10)", border: `1px solid ${ORO}` }}
-          >
-            <div className="flex justify-between text-sm text-gray-300">
-              <span>Costo de sesión ({numPersonas} {numPersonas === 1 ? "persona" : "personas"})</span>
-              <span>{fmt(costoSesion)}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-300 mt-1">
-              <span>Inversión en decants</span>
-              <span>{fmt(montoNum)}</span>
-            </div>
-            <div
-              className="flex justify-between items-baseline mt-3 pt-3"
-              style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
-            >
-              <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
-                Total a cubrir
-              </span>
-              <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
-                {fmt(costoSesion + montoNum)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Perfumes de interés — catálogo */}
-        <div className="flex items-center justify-between mt-10 mb-3">
-          <label className="block text-xs uppercase tracking-widest text-gray-400">
-            Perfumes de interés
-          </label>
-          <span className="text-sm" style={{ color: ORO }}>
-            {perfumesSel.length} / {maxPerfumes || 0}
-          </span>
-        </div>
-
-        {maxPerfumes < 1 ? (
-          <p className="text-sm text-gray-500">
-            Indica tu inversión arriba para desbloquear tu selección de perfumes.
-          </p>
-        ) : (
-          <>
-            {/* Filtros */}
-            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Fecha</label>
               <input
-                type="text"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar…"
-                className="flex-1 py-2 px-3 outline-none text-sm"
-                style={inputStyle}
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
               />
-              <div className="sm:w-52">
-                <DropdownOscuro
-                  value={casaFiltro}
-                  onChange={setCasaFiltro}
-                  placeholder="Todas las casas"
-                  opciones={[
-                    { value: "", label: "Todas las casas" },
-                    ...casas.map((c) => ({ value: c, label: c })),
-                  ]}
-                />
-              </div>
-              <div className="sm:w-52">
-                <DropdownOscuro
-                  value={orden}
-                  onChange={setOrden}
-                  placeholder="Ordenar"
-                  opciones={[
-                    { value: "casa", label: "Casa (A-Z)" },
-                    { value: "precio_asc", label: "Precio: menor a mayor" },
-                    { value: "precio_desc", label: "Precio: mayor a menor" },
-                  ]}
-                />
-              </div>
             </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Personas</label>
+              <input
+                type="number"
+                min="1"
+                value={numPersonas}
+                onChange={(e) => setNumPersonas(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Inversión / recarga ($)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={recarga}
+                onChange={(e) => setRecarga(e.target.value)}
+                placeholder="Crédito prepagado"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
 
-            {/* Seleccionados */}
-            {perfumesSel.length > 0 && (
-              <div className="mb-3">
+          {/* Decants comprados */}
+          <label className="block text-xs text-gray-500 mb-2">
+            Decants comprados
+          </label>
+          <div className="space-y-2">
+            {decants.map((d, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  type="text"
+                  value={d.nombre}
+                  onChange={(e) => setDecant(i, "nombre", e.target.value)}
+                  placeholder="Perfume"
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
+                />
+                <input
+                  type="number"
+                  value={d.ml}
+                  onChange={(e) => setDecant(i, "ml", e.target.value)}
+                  placeholder="ml"
+                  className="w-16 border border-gray-300 rounded-md px-2 py-2 text-sm"
+                />
+                <input
+                  type="number"
+                  value={d.monto}
+                  onChange={(e) => setDecant(i, "monto", e.target.value)}
+                  placeholder="$"
+                  className="w-24 border border-gray-300 rounded-md px-2 py-2 text-sm"
+                />
                 <button
-                  onClick={() => setPerfumesSel([])}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-sm mb-3"
-                  style={{
-                    background: "rgba(220,90,90,0.15)",
-                    color: "#ff8a8a",
-                    border: "1px solid rgba(220,90,90,0.6)",
-                  }}
+                  onClick={() => quitarFila(i)}
+                  className="text-gray-400 hover:text-red-600 px-1"
                 >
-                  ✕ Borrar todas ({perfumesSel.length})
+                  <Trash2 size={16} />
                 </button>
-                <div className="flex flex-wrap gap-2">
-                  {perfumesSel.map((p) => (
-                    <span key={p} className="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-sm" style={{ background: "rgba(198,161,91,0.15)", color: "#f4efe6", border: `1px solid ${ORO}` }}>
-                      {p}
-                      <button onClick={() => togglePerfume(p)} style={{ color: ORO }}>×</button>
-                    </span>
-                  ))}
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={agregarFila}
+            className="mt-2 text-sm text-[#A47E3B] flex items-center gap-1 hover:underline"
+          >
+            <Plus size={14} /> Agregar decant
+          </button>
+
+          <p className="text-sm text-gray-600 mt-3">
+            Gasto en decants: <strong>{fmt(gastoDecants)}</strong>
+          </p>
+
+          {/* Perfumes elegidos / olidos */}
+          <label className="block text-xs text-gray-500 mb-1 mt-4">
+            Perfumes que probó / eligió (opcional)
+          </label>
+          <textarea
+            rows={2}
+            value={perfumesTexto}
+            onChange={(e) => setPerfumesTexto(e.target.value)}
+            placeholder="Separados por coma"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none"
+          />
+
+          <label className="block text-xs text-gray-500 mb-1 mt-4">
+            Notas (opcional)
+          </label>
+          <textarea
+            rows={2}
+            value={notas}
+            onChange={(e) => setNotas(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none"
+          />
+
+          <button
+            onClick={guardarSesion}
+            disabled={guardando}
+            className="mt-4 bg-[#A47E3B] text-white px-6 py-2.5 rounded-md text-sm font-semibold hover:bg-[#8b6d32] disabled:bg-gray-300"
+          >
+            {guardando ? "Guardando…" : "Guardar sesión"}
+          </button>
+          {msg && <p className="text-sm text-green-700 mt-3 font-medium">{msg}</p>}
+        </div>
+
+        {/* Historial */}
+        <h3 className="font-bold text-gray-900 mb-3">
+          Historial de sesiones ({sesiones.length})
+        </h3>
+        {sesiones.length === 0 ? (
+          <p className="text-gray-400 text-sm">Aún no hay sesiones registradas.</p>
+        ) : (
+          <div className="space-y-3">
+            {sesiones.map((s) => (
+              <div key={s.id} className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          s.estado === "realizada"
+                            ? "bg-gray-200 text-gray-600"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {s.estado === "realizada" ? "Realizada" : "Pendiente"}
+                      </span>
+                      {s.pedido_enviado && (
+                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                          Pedido enviado
+                        </span>
+                      )}
+                      <span className="text-sm text-gray-500">
+                        {s.fecha} · {s.num_personas}{" "}
+                        {s.num_personas === 1 ? "persona" : "personas"}
+                      </span>
+                    </div>
+
+                    {(Number(s.inversion_declarada) > 0 || s.lugar || s.preferencia || s.dia || (Array.isArray(s.asistentes) && s.asistentes.length > 0)) && (
+                      <div className="mt-2 text-xs text-gray-600 space-y-0.5">
+                        {Number(s.inversion_declarada) > 0 && (
+                          <p>
+                            Inversión declarada: <strong>{fmt(s.inversion_declarada)}</strong>
+                          </p>
+                        )}
+                        {Array.isArray(s.asistentes) && s.asistentes.length > 0 && (
+                          <p>
+                            Asistentes: <strong>{s.asistentes.join(", ")}</strong>
+                          </p>
+                        )}
+                        {s.lugar && <p>Lugar: {s.lugar}</p>}
+                        {s.preferencia && <p>Preferencia: {s.preferencia}</p>}
+                        {s.dia && <p>Días: {s.dia}</p>}
+                      </div>
+                    )}
+
+                    {s.estado === "realizada" && (
+                      <p className="text-sm text-gray-700 mt-2">
+                        Inversión: <strong>{fmt(s.recarga)}</strong> · Gasto:{" "}
+                        <strong>{fmt(s.gasto_decants)}</strong>
+                      </p>
+                    )}
+
+                    {s.anotaciones && Object.keys(s.anotaciones).length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs font-semibold text-gray-700 mb-1">
+                          Notas del cliente
+                        </p>
+                        <ul className="space-y-1">
+                          {Object.entries(s.anotaciones).map(([perf, n]) =>
+                            n && (n.veredicto || n.nota) ? (
+                              <li key={perf} className="text-xs text-gray-600">
+                                <span className="font-medium text-gray-800">{perf}</span>
+                                {n.veredicto && (
+                                  <span
+                                    className={`ml-2 px-1.5 py-0.5 rounded ${VEREDICTO_COLOR[n.veredicto] || ""}`}
+                                  >
+                                    {VEREDICTO_LABEL[n.veredicto] || n.veredicto}
+                                  </span>
+                                )}
+                                {n.nota && <span className="block italic">{n.nota}</span>}
+                              </li>
+                            ) : null,
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
+                    {Array.isArray(s.pedido_final) && s.pedido_final.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs font-semibold text-gray-700 mb-1">
+                          Pedido final del cliente
+                        </p>
+                        <ul className="text-xs text-gray-600 list-disc pl-5">
+                          {s.pedido_final.map((d, i) => (
+                            <li key={i}>
+                              {d.nombre}
+                              {d.ml ? ` · ${d.ml} ml` : ""} — {fmt(d.monto)}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {s.fecha_acordada && (
+                      <p className="text-xs text-gray-700 mt-2">
+                        Fecha acordada:{" "}
+                        <strong>
+                          {new Date(s.fecha_acordada).toLocaleString("es-MX", {
+                            dateStyle: "full",
+                            timeStyle: "short",
+                          })}
+                        </strong>
+                      </p>
+                    )}
+                    {s.estado !== "realizada" && (
+                      <FechaAcordada key={`${s.id}-${s.fecha_acordada || ""}`} s={s} onGuardada={cargar} />
+                    )}
+
+                    {s.estado !== "realizada" && cerrandoId !== s.id && (
+                      <button
+                        onClick={() => setCerrandoId(s.id)}
+                        className="mt-3 text-sm font-semibold text-[#A47E3B] border border-[#A47E3B] px-3 py-1.5 rounded-md hover:bg-[#faf6ef]"
+                      >
+                        Marcar como realizada
+                      </button>
+                    )}
+                    {cerrandoId === s.id && (
+                      <CerrarSesion
+                        s={s}
+                        onCancelar={() => setCerrandoId(null)}
+                        onCerrada={() => {
+                          setCerrandoId(null);
+                          cargar();
+                        }}
+                      />
+                    )}
+                    {Array.isArray(s.decants) && s.decants.length > 0 && (
+                      <ul className="mt-2 text-sm text-gray-600 list-disc pl-5">
+                        {s.decants.map((d, i) => (
+                          <li key={i}>
+                            {d.nombre}
+                            {d.ml ? ` · ${d.ml} ml` : ""} — {fmt(d.monto)}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {Array.isArray(s.perfumes) && s.perfumes.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        {s.estado === "realizada" ? "Probó" : "Perfumes de interés"} ({s.perfumes.length}):{" "}
+                        {s.perfumes.join(", ")}
+                      </p>
+                    )}
+                    {s.perfumes_actualizado_en && (
+                      <p className="text-[11px] font-semibold text-amber-700 mt-1">
+                        El cliente modificó sus perfumes el{" "}
+                        {new Date(s.perfumes_actualizado_en).toLocaleString("es-MX", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </p>
+                    )}
+                    {s.notas && (
+                      <p className="text-xs text-gray-500 mt-1 italic">
+                        {s.notas}
+                      </p>
+                    )}
+                  </div>
+                  {confirmarBorrar === s.id ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => borrarSesion(s.id)}
+                        className="text-xs font-semibold text-white bg-red-600 px-2 py-1.5 rounded-md"
+                      >
+                        Confirmar
+                      </button>
+                      <button
+                        onClick={() => setConfirmarBorrar(null)}
+                        className="text-xs text-gray-500 px-1"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmarBorrar(s.id)}
+                      className="text-gray-400 hover:text-red-600 shrink-0"
+                      title="Borrar sesión"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
-            )}
-
-            {/* Lista */}
-            <div className="max-h-[420px] overflow-y-auto pr-1" style={{ border: "1px solid rgba(198,161,91,0.15)", borderRadius: 2 }}>
-              {orden === "casa" && grupos
-                ? grupos.map(([casa, items]) => (
-                    <div key={casa}>
-                      <p className="px-3 py-2 text-xs uppercase tracking-widest sticky top-0" style={{ color: ORO, background: "#111013" }}>
-                        {casa}
-                      </p>
-                      <div className="grid grid-cols-1 gap-2 p-2">
-                        {items.map(tarjetaPerfume)}
-                      </div>
-                    </div>
-                  ))
-                : (
-                  <div className="grid grid-cols-1 gap-2 p-2">
-                    {listaFiltrada.map(tarjetaPerfume)}
-                  </div>
-                )}
-              {listaFiltrada.length === 0 && (
-                <p className="text-sm text-gray-500 p-4 text-center">Sin resultados.</p>
-              )}
-            </div>
-          </>
+            ))}
+          </div>
         )}
-
-        {/* Preferencia de experiencia */}
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-3 mt-10">
-          ¿Cómo prefieres vivir la sesión?
-        </label>
-        <div className="flex flex-col gap-2">
-          {OPCIONES_EXPERIENCIA.map((o) => (
-            <button
-              key={o}
-              onClick={() => setPreferencia(o)}
-              className="py-2.5 px-3 text-sm text-left"
-              style={preferencia === o ? { background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 } : { ...inputStyle, color: "#e8e4dc" }}
-            >
-              {o}
-            </button>
-          ))}
-        </div>
-
-        {/* Lugar */}
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2 mt-8">
-          Lugar de la sesión (dentro de Angelópolis)
-        </label>
-        <input
-          type="text"
-          value={lugar}
-          onChange={(e) => setLugar(e.target.value)}
-          placeholder="Casa, oficina, dirección o referencia…"
-          className="w-full py-2.5 px-3 outline-none"
-          style={inputStyle}
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          Debe ser un espacio techado, sin luz solar directa, con una mesa o
-          superficie segura para colocar los perfumes.
-        </p>
-
-        {/* Preferencia de día */}
-        <label className="block text-xs uppercase tracking-widest text-gray-400 mb-3 mt-8">Preferencia de días</label>
-        <div className="flex flex-col sm:flex-row gap-2">
-          {OPCIONES_DIA.map((o) => (
-            <button key={o} onClick={() => setDia(o)} className="flex-1 py-2.5 px-3 text-sm" style={dia === o ? { background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 } : { ...inputStyle, color: "#e8e4dc" }}>
-              {o}
-            </button>
-          ))}
-        </div>
-
-        </section>
-
-        <div className="my-12 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(198,161,91,0.5), transparent)" }} />
-
-        <section className="rounded-md p-5 sm:p-6" style={{ border: "1px solid rgba(198,161,91,0.18)", background: "rgba(255,255,255,0.02)" }}>
-        {/* Términos de la experiencia */}
-        <h3 className="text-xl mt-0 mb-3" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-          Términos de la experiencia
-        </h3>
-        <div className="border-y py-1" style={{ borderColor: "rgba(198,161,91,0.20)" }}>
-          {TYC_EXPERIENCIA.map((t, i) => (
-            <div key={i} className="flex gap-3 py-2.5 border-b last:border-b-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-              <span style={{ color: ORO }}>—</span>
-              <span className="text-gray-400 text-[13px] leading-relaxed">{t}</span>
-            </div>
-          ))}
-        </div>
-        <label className="flex items-start gap-3 mt-4 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={aceptaTyc}
-            onChange={(e) => setAceptaTyc(e.target.checked)}
-            className="mt-1 accent-[#C6A15B] w-4 h-4"
-          />
-          <span className="text-sm text-gray-300">
-            He leído y acepto los términos de la experiencia.
-          </span>
-        </label>
-        </section>
-
-        <button
-          onClick={enviar}
-          disabled={!puedeEnviar || enviando}
-          className="w-full mt-8 py-3.5 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
-          style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
-        >
-          {enviando ? "Agendando…" : "Solicitar por WhatsApp"}
-        </button>
-        {!puedeEnviar && (
-          <p className="text-center text-xs text-gray-500 mt-3">
-            Completa tu inversión, elige mínimo 1 perfume, indica el lugar y
-            acepta los términos para solicitar tu sesión.
-          </p>
-        )}
-
-        <button onClick={salir} className="block mx-auto mt-8 text-xs uppercase tracking-widest text-gray-500 hover:text-gray-300">
-          Cerrar sesión
-        </button>
-      </div>
+      </main>
     </div>
   );
 }

@@ -265,17 +265,26 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
       setGuardandoSel(false);
     }
   };
-  const [notas, setNotas] = useState(() => sesionData.anotaciones || {});
+  const [notas, setNotas] = useState(() => {
+    const base = sesionData.anotaciones || {};
+    if (Array.isArray(base.__extras)) return base;
+    // Decants agregados aparte (fuera de la lista de interés). Si ya había un
+    // pedido enviado antes, se recuperan de ahí.
+    const previos = Array.isArray(sesionData.pedido_final) ? sesionData.pedido_final : [];
+    return {
+      ...base,
+      __extras: previos
+        .filter((l) => !perfumesInteres.includes(l.nombre))
+        .map(({ id, nombre: n, casa, ml }) => ({ id, nombre: n, casa, ml })),
+    };
+  });
   const [estadoGuardado, setEstadoGuardado] = useState("");
-  const [pedido, setPedido] = useState(() =>
-    Array.isArray(sesionData.pedido_final) ? sesionData.pedido_final : [],
-  );
   const [busq, setBusq] = useState("");
   const [enviandoPedido, setEnviandoPedido] = useState(false);
   const [msgPedido, setMsgPedido] = useState("");
   const primeraCarga = useRef(true);
 
-  // Autoguardado de notas (espera a que deje de escribir).
+  // Autoguardado de notas, ml y extras (espera a que deje de escribir).
   useEffect(() => {
     if (primeraCarga.current) {
       primeraCarga.current = false;
@@ -302,68 +311,114 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
   const setNota = (perf, campo, val) =>
     setNotas((prev) => ({ ...prev, [perf]: { ...(prev[perf] || {}), [campo]: val } }));
 
-  // Solo decants (el crédito es redimible en decants).
-  const decants = useMemo(
+  // Cambiar veredicto: "No" (o desmarcar) borra los ml; al cambiar, la
+  // inclusión vuelve a su valor por defecto (Me gustó = incluido).
+  const setVeredicto = (perf, v) =>
+    setNotas((prev) => {
+      const n = prev[perf] || {};
+      const nuevo = n.veredicto === v ? "" : v;
+      const conMl = nuevo === "gusto" || nuevo === "tal_vez";
+      const { incluir, ...resto } = n;
+      return { ...prev, [perf]: { ...resto, veredicto: nuevo, ml: conMl ? n.ml || "" : "" } };
+    });
+
+  const parfumPorId = (id) => parfums.find((x) => x.id === id);
+  const parfumPorNombre = (nom) => parfums.find((x) => x.nombre === nom);
+
+  // ¿Se puede pedir en decant?
+  const motivoNoDecant = (x) => {
+    if (!x) return "No disponible";
+    if (x.stock === true) return "Solo en botella";
+    if (x.disponible === "Agotado") return "Agotado";
+    return null;
+  };
+
+  // Líneas del pedido que vienen de las notas (Me gustó / Tal vez con ml).
+  const lineasNotas = useMemo(
+    () =>
+      perfumesInteres
+        .map((perf) => {
+          const n = notas[perf] || {};
+          const x = parfumPorNombre(perf);
+          const ml = Number(n.ml);
+          if (!(n.veredicto === "gusto" || n.veredicto === "tal_vez")) return null;
+          if (!ml || motivoNoDecant(x)) return null;
+          return {
+            key: perf,
+            id: x.id,
+            nombre: perf,
+            casa: x.casa,
+            ml,
+            monto: calcularPrecioDecant(x, ml),
+            veredicto: n.veredicto,
+            incluido: n.incluir ?? n.veredicto === "gusto",
+          };
+        })
+        .filter(Boolean),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [perfumesInteres, notas, parfums],
+  );
+
+  const extras = Array.isArray(notas.__extras) ? notas.__extras : [];
+  const lineasExtras = extras.map((e) => {
+    const x = parfumPorId(e.id);
+    const ml = Number(e.ml) || 0;
+    return { ...e, ml, monto: x ? calcularPrecioDecant(x, ml) : 0 };
+  });
+  const setExtras = (fn) =>
+    setNotas((prev) => ({ ...prev, __extras: fn(Array.isArray(prev.__extras) ? prev.__extras : []) }));
+
+  const decantsCatalogo = useMemo(
     () =>
       parfums
-        .filter((p) => p.stock === false && p.disponible !== "Agotado")
+        .filter((x) => !motivoNoDecant(x))
         .sort(
           (a, b) =>
             (a.casa || "").localeCompare(b.casa || "", "es") ||
             (a.nombre || "").localeCompare(b.nombre || "", "es"),
         ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [parfums],
   );
   const sugerencias = useMemo(() => {
     const q = busq.trim().toLowerCase();
     if (!q) return [];
-    return decants
+    return decantsCatalogo
       .filter(
-        (p) => p.nombre?.toLowerCase().includes(q) || p.casa?.toLowerCase().includes(q),
+        (x) =>
+          !perfumesInteres.includes(x.nombre) &&
+          !extras.some((e) => e.id === x.id) &&
+          (x.nombre?.toLowerCase().includes(q) || x.casa?.toLowerCase().includes(q)),
       )
       .slice(0, 8);
-  }, [busq, decants]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busq, decantsCatalogo, perfumesInteres, notas]);
 
-  const parfumPorId = (id) => parfums.find((p) => p.id === id);
-
-  const agregarAlPedido = (p) => {
-    if (pedido.some((l) => l.id === p.id)) return;
-    const ml = getOpcionesMililitros(p, { minSiempre })[0]?.value || 1;
-    setPedido((prev) => [
-      ...prev,
-      { id: p.id, nombre: p.nombre, casa: p.casa, ml, monto: calcularPrecioDecant(p, ml) },
-    ]);
+  const agregarExtra = (x) => {
+    const ml = getOpcionesMililitros(x, { minSiempre })[0]?.value || 1;
+    setExtras((prev) => [...prev, { id: x.id, nombre: x.nombre, casa: x.casa, ml }]);
     setBusq("");
     setMsgPedido("");
   };
+  const cambiarMlExtra = (id, ml) =>
+    setExtras((prev) => prev.map((e) => (e.id === id ? { ...e, ml: Number(ml) } : e)));
+  const quitarExtra = (id) => setExtras((prev) => prev.filter((e) => e.id !== id));
 
-  const cambiarMl = (id, ml) =>
-    setPedido((prev) =>
-      prev.map((l) => {
-        if (l.id !== id) return l;
-        const p = parfumPorId(id);
-        const n = Number(ml);
-        return { ...l, ml: n, monto: p ? calcularPrecioDecant(p, n) : l.monto };
-      }),
-    );
-
-  const quitarDelPedido = (id) => setPedido((prev) => prev.filter((l) => l.id !== id));
-
-  const totalPedido = pedido.reduce((s, l) => s + (Number(l.monto) || 0), 0);
+  const incluidas = lineasNotas.filter((l) => l.incluido);
+  const totalPedido =
+    incluidas.reduce((acc, l) => acc + l.monto, 0) +
+    lineasExtras.reduce((acc, l) => acc + l.monto, 0);
   const credito = Number(sesionData.inversion_declarada) || 0;
   const diferencia = totalPedido - credito;
+  const porcentaje = credito > 0 ? Math.min(100, (totalPedido / credito) * 100) : 0;
 
   const enviarPedido = async () => {
-    if (pedido.length === 0 || enviandoPedido) return;
+    const pedidoLimpio = [...incluidas, ...lineasExtras]
+      .filter((l) => l.ml > 0)
+      .map(({ id, nombre: n, casa, ml, monto }) => ({ id, nombre: n, casa, ml, monto }));
+    if (pedidoLimpio.length === 0 || enviandoPedido) return;
     setEnviandoPedido(true);
     setMsgPedido("");
-    const pedidoLimpio = pedido.map(({ id, nombre: n, casa, ml, monto }) => ({
-      id,
-      nombre: n,
-      casa,
-      ml,
-      monto,
-    }));
     try {
       const { error } = await supabase.rpc("vip_enviar_pedido", {
         p_username: username,
@@ -453,9 +508,31 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
           </h3>
           {estadoGuardado && <span className="text-xs text-gray-500">{estadoGuardado}</span>}
         </div>
-        <p className="text-sm text-gray-400 mb-5">
-          Anota lo que te pareció cada perfume durante la sesión. Se guarda solo.
+        <p className="text-sm text-gray-400 mb-4">
+          Marca qué te pareció cada perfume y, si te gustó, cuántos ml quieres. Se guarda solo.
         </p>
+
+        {credito > 0 && (
+          <div
+            className="sticky top-0 z-10 -mx-5 sm:-mx-6 px-5 sm:px-6 py-3 mb-5"
+            style={{ background: "#0f0e10", borderBottom: "1px solid rgba(198,161,91,0.25)" }}
+          >
+            <div className="flex justify-between items-baseline text-sm">
+              <span className="text-gray-300">
+                Llevas <strong style={{ color: ORO }}>{fmt(totalPedido)}</strong> de {fmt(credito)}
+              </span>
+              <span className="text-xs" style={{ color: diferencia > 0 ? "#ff8a8a" : "#9ca3af" }}>
+                {diferencia > 0 ? `Te pasas por ${fmt(diferencia)}` : `Te quedan ${fmt(-diferencia)}`}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+              <div
+                className="h-1.5 rounded-full transition-all"
+                style={{ width: `${porcentaje}%`, background: diferencia > 0 ? "#ff8a8a" : ORO }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Editar perfumes (solo pendiente) */}
         {esPendiente && !editando && (
@@ -594,9 +671,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                     {VEREDICTOS.map((v) => (
                       <button
                         key={v.value}
-                        onClick={() =>
-                          setNota(perf, "veredicto", n.veredicto === v.value ? "" : v.value)
-                        }
+                        onClick={() => setVeredicto(perf, v.value)}
                         className="flex-1 py-1.5 text-xs"
                         style={
                           n.veredicto === v.value
@@ -608,6 +683,43 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                       </button>
                     ))}
                   </div>
+                  {(n.veredicto === "gusto" || n.veredicto === "tal_vez") &&
+                    (() => {
+                      const x = parfumPorNombre(perf);
+                      const motivo = motivoNoDecant(x);
+                      if (motivo) {
+                        return <p className="text-xs text-gray-500 mb-2">{motivo} · no aplica para decant</p>;
+                      }
+                      const opciones = getOpcionesMililitros(x, { minSiempre });
+                      const ml = Number(n.ml) || 0;
+                      return (
+                        <div className="flex items-center gap-2 mb-2">
+                          <select
+                            value={n.ml || ""}
+                            onChange={(e) => setNota(perf, "ml", e.target.value)}
+                            className="py-1.5 px-2 text-sm"
+                            style={{ ...inputStyle, background: "#151316" }}
+                          >
+                            <option value="" style={{ background: "#151316", color: "#f4efe6" }}>
+                              ¿Cuántos ml?
+                            </option>
+                            {opciones.map((o) => (
+                              <option key={o.value} value={o.value} style={{ background: "#151316", color: "#f4efe6" }}>
+                                {o.label}
+                              </option>
+                            ))}
+                          </select>
+                          {ml > 0 && (
+                            <span className="text-sm" style={{ color: ORO }}>
+                              {fmt(calcularPrecioDecant(x, ml))}
+                            </span>
+                          )}
+                          {ml > 0 && n.veredicto === "tal_vez" && !n.incluir && (
+                            <span className="text-[11px] text-gray-500">no incluido aún</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   <button
                     onClick={() => setNotaAbierta((prev) => ({ ...prev, [perf]: !abierta }))}
                     className="text-xs uppercase tracking-widest"
@@ -634,22 +746,61 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
 
       {divisor}
 
-      {/* Pedido final */}
+      {/* Revisa tu pedido */}
       <section className="rounded-md p-5 sm:p-6" style={panel}>
         <h3 className="text-2xl mb-1" style={{ fontFamily: SERIF, color: "#f4efe6" }}>
-          Tu pedido final
+          Revisa tu pedido
         </h3>
         <p className="text-sm text-gray-400 mb-5">
-          Elige los decants que quieres llevarte, de cualquier perfume del catálogo, al
-          precio normal de la página.
+          Se arma con los perfumes a los que les pusiste ml. Los de "Me gustó" entran solos;
+          los de "Tal vez" márcalos si los quieres. Los ml se ajustan en la nota de cada perfume.
           {sesionData.pedido_enviado ? " Ya enviaste un pedido; si lo cambias, vuelve a enviarlo." : ""}
         </p>
 
+        {lineasNotas.length === 0 && lineasExtras.length === 0 && (
+          <p className="text-sm text-gray-500 mb-4">
+            Aún no hay decants. Marca "Me gustó" o "Tal vez" en un perfume y elige sus ml.
+          </p>
+        )}
+
+        {lineasNotas.length > 0 && (
+          <div className="space-y-2">
+            {lineasNotas.map((l) => (
+              <label
+                key={l.key}
+                className="flex items-center gap-3 p-2 rounded-sm cursor-pointer"
+                style={{
+                  border: l.incluido ? `1px solid ${ORO}` : "1px solid rgba(255,255,255,0.08)",
+                  opacity: l.incluido ? 1 : 0.6,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={l.incluido}
+                  onChange={() => setNota(l.key, "incluir", !l.incluido)}
+                  className="w-4 h-4 accent-[#C6A15B] shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{l.nombre}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {l.casa} · {l.veredicto === "gusto" ? "Me gustó" : "Tal vez"} · {l.ml} ml
+                  </p>
+                </div>
+                <span className="text-sm shrink-0" style={{ color: ORO }}>{fmt(l.monto)}</span>
+              </label>
+            ))}
+          </div>
+        )}
+
+        {/* Decants extra (fuera de la lista) */}
+        <p className="text-xs uppercase tracking-widest text-gray-400 mt-6 mb-2">
+          Agregar otro decant
+        </p>
         <input
           type="text"
           value={busq}
           onChange={(e) => setBusq(e.target.value)}
-          placeholder="Busca un perfume o casa para agregar…"
+          placeholder="Busca un perfume o casa…"
           className="w-full py-2.5 px-3 text-sm outline-none"
           style={inputStyle}
         />
@@ -658,41 +809,43 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
             {sugerencias.length === 0 ? (
               <p className="px-3 py-2 text-sm text-gray-500">Sin resultados.</p>
             ) : (
-              sugerencias.map((p) => (
+              sugerencias.map((x) => (
                 <button
-                  key={p.id}
-                  onClick={() => agregarAlPedido(p)}
+                  key={x.id}
+                  onClick={() => agregarExtra(x)}
                   className="w-full flex items-center justify-between gap-2 text-left px-3 py-2 text-sm hover:bg-white/5"
                   style={{ color: "#e8e4dc" }}
                 >
                   <span className="truncate">
-                    {p.nombre} <span className="text-gray-500">· {p.casa}</span>
+                    {x.nombre} <span className="text-gray-500">· {x.casa}</span>
                   </span>
-                  <span className="shrink-0" style={{ color: ORO }}>{fmt(p.precio)}/ml</span>
+                  <span className="shrink-0" style={{ color: ORO }}>{fmt(x.precio)}/ml</span>
                 </button>
               ))
             )}
           </div>
         )}
 
-        {pedido.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {pedido.map((l) => {
-              const p = parfumPorId(l.id);
-              const opciones = p ? getOpcionesMililitros(p, { minSiempre }) : [{ value: l.ml, label: `${l.ml} ml` }];
+        {lineasExtras.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {lineasExtras.map((l) => {
+              const x = parfumPorId(l.id);
+              const opciones = x
+                ? getOpcionesMililitros(x, { minSiempre })
+                : [{ value: l.ml, label: `${l.ml} ml` }];
               return (
                 <div
                   key={l.id}
                   className="flex items-center gap-3 p-2 rounded-sm"
-                  style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+                  style={{ border: `1px solid ${ORO}` }}
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{l.nombre}</p>
-                    <p className="text-xs text-gray-500 truncate">{l.casa}</p>
+                    <p className="text-xs text-gray-500 truncate">{l.casa} · extra</p>
                   </div>
                   <select
                     value={l.ml}
-                    onChange={(e) => cambiarMl(l.id, e.target.value)}
+                    onChange={(e) => cambiarMlExtra(l.id, e.target.value)}
                     className="py-1.5 px-2 text-sm"
                     style={{ ...inputStyle, background: "#151316" }}
                   >
@@ -704,7 +857,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                   </select>
                   <span className="text-sm w-20 text-right" style={{ color: ORO }}>{fmt(l.monto)}</span>
                   <button
-                    onClick={() => quitarDelPedido(l.id)}
+                    onClick={() => quitarExtra(l.id)}
                     className="text-gray-500 hover:text-red-400 px-1"
                     title="Quitar"
                   >
@@ -713,42 +866,44 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                 </div>
               );
             })}
+          </div>
+        )}
 
-            <div
-              className="mt-4 rounded-sm px-5 py-4"
-              style={{ background: "rgba(198,161,91,0.10)", border: `1px solid ${ORO}` }}
-            >
-              <div className="flex justify-between text-sm text-gray-300">
-                <span>Total del pedido</span>
-                <span>{fmt(totalPedido)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-300 mt-1">
-                <span>Inversión acordada</span>
-                <span>{fmt(credito)}</span>
-              </div>
-              <div
-                className="flex justify-between items-baseline mt-3 pt-3"
-                style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
-              >
-                <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
-                  {diferencia > 0 ? "Diferencia a cubrir" : "Crédito restante"}
-                </span>
-                <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
-                  {fmt(Math.abs(diferencia))}
-                </span>
-              </div>
-              {diferencia < 0 && (
-                <p className="text-xs text-gray-400 mt-2">
-                  El crédito restante queda como saldo en tienda para futuros decants.
-                </p>
-              )}
+        {totalPedido > 0 && (
+          <div
+            className="mt-5 rounded-sm px-5 py-4"
+            style={{ background: "rgba(198,161,91,0.10)", border: `1px solid ${ORO}` }}
+          >
+            <div className="flex justify-between text-sm text-gray-300">
+              <span>Total del pedido</span>
+              <span>{fmt(totalPedido)}</span>
             </div>
+            <div className="flex justify-between text-sm text-gray-300 mt-1">
+              <span>Inversión acordada</span>
+              <span>{fmt(credito)}</span>
+            </div>
+            <div
+              className="flex justify-between items-baseline mt-3 pt-3"
+              style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
+            >
+              <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
+                {diferencia > 0 ? "Diferencia a cubrir" : "Crédito restante"}
+              </span>
+              <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
+                {fmt(Math.abs(diferencia))}
+              </span>
+            </div>
+            {diferencia < 0 && (
+              <p className="text-xs text-gray-400 mt-2">
+                El crédito restante queda como saldo en tienda para futuros decants.
+              </p>
+            )}
           </div>
         )}
 
         <button
           onClick={enviarPedido}
-          disabled={pedido.length === 0 || enviandoPedido}
+          disabled={totalPedido <= 0 || enviandoPedido}
           className="w-full mt-6 py-3.5 uppercase tracking-[0.2em] text-sm disabled:opacity-40"
           style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
         >
