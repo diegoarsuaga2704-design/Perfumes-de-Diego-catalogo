@@ -124,6 +124,9 @@ export default function Terminos() {
             decants iguales o mayores a $1,950 MXN.
           </p>
           <p>
+            El descuento de 10% de bienvenida esta topado a $500, es de uso único por correo electrónico y por número de celular.
+          </p>
+          <p>
             Entregamos tu pedido a la paquetería en un plazo máximo de 48 horas
             hábiles a partir de la confirmación del pago. En la mayoría de los
             casos lo entregamos a la paquetería el mismo día en que se realiza el

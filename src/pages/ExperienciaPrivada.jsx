@@ -32,6 +32,15 @@ function useVipHead() {
       document.head.appendChild(l);
     }
     document.title = "Experiencia privada";
+    const cssId = "vip-mobile-css";
+    if (!document.getElementById(cssId)) {
+      const st = document.createElement("style");
+      st.id = cssId;
+      // iPhone hace zoom al tocar campos con letra < 16px; esto lo evita.
+      st.textContent =
+        "[data-vip] input, [data-vip] textarea, [data-vip] select { font-size: 16px !important; }";
+      document.head.appendChild(st);
+    }
     const mid = "robots-noindex-vip";
     if (!document.getElementById(mid)) {
       const m = document.createElement("meta");
@@ -179,20 +188,20 @@ const TarjetaPerfume = memo(function TarjetaPerfume({ p, sel, bloqueado, onToggl
         <p className="text-xs" style={{ color: ORO }}>
           {fmt(p.precio)}{!p.stock ? "/ml" : ""}
         </p>
+        {p.fraganticaLink && (
+          <a
+            href={p.fraganticaLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-block mt-1.5 text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-sm"
+            style={{ color: ORO, border: "1px solid rgba(198,161,91,0.4)" }}
+          >
+            + info
+          </a>
+        )}
       </div>
-      {p.fraganticaLink && (
-        <a
-          href={p.fraganticaLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="text-[11px] uppercase tracking-wider px-2 py-1 rounded-sm shrink-0"
-          style={{ color: ORO, border: "1px solid rgba(198,161,91,0.4)" }}
-        >
-          + info
-        </a>
-      )}
-      {sel && <span style={{ color: ORO }}>✓</span>}
+      {sel && <span className="text-lg shrink-0" style={{ color: ORO }}>✓</span>}
     </div>
   );
 });
@@ -487,11 +496,15 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
           "Fecha por confirmar"
         )}
       </h2>
-      <p className="text-sm text-gray-400 mt-2">
-        {sesionData.num_personas} {sesionData.num_personas === 1 ? "persona" : "personas"} ·
-        Inversión acordada: <span style={{ color: ORO }}>{fmt(credito)}</span>
-        {sesionData.lugar ? ` · ${sesionData.lugar}` : ""}
-      </p>
+      <div className="text-sm text-gray-400 mt-3 space-y-1">
+        <p>
+          {sesionData.num_personas} {sesionData.num_personas === 1 ? "persona" : "personas"}
+        </p>
+        <p>
+          Inversión acordada: <span style={{ color: ORO }}>{fmt(credito)}</span>
+        </p>
+        {sesionData.lugar && <p>{sesionData.lugar}</p>}
+      </div>
       {Array.isArray(sesionData.asistentes) && sesionData.asistentes.length > 0 && (
         <p className="text-sm text-gray-500 mt-1">
           Asistentes: {sesionData.asistentes.join(", ")}
@@ -517,14 +530,12 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
             className="sticky top-0 z-10 -mx-5 sm:-mx-6 px-5 sm:px-6 py-3 mb-5"
             style={{ background: "#0f0e10", borderBottom: "1px solid rgba(198,161,91,0.25)" }}
           >
-            <div className="flex justify-between items-baseline text-sm">
-              <span className="text-gray-300">
-                Llevas <strong style={{ color: ORO }}>{fmt(totalPedido)}</strong> de {fmt(credito)}
-              </span>
-              <span className="text-xs" style={{ color: diferencia > 0 ? "#ff8a8a" : "#9ca3af" }}>
-                {diferencia > 0 ? `Te pasas por ${fmt(diferencia)}` : `Te quedan ${fmt(-diferencia)}`}
-              </span>
-            </div>
+            <p className="text-sm text-gray-300">
+              Llevas <strong style={{ color: ORO }}>{fmt(totalPedido)}</strong> de {fmt(credito)}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: diferencia > 0 ? "#ff8a8a" : "#9ca3af" }}>
+              {diferencia > 0 ? `Te pasas por ${fmt(diferencia)}` : `Te quedan ${fmt(-diferencia)}`}
+            </p>
             <div className="mt-2 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
               <div
                 className="h-1.5 rounded-full transition-all"
@@ -538,7 +549,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
         {esPendiente && !editando && (
           <button
             onClick={empezarEdicion}
-            className="mb-4 text-xs uppercase tracking-widest px-3 py-2 rounded-sm"
+            className="w-full mb-4 text-xs uppercase tracking-widest px-3 py-3 rounded-sm"
             style={{ color: ORO, border: "1px solid rgba(198,161,91,0.5)" }}
           >
             Editar perfumes ({perfumesInteres.length} / {maxSel})
@@ -579,7 +590,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                           setSeleccion((prev) => [...prev, x.nombre]);
                           setBusqEdit("");
                         }}
-                        className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm hover:bg-white/5 disabled:opacity-30"
+                        className="w-full flex items-center gap-3 text-left px-3 py-3 text-sm hover:bg-white/5 disabled:opacity-30"
                         style={{ color: "#e8e4dc" }}
                       >
                         <img
@@ -615,18 +626,18 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                 </span>
               ))}
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-col gap-2 mt-4">
               <button
                 onClick={guardarSeleccion}
                 disabled={guardandoSel}
-                className="px-5 py-2 text-sm uppercase tracking-widest disabled:opacity-40"
+                className="w-full py-3 text-sm uppercase tracking-widest disabled:opacity-40"
                 style={{ background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }}
               >
                 {guardandoSel ? "Guardando…" : "Guardar cambios"}
               </button>
               <button
                 onClick={() => setEditando(false)}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200"
+                className="w-full py-3 text-sm text-gray-400 hover:text-gray-200"
               >
                 Cancelar
               </button>
@@ -672,7 +683,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                       <button
                         key={v.value}
                         onClick={() => setVeredicto(perf, v.value)}
-                        className="flex-1 py-1.5 text-xs"
+                        className="flex-1 py-3 text-sm"
                         style={
                           n.veredicto === v.value
                             ? { background: ORO, color: "#0b0b0d", borderRadius: 2, fontWeight: 600 }
@@ -693,11 +704,11 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                       const opciones = getOpcionesMililitros(x, { minSiempre });
                       const ml = Number(n.ml) || 0;
                       return (
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="mb-3">
                           <select
                             value={n.ml || ""}
                             onChange={(e) => setNota(perf, "ml", e.target.value)}
-                            className="py-1.5 px-2 text-sm"
+                            className="w-full py-3 px-3"
                             style={{ ...inputStyle, background: "#151316" }}
                           >
                             <option value="" style={{ background: "#151316", color: "#f4efe6" }}>
@@ -710,19 +721,19 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                             ))}
                           </select>
                           {ml > 0 && (
-                            <span className="text-sm" style={{ color: ORO }}>
+                            <p className="text-sm mt-1.5" style={{ color: ORO }}>
                               {fmt(calcularPrecioDecant(x, ml))}
-                            </span>
-                          )}
-                          {ml > 0 && n.veredicto === "tal_vez" && !n.incluir && (
-                            <span className="text-[11px] text-gray-500">no incluido aún</span>
+                              {n.veredicto === "tal_vez" && !n.incluir && (
+                                <span className="text-xs text-gray-500"> · no incluido aún</span>
+                              )}
+                            </p>
                           )}
                         </div>
                       );
                     })()}
                   <button
                     onClick={() => setNotaAbierta((prev) => ({ ...prev, [perf]: !abierta }))}
-                    className="text-xs uppercase tracking-widest"
+                    className="text-xs uppercase tracking-widest py-2"
                     style={{ color: ORO }}
                   >
                     {abierta ? "▴ Ocultar nota" : n.nota ? "▾ Ver nota" : "+ Agregar nota"}
@@ -768,7 +779,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
             {lineasNotas.map((l) => (
               <label
                 key={l.key}
-                className="flex items-center gap-3 p-2 rounded-sm cursor-pointer"
+                className="flex items-start gap-3 p-3 rounded-sm cursor-pointer"
                 style={{
                   border: l.incluido ? `1px solid ${ORO}` : "1px solid rgba(255,255,255,0.08)",
                   opacity: l.incluido ? 1 : 0.6,
@@ -778,15 +789,16 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                   type="checkbox"
                   checked={l.incluido}
                   onChange={() => setNota(l.key, "incluir", !l.incluido)}
-                  className="w-4 h-4 accent-[#C6A15B] shrink-0"
+                  className="w-5 h-5 mt-0.5 accent-[#C6A15B] shrink-0"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{l.nombre}</p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {l.casa} · {l.veredicto === "gusto" ? "Me gustó" : "Tal vez"} · {l.ml} ml
+                  <p className="text-sm" style={{ color: "#f4efe6" }}>{l.nombre}</p>
+                  <p className="text-xs text-gray-500">{l.casa}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {l.veredicto === "gusto" ? "Me gustó" : "Tal vez"} · {l.ml} ml ·{" "}
+                    <span style={{ color: ORO }}>{fmt(l.monto)}</span>
                   </p>
                 </div>
-                <span className="text-sm shrink-0" style={{ color: ORO }}>{fmt(l.monto)}</span>
               </label>
             ))}
           </div>
@@ -813,13 +825,13 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                 <button
                   key={x.id}
                   onClick={() => agregarExtra(x)}
-                  className="w-full flex items-center justify-between gap-2 text-left px-3 py-2 text-sm hover:bg-white/5"
-                  style={{ color: "#e8e4dc" }}
+                  className="w-full text-left px-3 py-3 text-sm hover:bg-white/5"
+                  style={{ color: "#e8e4dc", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
                 >
-                  <span className="truncate">
-                    {x.nombre} <span className="text-gray-500">· {x.casa}</span>
+                  <span className="block">{x.nombre}</span>
+                  <span className="block text-xs text-gray-500">
+                    {x.casa} · <span style={{ color: ORO }}>{fmt(x.precio)}/ml</span>
                   </span>
-                  <span className="shrink-0" style={{ color: ORO }}>{fmt(x.precio)}/ml</span>
                 </button>
               ))
             )}
@@ -836,17 +848,26 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
               return (
                 <div
                   key={l.id}
-                  className="flex items-center gap-3 p-2 rounded-sm"
+                  className="p-3 rounded-sm"
                   style={{ border: `1px solid ${ORO}` }}
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm truncate" style={{ color: "#f4efe6" }}>{l.nombre}</p>
-                    <p className="text-xs text-gray-500 truncate">{l.casa} · extra</p>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-sm" style={{ color: "#f4efe6" }}>{l.nombre}</p>
+                      <p className="text-xs text-gray-500">{l.casa} · extra</p>
+                    </div>
+                    <button
+                      onClick={() => quitarExtra(l.id)}
+                      className="text-gray-500 hover:text-red-400 text-xl leading-none px-2"
+                      title="Quitar"
+                    >
+                      ×
+                    </button>
                   </div>
                   <select
                     value={l.ml}
                     onChange={(e) => cambiarMlExtra(l.id, e.target.value)}
-                    className="py-1.5 px-2 text-sm"
+                    className="w-full py-3 px-3"
                     style={{ ...inputStyle, background: "#151316" }}
                   >
                     {opciones.map((o) => (
@@ -855,14 +876,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                       </option>
                     ))}
                   </select>
-                  <span className="text-sm w-20 text-right" style={{ color: ORO }}>{fmt(l.monto)}</span>
-                  <button
-                    onClick={() => quitarExtra(l.id)}
-                    className="text-gray-500 hover:text-red-400 px-1"
-                    title="Quitar"
-                  >
-                    ×
-                  </button>
+                  <p className="text-sm mt-1.5" style={{ color: ORO }}>{fmt(l.monto)}</p>
                 </div>
               );
             })}
@@ -1224,7 +1238,7 @@ export default function ExperienciaPrivada() {
 
   if (!sesion) {
     return (
-      <div style={fondo} className="flex items-center justify-center px-6">
+      <div data-vip style={fondo} className="flex items-center justify-center px-6">
         <div className="w-full max-w-md text-center py-20">
           <div className="mx-auto mb-8 h-px w-16" style={{ background: ORO, opacity: 0.6 }} />
           <p className="uppercase text-xs tracking-[0.35em] mb-6" style={{ color: ORO }}>
@@ -1273,7 +1287,7 @@ export default function ExperienciaPrivada() {
   const sesionAbierta = sesiones.find((x) => x.id === sesionAbiertaId);
   if (sesionAbierta) {
     return (
-      <div style={fondo}>
+      <div data-vip style={fondo}>
         <div className="max-w-2xl mx-auto w-full px-6 py-16">
           <p className="uppercase text-xs tracking-[0.35em] mb-5" style={{ color: ORO }}>
             Experiencia privada
@@ -1295,7 +1309,7 @@ export default function ExperienciaPrivada() {
   }
 
   return (
-    <div style={fondo}>
+    <div data-vip style={fondo}>
       <div className="max-w-2xl mx-auto w-full px-6 py-16">
         <p className="uppercase text-xs tracking-[0.35em] mb-5" style={{ color: ORO }}>
           Experiencia privada
@@ -1330,12 +1344,11 @@ export default function ExperienciaPrivada() {
                         setSesionAbiertaId(s.id);
                         window.scrollTo(0, 0);
                       }}
-                      className="w-full text-left flex items-center justify-between gap-3 p-3 rounded-sm hover:bg-white/5"
+                      className="w-full text-left block p-4 rounded-sm hover:bg-white/5"
                       style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
+                      <div>
+                        <span
                             className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full"
                             style={
                               realizada
@@ -1345,18 +1358,24 @@ export default function ExperienciaPrivada() {
                           >
                             {realizada ? "Realizada" : "Próxima"}
                           </span>
-                          <span className="text-sm text-gray-300 capitalize">
-                            {fechaSesionTexto(s) ||
-                              `Por confirmar · solicitada el ${new Date(s.creado_en).toLocaleDateString("es-MX")}`}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {s.num_personas} {s.num_personas === 1 ? "persona" : "personas"} · {nPerfumes} perfumes de interés
-                          {s.pedido_enviado ? " · pedido enviado" : ""}
+                        <p className="text-base text-gray-200 capitalize mt-2">
+                          {fechaSesionTexto(s) || "Fecha por confirmar"}
                         </p>
+                        {!fechaSesionTexto(s) && (
+                          <p className="text-xs text-gray-500">
+                            Solicitada el {new Date(s.creado_en).toLocaleDateString("es-MX")}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          {s.num_personas} {s.num_personas === 1 ? "persona" : "personas"}
+                        </p>
+                        <p className="text-xs text-gray-500">{nPerfumes} perfumes de interés</p>
+                        {s.pedido_enviado && (
+                          <p className="text-xs mt-0.5" style={{ color: ORO }}>Pedido enviado</p>
+                        )}
                       </div>
-                      <span className="text-xs uppercase tracking-widest shrink-0" style={{ color: ORO }}>
-                        Abrir →
+                      <span className="block text-xs uppercase tracking-widest mt-3" style={{ color: ORO }}>
+                        Abrir sesión →
                       </span>
                     </button>
                   );
