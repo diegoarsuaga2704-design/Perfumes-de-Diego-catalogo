@@ -7,6 +7,7 @@ import {
   updateParfumAdmin,
 } from "../functions/getParfumsAdmin";
 import { ensureCasaExists } from "../functions/getCasas";
+import renombrarPerfumeVip from "../functions/renombrarPerfumeVip";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ImageUploader from "../ui/ImageUploader";
 import CasaAutocomplete from "../ui/CasaAutocomplete";
@@ -36,6 +37,7 @@ export default function AdminPerfumeEdit() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [nombreOriginal, setNombreOriginal] = useState("");
 
   useEffect(() => {
     fetchParfum();
@@ -50,6 +52,7 @@ export default function AdminPerfumeEdit() {
         return;
       }
       setForm(data);
+      setNombreOriginal(data.nombre || "");
     } catch (err) {
       setError("Error al cargar el perfume");
     } finally {
@@ -98,6 +101,12 @@ export default function AdminPerfumeEdit() {
       ensureCasaExists(updates.casa).catch((err) =>
         console.error("Error asegurando la casa:", err),
       );
+      // Si cambió el nombre, actualiza las sesiones VIP que lo usan.
+      if (updates.nombre !== nombreOriginal) {
+        await renombrarPerfumeVip(nombreOriginal, updates.nombre).catch((err) =>
+          console.error("Error renombrando en sesiones VIP:", err),
+        );
+      }
       setSuccess(true);
 
       setTimeout(() => {

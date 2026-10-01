@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, memo, useRef } from "react";
 import supabase from "../services/supabase";
-import getParfums from "../functions/getParfums";
 import { useParfums } from "../context/ParfumsContext";
 import { imagenThumb } from "../functions/imagenThumb";
 import {
@@ -57,6 +56,7 @@ function useVipHead() {
 }
 
 // Fecha que ve el cliente: la acordada con Diego, o "por confirmar".
+// Las sesiones registradas desde el admin solo traen `fecha` (sin hora).
 function fechaSesionTexto(sx) {
   if (sx?.fecha_acordada) {
     return new Date(sx.fecha_acordada).toLocaleString("es-MX", {
@@ -67,7 +67,33 @@ function fechaSesionTexto(sx) {
       minute: "2-digit",
     });
   }
+  if (sx?.fecha) {
+    const d = new Date(String(sx.fecha).slice(0, 10) + "T12:00:00");
+    if (!isNaN(d)) {
+      return d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+    }
+  }
   return null;
+}
+
+// Crédito de la sesión: lo declarado al agendar, o la recarga registrada en el admin.
+const creditoSesion = (sx) => Number(sx?.inversion_declarada) || Number(sx?.recarga) || 0;
+
+// Borrador del formulario guardado en el navegador (sobrevive recargas).
+function leerBorrador() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_BORRADOR) || "null");
+    return d && typeof d === "object" ? d : {};
+  } catch {
+    return {};
+  }
+}
+
+// Ajusta la lista de asistentes al número de personas sin perder nombres.
+function ajustarAsistentes(lista, n) {
+  const copia = (Array.isArray(lista) ? lista : []).slice(0, n);
+  while (copia.length < n) copia.push("");
+  return copia;
 }
 
 const fmt = (n) => "$" + (Number(n) || 0).toLocaleString("es-MX");
@@ -94,6 +120,12 @@ const OPCIONES_DIA = [
 function DropdownOscuro({ value, onChange, opciones, placeholder }) {
   const [abierto, setAbierto] = useState(false);
   const actual = opciones.find((o) => o.value === value);
+  useEffect(() => {
+    if (!abierto) return;
+    const onKey = (e) => e.key === "Escape" && setAbierto(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [abierto]);
   return (
     <div className="relative">
       <button
@@ -217,8 +249,11 @@ const VEREDICTOS = [
 function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minSiempre = 0, onVolver, onActualizado }) {
   const perfumesInteres = Array.isArray(sesionData.perfumes) ? sesionData.perfumes : [];
   const esPendiente = sesionData.estado !== "realizada";
-  const maxSel = Math.floor(
-    (Number(sesionData.inversion_declarada) || 0) / (Number(porPerfume) || 1000),
+  // Nunca por debajo de lo que ya eligió: si sube el precio por perfume en la
+  // config, la sesión no queda bloqueada.
+  const maxSel = Math.max(
+    Math.floor(creditoSesion(sesionData) / (Number(porPerfume) || 1000)),
+    perfumesInteres.length,
   );
   const [editando, setEditando] = useState(false);
   const [seleccion, setSeleccion] = useState(perfumesInteres);
@@ -235,6 +270,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
     return parfums
       .filter(
         (x) =>
+          x.disponible !== "Agotado" &&
           !seleccion.includes(x.nombre) &&
           (x.nombre?.toLowerCase().includes(q) || x.casa?.toLowerCase().includes(q)),
       )
@@ -292,6 +328,7 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
   const [enviandoPedido, setEnviandoPedido] = useState(false);
   const [msgPedido, setMsgPedido] = useState("");
   const primeraCarga = useRef(true);
+  const pendiente = useRef(null);
 
   // Autoguardado de notas, ml y extras (espera a que deje de escribir).
   useEffect(() => {
@@ -299,8 +336,10 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
       primeraCarga.current = false;
       return;
     }
+    pendiente.current = notas;
     setEstadoGuardado("Guardando…");
     const t = setTimeout(async () => {
+      pendiente.current = null;
       try {
         const { error } = await supabase.rpc("vip_guardar_anotaciones", {
           p_username: username,
@@ -316,6 +355,22 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notas]);
+
+  // Si sale de la sesión antes de que corra el autoguardado, guarda lo pendiente.
+  useEffect(
+    () => () => {
+      if (!pendiente.current) return;
+      supabase
+        .rpc("vip_guardar_anotaciones", {
+          p_username: username,
+          p_sesion_id: sesionData.id,
+          p_anotaciones: pendiente.current,
+        })
+        .then(({ error }) => !error && onActualizado?.());
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const setNota = (perf, campo, val) =>
     setNotas((prev) => ({ ...prev, [perf]: { ...(prev[perf] || {}), [campo]: val } }));
@@ -372,8 +427,10 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
   const lineasExtras = extras.map((e) => {
     const x = parfumPorId(e.id);
     const ml = Number(e.ml) || 0;
-    return { ...e, ml, monto: x ? calcularPrecioDecant(x, ml) : 0 };
+    const motivo = parfums.length > 0 ? motivoNoDecant(x) : null;
+    return { ...e, ml, motivo, monto: x && !motivo ? calcularPrecioDecant(x, ml) : 0 };
   });
+  const extrasValidos = lineasExtras.filter((l) => !l.motivo);
   const setExtras = (fn) =>
     setNotas((prev) => ({ ...prev, __extras: fn(Array.isArray(prev.__extras) ? prev.__extras : []) }));
 
@@ -416,16 +473,37 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
   const incluidas = lineasNotas.filter((l) => l.incluido);
   const totalPedido =
     incluidas.reduce((acc, l) => acc + l.monto, 0) +
-    lineasExtras.reduce((acc, l) => acc + l.monto, 0);
-  const credito = Number(sesionData.inversion_declarada) || 0;
+    extrasValidos.reduce((acc, l) => acc + l.monto, 0);
+  const credito = creditoSesion(sesionData);
   const diferencia = totalPedido - credito;
   const porcentaje = credito > 0 ? Math.min(100, (totalPedido / credito) * 100) : 0;
 
   const enviarPedido = async () => {
-    const pedidoLimpio = [...incluidas, ...lineasExtras]
+    const pedidoLimpio = [...incluidas, ...extrasValidos]
       .filter((l) => l.ml > 0)
       .map(({ id, nombre: n, casa, ml, monto }) => ({ id, nombre: n, casa, ml, monto }));
     if (pedidoLimpio.length === 0 || enviandoPedido) return;
+    // WhatsApp se abre antes del await: iPhone bloquea ventanas que se abren
+    // después de esperar una respuesta del servidor.
+    const lineas = [
+      "Hola Diego, este es mi pedido final de la Experiencia Privada.",
+      "",
+      `Cliente: ${nombre || "-"}`,
+      `Sesión: ${fechaSesionTexto(sesionData) || "solicitada el " + new Date(sesionData.creado_en).toLocaleDateString("es-MX")}`,
+      "",
+      ...pedidoLimpio.map((l) => `• ${l.nombre} (${l.casa}) · ${l.ml} ml — ${fmt(l.monto)}`),
+      "",
+      `Total del pedido: ${fmt(totalPedido)}`,
+      `Inversión acordada: ${fmt(credito)}`,
+      diferencia > 0
+        ? `Diferencia a cubrir: ${fmt(diferencia)}`
+        : `Crédito restante (saldo en tienda): ${fmt(-diferencia)}`,
+    ];
+    window.open(
+      `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
     setEnviandoPedido(true);
     setMsgPedido("");
     try {
@@ -436,28 +514,11 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
       });
       if (error) throw error;
       onActualizado?.();
-      const lineas = [
-        "Hola Diego, este es mi pedido final de la Experiencia Privada.",
-        "",
-        `Cliente: ${nombre || "-"}`,
-        `Sesión: ${fechaSesionTexto(sesionData) || "solicitada el " + new Date(sesionData.creado_en).toLocaleDateString("es-MX")}`,
-        "",
-        ...pedidoLimpio.map((l) => `• ${l.nombre} (${l.casa}) · ${l.ml} ml — ${fmt(l.monto)}`),
-        "",
-        `Total del pedido: ${fmt(totalPedido)}`,
-        `Inversión acordada: ${fmt(credito)}`,
-        diferencia > 0
-          ? `Diferencia a cubrir: ${fmt(diferencia)}`
-          : `Crédito restante (saldo en tienda): ${fmt(-diferencia)}`,
-      ];
-      window.open(
-        `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`,
-        "_blank",
-        "noopener,noreferrer",
-      );
       setMsgPedido("Pedido enviado ✓");
     } catch {
-      setMsgPedido("No se pudo enviar el pedido. Intenta de nuevo.");
+      setMsgPedido(
+        "Se abrió WhatsApp, pero el pedido no quedó registrado aquí. Intenta enviarlo de nuevo.",
+      );
     } finally {
       setEnviandoPedido(false);
     }
@@ -855,6 +916,12 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                     <div className="min-w-0">
                       <p className="text-sm" style={{ color: "#f4efe6" }}>{l.nombre}</p>
                       <p className="text-xs text-gray-500">{l.casa} · extra</p>
+                      {l.motivo && (
+                        <p className="text-xs mt-0.5" style={{ color: "#d98c8c" }}>
+                          {l.motivo === "No disponible" ? "Ya no está en el catálogo" : l.motivo} · no se
+                          incluye en el pedido
+                        </p>
+                      )}
                     </div>
                     <button
                       onClick={() => quitarExtra(l.id)}
@@ -936,24 +1003,33 @@ export default function ExperienciaPrivada() {
   const [verificando, setVerificando] = useState(false);
   const [error, setError] = useState("");
   const [cfg, setCfg] = useState(CFG_DEFAULT);
-  const { minDecantSiempre = 0 } = useParfums() || {};
+  const { parfums = [], minDecantSiempre = 0 } = useParfums() || {};
 
-  const [parfums, setParfums] = useState([]);
-  const [numPersonas, setNumPersonas] = useState(1);
-  const [asistentes, setAsistentes] = useState([""]);
-  const [perfumesSel, setPerfumesSel] = useState([]);
+  // El borrador se lee al crear el estado (no en un efecto), así el efecto que
+  // lo guarda nunca lo sobrescribe antes de recuperarlo.
+  const [borrador] = useState(leerBorrador);
+  const [numPersonas, setNumPersonas] = useState(() =>
+    Math.max(1, Number(borrador.numPersonas) || 1),
+  );
+  const [asistentes, setAsistentes] = useState(() =>
+    ajustarAsistentes(borrador.asistentes || [""], Math.max(1, Number(borrador.numPersonas) || 1)),
+  );
+  const [perfumesSel, setPerfumesSel] = useState(() =>
+    Array.isArray(borrador.perfumesSel) ? borrador.perfumesSel : [],
+  );
   const [busqueda, setBusqueda] = useState("");
   const [casaFiltro, setCasaFiltro] = useState("");
   const [orden, setOrden] = useState("casa");
-  const [dia, setDia] = useState("");
-  const [preferencia, setPreferencia] = useState("");
-  const [lugar, setLugar] = useState("");
-  const [aceptaTyc, setAceptaTyc] = useState(false);
-  const [monto, setMonto] = useState("");
-  const [nombre, setNombre] = useState("");
+  const [dia, setDia] = useState(borrador.dia || "");
+  const [preferencia, setPreferencia] = useState(borrador.preferencia || "");
+  const [lugar, setLugar] = useState(borrador.lugar || "");
+  const [aceptaTyc, setAceptaTyc] = useState(Boolean(borrador.aceptaTyc));
+  const [monto, setMonto] = useState(borrador.monto != null ? String(borrador.monto) : "");
+  const [nombre, setNombre] = useState(borrador.nombre || "");
   const [sesiones, setSesiones] = useState([]);
   const [enviando, setEnviando] = useState(false);
   const [sesionAbiertaId, setSesionAbiertaId] = useState(null);
+  const [msgAgenda, setMsgAgenda] = useState(null);
 
   const cargarSesiones = async (u) => {
     const user = (u || sesion?.username || "").trim();
@@ -974,34 +1050,34 @@ export default function ExperienciaPrivada() {
         if (d?.username) {
           setSesion(d);
           setNombre(d.nombre || "");
-          setAsistentes([d.nombre || ""]);
+          setAsistentes((prev) => (prev[0]?.trim() ? prev : [d.nombre || "", ...prev.slice(1)]));
           cargarSesiones(d.username);
+          // Revalida la clave para traer saldo y nombre al día (o sacar al
+          // cliente si ya no existe). Sin conexión, se queda con lo guardado.
+          supabase
+            .rpc("validar_vip", { p_username: d.username })
+            .then(({ data, error: rpcError }) => {
+              if (rpcError) return;
+              const cliente = Array.isArray(data) ? data[0] : data;
+              if (!cliente?.nombre) {
+                salir();
+                return;
+              }
+              const fresca = {
+                username: d.username,
+                nombre: cliente.nombre,
+                saldo: Number(cliente.saldo) || 0,
+              };
+              localStorage.setItem(LS_VIP, JSON.stringify(fresca));
+              setSesion(fresca);
+              setNombre(fresca.nombre);
+            });
         }
       }
     } catch {
       // ignora datos corruptos
     }
-  }, []);
-
-  // Recupera el borrador del formulario (sobrevive recargas).
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_BORRADOR);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.numPersonas) setNumPersonas(d.numPersonas);
-        if (Array.isArray(d.asistentes)) setAsistentes(d.asistentes);
-        if (d.monto != null) setMonto(String(d.monto));
-        if (Array.isArray(d.perfumesSel)) setPerfumesSel(d.perfumesSel);
-        if (d.dia) setDia(d.dia);
-        if (d.preferencia) setPreferencia(d.preferencia);
-        if (d.lugar) setLugar(d.lugar);
-        if (d.aceptaTyc) setAceptaTyc(d.aceptaTyc);
-        if (d.nombre) setNombre(d.nombre);
-      }
-    } catch {
-      // ignora borrador corrupto
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Guarda el borrador en cada cambio.
@@ -1045,22 +1121,17 @@ export default function ExperienciaPrivada() {
       .catch(() => {});
   }, []);
 
+  // Al empezar una nueva solicitud, se quita el aviso de la anterior.
   useEffect(() => {
-    if (!sesion) return;
-    getParfums()
-      .then((p) => setParfums(p || []))
-      .catch(() => setParfums([]));
-  }, [sesion]);
+    if (monto) setMsgAgenda(null);
+  }, [monto]);
 
-  useEffect(() => {
-    setAsistentes((prev) => {
-      const n = Math.max(1, Number(numPersonas) || 1);
-      const copia = [...prev];
-      while (copia.length < n) copia.push("");
-      copia.length = n;
-      return copia;
-    });
-  }, [numPersonas]);
+  // Cambia el número de personas y ajusta la lista de asistentes en el mismo paso.
+  const cambiarPersonas = (delta) => {
+    const n = Math.max(1, (Number(numPersonas) || 1) + delta);
+    setNumPersonas(n);
+    setAsistentes((prev) => ajustarAsistentes(prev, n));
+  };
 
   const entrar = async () => {
     const u = username.trim();
@@ -1082,7 +1153,9 @@ export default function ExperienciaPrivada() {
         localStorage.setItem(LS_VIP, JSON.stringify(nueva));
         setSesion(nueva);
         setNombre(nueva.nombre);
-        setAsistentes([nueva.nombre]);
+        setAsistentes((prev) =>
+          ajustarAsistentes([nueva.nombre, ...prev.slice(1)], Math.max(1, Number(numPersonas) || 1)),
+        );
         cargarSesiones(nueva.username);
       } else {
         setError("Acceso no válido. Verifica tu clave de acceso.");
@@ -1101,6 +1174,7 @@ export default function ExperienciaPrivada() {
     setSesiones([]);
     setSesionAbiertaId(null);
     setUsername("");
+    setMsgAgenda(null);
   };
 
   const costoSesion = useMemo(() => {
@@ -1114,17 +1188,23 @@ export default function ExperienciaPrivada() {
     montoNum / (Number(cfg.inversion_por_perfume) || 1000),
   );
 
+  // Para oler solo se ofrecen perfumes con frasco disponible.
+  const catalogoOler = useMemo(
+    () => parfums.filter((p) => p.disponible !== "Agotado"),
+    [parfums],
+  );
+
   const casas = useMemo(
     () =>
-      [...new Set(parfums.map((p) => p.casa).filter(Boolean))].sort((a, b) =>
+      [...new Set(catalogoOler.map((p) => p.casa).filter(Boolean))].sort((a, b) =>
         a.localeCompare(b, "es"),
       ),
-    [parfums],
+    [catalogoOler],
   );
 
   const listaFiltrada = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    let lista = parfums.filter((p) => {
+    let lista = catalogoOler.filter((p) => {
       if (casaFiltro && p.casa !== casaFiltro) return false;
       if (q && !(p.nombre?.toLowerCase().includes(q) || p.casa?.toLowerCase().includes(q)))
         return false;
@@ -1141,7 +1221,7 @@ export default function ExperienciaPrivada() {
           (a.nombre || "").localeCompare(b.nombre || "", "es"),
       );
     return lista;
-  }, [parfums, busqueda, casaFiltro, orden]);
+  }, [catalogoOler, busqueda, casaFiltro, orden]);
 
   // Agrupado A-Z por casa (solo cuando el orden es por casa).
   const grupos = useMemo(() => {
@@ -1170,36 +1250,21 @@ export default function ExperienciaPrivada() {
   const setAsistente = (i, val) =>
     setAsistentes((prev) => prev.map((a, idx) => (idx === i ? val : a)));
 
+  const excedente = Math.max(0, perfumesSel.length - maxPerfumes);
   const puedeEnviar =
     montoValido &&
     perfumesSel.length >= 1 &&
+    excedente === 0 &&
     nombre.trim() &&
     lugar.trim() &&
     aceptaTyc;
 
   const enviar = async () => {
     if (!puedeEnviar || enviando) return;
-    setEnviando(true);
     const nombres = asistentes.map((a) => a.trim()).filter(Boolean);
 
-    // Crea la sesión pendiente (para que el cliente la vea en su espacio).
-    try {
-      await supabase.rpc("vip_agendar", {
-        p_username: sesion.username,
-        p_num_personas: Number(numPersonas) || 1,
-        p_perfumes: perfumesSel,
-        p_inversion: montoNum,
-        p_preferencia: preferencia || null,
-        p_lugar: lugar.trim() || null,
-        p_dia: dia || null,
-        p_asistentes: nombres,
-      });
-      await cargarSesiones(sesion.username);
-    } catch {
-      // aunque falle el guardado, seguimos con el aviso por WhatsApp
-    }
-    setEnviando(false);
-
+    // WhatsApp se abre antes del await: iPhone bloquea ventanas que se abren
+    // después de esperar una respuesta del servidor.
     const lineas = [
       "Hola Diego, quiero agendar una Experiencia Privada.",
       "",
@@ -1221,6 +1286,45 @@ export default function ExperienciaPrivada() {
       "_blank",
       "noopener,noreferrer",
     );
+
+    // Crea la sesión pendiente (para que el cliente la vea en su espacio).
+    setEnviando(true);
+    setMsgAgenda(null);
+    try {
+      const { error: rpcError } = await supabase.rpc("vip_agendar", {
+        p_username: sesion.username,
+        p_num_personas: Number(numPersonas) || 1,
+        p_perfumes: perfumesSel,
+        p_inversion: montoNum,
+        p_preferencia: preferencia || null,
+        p_lugar: lugar.trim() || null,
+        p_dia: dia || null,
+        p_asistentes: nombres,
+      });
+      if (rpcError) throw rpcError;
+      await cargarSesiones(sesion.username);
+      // Limpia el formulario: evita agendar la misma sesión dos veces.
+      setNumPersonas(1);
+      setAsistentes([nombre]);
+      setMonto("");
+      setPerfumesSel([]);
+      setDia("");
+      setPreferencia("");
+      setLugar("");
+      setAceptaTyc(false);
+      setMsgAgenda({
+        ok: true,
+        texto: "Solicitud enviada ✓ Ya aparece en «Mis sesiones». Te confirmo la fecha por WhatsApp.",
+      });
+    } catch {
+      setMsgAgenda({
+        ok: false,
+        texto:
+          "Se abrió WhatsApp, pero la sesión no quedó guardada en tu espacio. Intenta de nuevo en un momento.",
+      });
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const fondo = {
@@ -1256,6 +1360,10 @@ export default function ExperienciaPrivada() {
             onChange={(e) => setUsername(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && entrar()}
             placeholder="Tu clave de acceso"
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
             className="w-full text-center text-lg tracking-wider py-3 px-4 outline-none"
             style={inputStyle}
           />
@@ -1436,9 +1544,9 @@ export default function ExperienciaPrivada() {
         {/* Personas */}
         <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2">Número de personas</label>
         <div className="flex items-center gap-3">
-          <button onClick={() => setNumPersonas((n) => Math.max(1, Number(n) - 1))} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>−</button>
+          <button onClick={() => cambiarPersonas(-1)} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>−</button>
           <span className="text-xl w-8 text-center" style={{ color: "#f4efe6" }}>{numPersonas}</span>
-          <button onClick={() => setNumPersonas((n) => Number(n) + 1)} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>+</button>
+          <button onClick={() => cambiarPersonas(1)} className="w-9 h-9 border text-lg" style={{ borderColor: "rgba(198,161,91,0.4)", color: ORO, borderRadius: 2 }}>+</button>
           <span className="text-sm text-gray-400 ml-2">Sesión: {fmt(costoSesion)}</span>
         </div>
 
@@ -1558,6 +1666,13 @@ export default function ExperienciaPrivada() {
                 />
               </div>
             </div>
+
+            {excedente > 0 && (
+              <p className="text-sm mb-3" style={{ color: "#ff8a8a" }}>
+                Tu inversión permite hasta {maxPerfumes} perfumes. Quita {excedente}{" "}
+                {excedente === 1 ? "perfume" : "perfumes"} o sube tu inversión.
+              </p>
+            )}
 
             {/* Seleccionados */}
             {perfumesSel.length > 0 && (
@@ -1691,10 +1806,16 @@ export default function ExperienciaPrivada() {
         >
           {enviando ? "Agendando…" : "Solicitar por WhatsApp"}
         </button>
-        {!puedeEnviar && (
+        {msgAgenda && (
+          <p className="text-center text-sm mt-3" style={{ color: msgAgenda.ok ? ORO : "#d98c8c" }}>
+            {msgAgenda.texto}
+          </p>
+        )}
+        {!puedeEnviar && !msgAgenda?.ok && (
           <p className="text-center text-xs text-gray-500 mt-3">
-            Completa tu inversión, elige mínimo 1 perfume, indica el lugar y
-            acepta los términos para solicitar tu sesión.
+            {excedente > 0
+              ? `Quita ${excedente} ${excedente === 1 ? "perfume" : "perfumes"} de tu selección para solicitar tu sesión.`
+              : "Completa tu inversión, elige mínimo 1 perfume, indica el lugar y acepta los términos para solicitar tu sesión."}
           </p>
         )}
 
