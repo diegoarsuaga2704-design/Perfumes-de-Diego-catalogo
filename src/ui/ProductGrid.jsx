@@ -6,6 +6,7 @@ import { useOrder } from "../context/OrderContext.jsx";
 import { useParfums } from "../context/ParfumsContext.jsx";
 import Pagination from "./Paginacion.jsx";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { normalizarTexto } from "../functions/normalizarTexto";
 
 // 🔒 Helper global para blindar strings
 const safeString = (value) => (value ?? "").toString();
@@ -72,9 +73,7 @@ export default function ProductGrid({
     // ===== BUSQUEDA DIRECTA =====
     if (searchResult && searchResult.nombre) {
       let result = allParfums.filter(
-        (p) =>
-          safeString(p.nombre).toLowerCase() ===
-          safeString(searchResult.nombre).toLowerCase(),
+        (p) => normalizarTexto(p.nombre) === normalizarTexto(searchResult.nombre),
       );
 
       if (stockFilter !== null) {
@@ -86,12 +85,12 @@ export default function ProductGrid({
 
     // ===== BUSQUEDA PARCIAL =====
     if (searchResult && searchResult.query) {
-      const lowerQuery = searchResult.query.toLowerCase();
+      const lowerQuery = normalizarTexto(searchResult.query);
 
       let result = allParfums.filter(
         (p) =>
-          safeString(p.nombre).toLowerCase().includes(lowerQuery) ||
-          safeString(p.casa).toLowerCase().includes(lowerQuery),
+          normalizarTexto(p.nombre).includes(lowerQuery) ||
+          normalizarTexto(p.casa).includes(lowerQuery),
       );
 
       if (stockFilter !== null) {

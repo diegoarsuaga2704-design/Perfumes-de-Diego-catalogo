@@ -1,4 +1,4 @@
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ComoFunciona from "../ui/ComoFunciona";
 import HomeBrand from "../ui/HomeBrand";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
@@ -6,13 +6,12 @@ import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 import SEO from "../ui/SEO";
 
 function Prehome() {
-  const navigate = useNavigate();
-
   const collections = [
     {
       image:
         "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/o.rZpkAR0ZbQi.jpg",
       title: "Decants",
+      to: "/decants",
       description:
         "Prueba tus perfumes favoritos antes de comprar el frasco completo.",
     },
@@ -20,27 +19,17 @@ function Prehome() {
       image:
         "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg",
       title: "Mejor vendidos",
+      to: "/best-sellers",
       description: "Los favoritos de mis clientes.",
     },
     {
       image:
         "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/haec%20foto.webp",
       title: "Botellas completas y parciales",
+      to: "/botellas",
       description: "Perfumes sellados y parciales disponibles.",
     },
   ];
-
-  const handleClick = (store) => {
-    if (store === "Botellas completas y parciales") {
-      navigate("/botellas");
-    } else if (store === "Decants") {
-      navigate("/decants");
-    } else if (store === "Mejor vendidos") {
-      navigate("/best-sellers");
-    } else {
-      navigate("/home");
-    }
-  };
 
   return (
     <div className="bg-gray-100">
@@ -56,7 +45,7 @@ function Prehome() {
             title={item.title}
             description={item.description}
             eager={index === 0}
-            onClick={() => handleClick(item.title)}
+            to={item.to}
           />
         ))}
       </div>

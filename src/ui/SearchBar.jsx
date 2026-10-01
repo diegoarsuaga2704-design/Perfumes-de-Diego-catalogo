@@ -3,6 +3,8 @@ import { Search } from "lucide-react";
 import { useParfums } from "../context/ParfumsContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { slugify } from "../functions/slugify";
+import { normalizarTexto } from "../functions/normalizarTexto";
+import { imagenThumb } from "../functions/imagenThumb";
 
 function SearchBar({ onSearchResult }) {
   const { parfums, error } = useParfums();
@@ -39,8 +41,8 @@ function SearchBar({ onSearchResult }) {
       return;
     }
 
-    const lowerQuery = query.toLowerCase();
-    const safeLower = (v) => (v ?? "").toString().toLowerCase();
+    const lowerQuery = normalizarTexto(query.trim());
+    const safeLower = normalizarTexto;
     // Separar en dos grupos:
     // 1️⃣ los que empiezan con el texto
     const startsWithMatches = parfums.filter(
@@ -91,7 +93,7 @@ function SearchBar({ onSearchResult }) {
 
     // ¿Hay un perfume con ese nombre exacto?
     const exactMatch = parfums.find(
-      (p) => (p.nombre ?? "").toString().toLowerCase() === query.toLowerCase(),
+      (p) => normalizarTexto(p.nombre) === normalizarTexto(query.trim()),
     );
 
     if (exactMatch) {
@@ -181,9 +183,15 @@ function SearchBar({ onSearchResult }) {
               }}
             >
               <img
-                src={item.image}
+                src={imagenThumb(item.image, 80)}
                 alt={item.nombre}
-                className="h-7 rounded object-cover mr-3"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  // Si falla la miniatura, usa la imagen original.
+                  if (e.currentTarget.src !== item.image) e.currentTarget.src = item.image;
+                }}
+                className="h-7 w-7 rounded object-cover mr-3 shrink-0"
               />
               <span className="text-sm text-gray-600">{item.nombre}</span>
             </li>

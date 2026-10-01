@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { FaTiktok } from "react-icons/fa";
 import { Package } from "lucide-react";
 import { slugify } from "../functions/slugify";
@@ -8,29 +8,30 @@ import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
 
 function ProductCard({ parfum }) {
-  const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
   const [usarOriginal, setUsarOriginal] = useState(false);
 
   // Un solo badge, misma lógica que ProductDetail (fuente única).
   const badge = getBadgeEstatus(parfum);
 
-  const handleCardClick = () => {
-    navigate(`/product/${slugify(parfum.nombre)}/${parfum.id}`);
-  };
-
   return (
     <div
-      key={parfum.id}
-      onClick={handleCardClick}
-      className={`cursor-pointer bg-white relative shadow-md rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300
+      className={`bg-white relative shadow-md rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300
         ${parfum.disponible === "Agotado" ? "shadow-red-600" : ""}
       ${parfum.disponible === "Próximamente" ? "shadow-sky-600" : ""}`}
     >
+      {/* Enlace real que cubre toda la tarjeta: permite abrir en otra pestaña
+          (o pulsación larga en el celular) y que Google siga el enlace. */}
+      <Link
+        to={`/product/${slugify(parfum.nombre)}/${parfum.id}`}
+        aria-label={parfum.nombre}
+        className="absolute inset-0 z-[5]"
+      />
+
       {/* Badge de estatus (esquina superior derecha) — un solo badge */}
       {badge && (
         <span
-          className={`absolute top-2 right-2 z-10 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md ${badge.color}`}
+          className={`absolute top-2 right-2 z-10 pointer-events-none text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-md ${badge.color}`}
         >
           {badge.texto}
         </span>
@@ -74,8 +75,7 @@ function ProductCard({ parfum }) {
               href={parfum.tiktokLink}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="mt-2 inline-flex items-center justify-center gap-1 text-[10px] sm:text-xs text-[#A47E3B] hover:text-[#D4AF7A] font-semibold border border-[#A47E3B] rounded-md py-1 px-2 w-fit"
+              className="relative z-10 mt-2 inline-flex items-center justify-center gap-1 text-[10px] sm:text-xs text-[#A47E3B] hover:text-[#D4AF7A] font-semibold border border-[#A47E3B] rounded-md py-1 px-2 w-fit"
             >
               <FaTiktok className="h-3 w-3" />
               Ver video

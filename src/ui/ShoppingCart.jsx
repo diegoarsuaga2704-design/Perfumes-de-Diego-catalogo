@@ -63,6 +63,26 @@ export default function ShoppingCart() {
     };
   }, [isCartOpen]);
 
+  // Con el carrito abierto, "atrás" (Android/navegador) y Escape lo cierran
+  // en vez de salir de la página. Se agrega una entrada al historial al
+  // abrirlo; si se cierra con la X, se quita esa entrada.
+  useEffect(() => {
+    if (!isCartOpen) return;
+    window.history.pushState({ ...window.history.state, carritoAbierto: true }, "");
+    const onPop = () => closeCart();
+    const onKey = (e) => {
+      if (e.key === "Escape") closeCart();
+    };
+    window.addEventListener("popstate", onPop);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      document.removeEventListener("keydown", onKey);
+      if (window.history.state?.carritoAbierto) window.history.back();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCartOpen]);
+
   if (!isCartOpen) return null;
 
   return (
@@ -141,7 +161,9 @@ export default function ShoppingCart() {
                 onClick={() => {
                   track("ir_a_checkout");
                   closeCart();
-                  navigate("/checkout");
+                  // replace: sustituye la entrada del carrito abierto, así
+                  // "atrás" desde el checkout regresa a la página anterior.
+                  navigate("/checkout", { replace: true });
                 }}
                 className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors"
               >

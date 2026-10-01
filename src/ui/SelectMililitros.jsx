@@ -26,7 +26,7 @@ export default function SelectMililitros({
       value={value}
       onChange={onChange}
       options={opciones}
-      placeholder={esCta ? "🛒 Eligir mililitros" : placeholder}
+      placeholder={esCta ? "🛒 Elegir mililitros" : placeholder}
       direction={direction}
       variant={variant}
       pulse={pulse}

@@ -3,6 +3,7 @@ import supabase from "../services/supabase";
 import { useToast } from "./ToastContext";
 import { track } from "@vercel/analytics";
 import { getCupon } from "../functions/cuponBienvenida";
+import { MAX_BOTELLAS } from "../functions/limitesCarrito";
 import {
   calcularPrecioDecantCarrito,
 } from "../functions/pricingDecant";
@@ -11,6 +12,7 @@ const CartContext = createContext();
 const CART_STORAGE_KEY = "perfumes-diego-cart";
 const CART_EXPIRY_DAYS = 10;
 const CART_EXPIRY_MS = CART_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+const CUPON_STORAGE_KEY = "perfumes-diego-cupon";
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
@@ -42,7 +44,7 @@ export function CartProvider({ children }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { showToast } = useToast();
 
-  // 🔄 Al cargar, refrescar precio/stock de los items guardados (el carrito
+  // 🔄 Al cargar, refrescar el precio de los items guardados (el carrito
   // puede tener hasta 10 días). Si un producto ya no existe o se agotó, lo
   // quitamos. Si la red falla, NO tocamos el carrito (mejor un precio viejo
   // que vaciarlo sin querer). Corre una sola vez, con el carrito recién
@@ -56,7 +58,7 @@ export function CartProvider({ children }) {
 
       const { data, error } = await supabase
         .from("parfums")
-        .select("id, precio, botellasDisponibles, disponible")
+        .select("id, precio, disponible")
         .in("id", ids);
 
       if (error || !data || cancelado) return;
@@ -83,24 +85,6 @@ export function CartProvider({ children }) {
           huboCambios = true;
         }
 
-        // Botella: refrescar stock y recortar cantidad si bajó.
-        if (item.tipoVenta === "botella") {
-          const stock = Number(fresco.botellasDisponibles) || 0;
-          if (stock < 1) {
-            huboEliminados = true;
-            huboCambios = true;
-            continue;
-          }
-          if (stock !== item.stockDisponible) {
-            nuevo.stockDisponible = stock;
-            huboCambios = true;
-          }
-          if (Number(item.cantidad) > stock) {
-            nuevo.cantidad = stock;
-            huboCambios = true;
-          }
-        }
-
         actualizados.push(nuevo);
       }
 
@@ -109,7 +93,7 @@ export function CartProvider({ children }) {
         showToast(
           huboEliminados
             ? "Quitamos productos de tu carrito que ya no están disponibles."
-            : "Actualizamos tu carrito con precios y stock al día.",
+            : "Actualizamos tu carrito con los precios al día.",
           "info",
         );
       }
@@ -150,18 +134,14 @@ export function CartProvider({ children }) {
 
   // 🛒 Añadir producto (decant o botella)
   const addToCart = (product) => {
-    // Tope de stock para botellas: avisar en vez de no hacer nada.
+    // Botellas: tope de 10 piezas por perfume; avisar en vez de no hacer nada.
     if (product.tipoVenta === "botella") {
       const existente = cartItems.find(
         (i) => i.id === product.id && i.tipoVenta === "botella",
       );
-      if (existente && existente.cantidad + 1 > existente.stockDisponible) {
-        showToast(
-          `Solo quedan ${existente.stockDisponible} de ${
-            existente.nombre || "este producto"
-          }.`,
-          "info",
-        );
+      const yaHay = Number(existente?.cantidad) || 0;
+      if (yaHay + (Number(product.cantidad) || 1) > MAX_BOTELLAS) {
+        showToast(`Puedes pedir hasta ${MAX_BOTELLAS} piezas por perfume.`, "info");
         return;
       }
     }
@@ -185,11 +165,10 @@ export function CartProvider({ children }) {
             item.tipoVenta === product.tipoVenta
           ) {
             if (item.tipoVenta === "botella") {
-              if (item.cantidad + 1 > item.stockDisponible) return item;
-              return {
-                ...item,
-                cantidad: item.cantidad + 1,
-              };
+              // Suma las piezas elegidas (no solo 1).
+              const nueva = item.cantidad + (Number(product.cantidad) || 1);
+              if (nueva > MAX_BOTELLAS) return item;
+              return { ...item, cantidad: nueva };
             } else {
               const nuevosMl = item.mililitros + product.mililitros;
               return {
@@ -208,21 +187,16 @@ export function CartProvider({ children }) {
 
   // ✏️ Actualizar cantidad
   const updateCartItem = (id, tipoVenta, newValue) => {
-    if (tipoVenta === "botella") {
-      const item = cartItems.find(
-        (i) => i.id === id && i.tipoVenta === "botella",
-      );
-      if (item && newValue > item.stockDisponible) {
-        showToast(`Solo hay ${item.stockDisponible} disponibles.`, "info");
-        return;
-      }
+    if (tipoVenta === "botella" && newValue > MAX_BOTELLAS) {
+      showToast(`Puedes pedir hasta ${MAX_BOTELLAS} piezas por perfume.`, "info");
+      return;
     }
 
     setCartItems((prev) =>
       prev.map((item) => {
         if (item.id === id && item.tipoVenta === tipoVenta) {
           if (tipoVenta === "botella") {
-            if (newValue > item.stockDisponible) return item;
+            if (newValue > MAX_BOTELLAS) return item;
             return { ...item, cantidad: newValue };
           }
 
@@ -310,7 +284,12 @@ export function CartProvider({ children }) {
       return;
     }
 
-    // 4) Válido: aplica el descuento y limpia el error.
+    // 4) Válido: aplica el descuento, lo recuerda (sobrevive recargas) y limpia el error.
+    try {
+      localStorage.setItem(CUPON_STORAGE_KEY, upperCode);
+    } catch {
+      // sin persistencia
+    }
     setDiscountCode(upperCode);
     setDiscountType(resultado.tipo);
     setDiscountValue(Number(resultado.valor));
@@ -367,19 +346,31 @@ export function CartProvider({ children }) {
     setIsDiscountApplied(false);
     try {
       localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem(CUPON_STORAGE_KEY);
     } catch {}
   };
 
-  // Auto-aplica el cupón guardado (del link del correo) en cuanto hay decants
-  // en el carrito. Cada código se intenta una sola vez.
+  // Auto-aplica el cupón guardado en cuanto hay productos en el carrito:
+  // primero el que escribió el cliente (si recargó la página), luego el de
+  // bienvenida del correo (solo con decants). Cada código se intenta una vez;
+  // se vuelve a validar contra Supabase por si ya venció.
   const cuponesIntentados = useRef(new Set());
   useEffect(() => {
-    if (isDiscountApplied) return;
-    const codigo = getCupon();
-    if (!codigo || cuponesIntentados.current.has(codigo)) return;
-    if (!cartItems.some((i) => i.tipoVenta === "decant")) return;
+    if (isDiscountApplied || cartItems.length === 0) return;
+    let manual = null;
+    try {
+      manual = localStorage.getItem(CUPON_STORAGE_KEY);
+    } catch {
+      // sin localStorage
+    }
+    const bienvenida = cartItems.some((i) => i.tipoVenta === "decant") ? getCupon() : null;
+    const codigo = [manual, bienvenida].find(
+      (c) => c && !cuponesIntentados.current.has(c),
+    );
+    if (!codigo) return;
     cuponesIntentados.current.add(codigo);
     applyDiscountCode(codigo, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartItems, isDiscountApplied]);
 
   return (

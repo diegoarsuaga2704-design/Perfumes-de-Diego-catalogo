@@ -18,6 +18,7 @@ import PerfumesRelacionados from "../ui/PerfumesRelacionados";
 import RecentlyViewed from "../ui/RecentlyViewed";
 import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 import { useCart } from "../context/CartContext";
+import { MAX_BOTELLAS } from "../functions/limitesCarrito";
 import CustomSelect from "../ui/CustomSelect";
 import SEO from "../ui/SEO";
 
@@ -44,9 +45,15 @@ export default function ProductDetail() {
   const { addToCart, openCart } = useCart();
 
   useEffect(() => {
+    // Al cambiar de perfume, limpia el error/estado del anterior.
+    setError(null);
+    setLoading(true);
+    // Si cambia de perfume antes de que responda, ignora la respuesta vieja.
+    let cancelado = false;
     async function fetchParfum() {
       try {
         const found = await getParfumById(id);
+        if (cancelado) return;
 
         if (!found) {
           setError("Perfume no encontrado");
@@ -55,14 +62,18 @@ export default function ProductDetail() {
           registrarVisto(found);
         }
       } catch (err) {
+        if (cancelado) return;
         console.error(err);
         setError("Error al cargar el perfume");
       } finally {
-        setLoading(false);
+        if (!cancelado) setLoading(false);
       }
     }
 
     fetchParfum();
+    return () => {
+      cancelado = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -118,10 +129,7 @@ export default function ProductDetail() {
   const esBotellaCompleta = parfum.stock === true;
   const esDecant = parfum.stock === false;
   const estaDisponible = parfum.disponible === "Disponible";
-  const puedeAgregar =
-    (!esDecant || mililitros) &&
-    (!esBotellaCompleta ||
-      (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1));
+  const puedeAgregar = !esDecant || Boolean(mililitros);
 
   const totalPrice = esBotellaCompleta
     ? parfum.precio * botellas
@@ -130,7 +138,6 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     if (!estaDisponible) return;
     if (esDecant && !mililitros) return;
-    if (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1)) return;
 
     const product = {
       id: parfum.id,
@@ -142,7 +149,6 @@ export default function ProductDetail() {
       mlBotella: esBotellaCompleta ? parfum.mlBotella : null,
       mililitros: esDecant ? mililitros : null,
       cantidad: esBotellaCompleta ? botellas : null,
-      stockDisponible: esBotellaCompleta ? parfum.botellasDisponibles : null,
       estado_botella: parfum.estado_botella || null,
     };
 
@@ -285,10 +291,7 @@ export default function ProductDetail() {
                     label="Selecciona cantidad de piezas"
                     value={botellas}
                     onChange={(val) => setBotellas(val)}
-                    options={Array.from(
-                      { length: Math.max(0, Math.floor(Number(parfum.botellasDisponibles) || 0)) },
-                      (_, i) => i + 1,
-                    ).map((num) => ({
+                    options={Array.from({ length: MAX_BOTELLAS }, (_, i) => i + 1).map((num) => ({
                       value: num,
                       label: `${num} pieza${num > 1 ? "s" : ""}`,
                     }))}
@@ -335,16 +338,11 @@ export default function ProductDetail() {
                   )}
                   <button
                     onClick={handleAddToCart}
-                    disabled={
-                      added ||
-                      (esDecant && !mililitros) ||
-                      (esBotellaCompleta && (!parfum.botellasDisponibles || parfum.botellasDisponibles < 1))
-                    }
+                    disabled={added || !puedeAgregar}
                     className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full sm:w-auto ${
                       added
                         ? "bg-green-500 text-white cursor-default"
-                        : (!esDecant || mililitros) &&
-                            (!esBotellaCompleta || (parfum.botellasDisponibles && parfum.botellasDisponibles >= 1))
+                        : puedeAgregar
                           ? "bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
@@ -494,20 +492,11 @@ export default function ProductDetail() {
               )}
               <button
                 onClick={handleAddToCart}
-                disabled={
-                  added ||
-                  (esDecant && !mililitros) ||
-                  (esBotellaCompleta &&
-                    (!parfum.botellasDisponibles ||
-                      parfum.botellasDisponibles < 1))
-                }
+                disabled={added || !puedeAgregar}
                 className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   added
                     ? "bg-green-500 text-white cursor-default"
-                    : (!esDecant || mililitros) &&
-                        (!esBotellaCompleta ||
-                          (parfum.botellasDisponibles &&
-                            parfum.botellasDisponibles >= 1))
+                    : puedeAgregar
                       ? "bg-[#A47E3B] text-white active:bg-[#8B6A30]"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
