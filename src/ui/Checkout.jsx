@@ -9,6 +9,8 @@ import { CheckCircle } from "lucide-react";
 import supabase from "../services/supabase";
 import { borrarCupon } from "../functions/cuponBienvenida";
 
+const KEY_PREGUNTAR = "pedido_preguntar_enviado";
+
 function Checkout({ totalCartPrice = 0, postalCode = "" }) {
   const {
     cartItems = [],
@@ -22,6 +24,27 @@ function Checkout({ totalCartPrice = 0, postalCode = "" }) {
 
   const [inAppInfo, setInAppInfo] = useState({ isInApp: false, source: null });
   const [copiado, setCopiado] = useState(false);
+  // Tras intentar mandar el pedido (abrir WhatsApp o copiarlo) se pregunta si
+  // ya lo envió. Solo al confirmar se vacía el carrito y se usa el cupón.
+  // Se guarda en sessionStorage: si WhatsApp abre su página web y el cliente
+  // regresa con "atrás", la página se recarga y la pregunta debe seguir ahí.
+  const [preguntarEnviado, setPreguntarEnviadoState] = useState(() => {
+    try {
+      return sessionStorage.getItem(KEY_PREGUNTAR) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const setPreguntarEnviado = (v) => {
+    setPreguntarEnviadoState(v);
+    try {
+      if (v) sessionStorage.setItem(KEY_PREGUNTAR, "1");
+      else sessionStorage.removeItem(KEY_PREGUNTAR);
+    } catch {
+      // sin sessionStorage
+    }
+  };
+  const [noSeAbrio, setNoSeAbrio] = useState(false);
 
   useEffect(() => {
     setInAppInfo(detectInAppBrowser());
@@ -131,6 +154,8 @@ Gracias!`;
     if (!ok) return;
     track("pedido_copiar", { total: safeTotalCartPrice });
     setCopiado(true);
+    setNoSeAbrio(false);
+    setPreguntarEnviado(true);
     setTimeout(() => setCopiado(false), 2500);
   };
 
@@ -151,21 +176,58 @@ Gracias!`;
     borrarCupon();
   };
 
-  // Tras enviar el pedido: marca el cupón como usado, vacía el carrito y cierra
-  // el panel. El mensaje de WhatsApp ya se abrió con el pedido actual.
-  const finalizarPedido = async () => {
+  // Cuando el cliente confirma que ya envió el pedido: marca el cupón como
+  // usado, vacía el carrito y regresa al catálogo.
+  const [confirmando, setConfirmando] = useState(false);
+  const confirmarEnviado = async () => {
+    if (confirmando) return;
+    setConfirmando(true);
+    track("pedido_confirmado", { total: safeTotalCartPrice });
     await marcarCuponUsado();
+    setPreguntarEnviado(false);
     vaciarCarrito();
     closeCart();
+    navigate("/home");
   };
 
-  // Intento directo en navegador in-app: location.href abre WhatsApp en más
-  // casos que window.open (que suele bloquearse). Si no abre, quedan los pasos.
-  const intentarAbrirWhatsApp = async () => {
+  // Abrir WhatsApp NO vacía el carrito: si la app (TikTok/Instagram) o el
+  // navegador lo bloquea, el cliente no pierde su pedido ni su cupón.
+  const intentarAbrirWhatsApp = () => {
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
-    await finalizarPedido();
+    setNoSeAbrio(false);
+    setPreguntarEnviado(true);
+    // location.href abre WhatsApp en más casos que window.open dentro de apps.
     window.location.href = enlaceWhatsApp;
   };
+
+  const preguntaEnviado = preguntarEnviado && (
+    <div className="mt-3 rounded-md border border-[#A47E3B] bg-white p-3 text-sm">
+      <p className="font-semibold text-gray-900 mb-2">
+        ¿Ya enviaste tu pedido por WhatsApp?
+      </p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={confirmarEnviado}
+          disabled={confirmando}
+          className="flex-1 py-2 rounded-md font-semibold bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30] disabled:opacity-60"
+        >
+          Sí, ya lo envié
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            track("pedido_no_se_abrio");
+            setPreguntarEnviado(false);
+            setNoSeAbrio(true);
+          }}
+          className="flex-1 py-2 rounded-md font-medium border border-gray-300 text-gray-700 hover:bg-gray-50"
+        >
+          No se abrió
+        </button>
+      </div>
+    </div>
+  );
 
   const trustLine = (
     <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-500">
@@ -195,6 +257,8 @@ Gracias!`;
             >
               Abrir WhatsApp
             </button>
+
+            {preguntaEnviado && <div className="mb-3">{preguntaEnviado}</div>}
 
             <p className="text-gray-700 mb-3">
               ¿No se abrió? A veces {inAppInfo.source || "el navegador de la app"}{" "}
@@ -243,6 +307,12 @@ Gracias!`;
               </p>
             )}
 
+            {noSeAbrio && (
+              <p className="mt-2 text-xs text-gray-600">
+                Tu carrito sigue aquí. Usa la opción 1 o 2 de arriba.
+              </p>
+            )}
+
             {trustLine}
           </>
 
@@ -261,18 +331,25 @@ Gracias!`;
     <div>
       <button
         type="button"
-        onClick={async () => {
+        onClick={() => {
           if (noListo) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
-          await finalizarPedido();
-          navigate("/home");
+          setNoSeAbrio(false);
+          setPreguntarEnviado(true);
         }}
         disabled={noListo}
         className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
       >
         Enviar pedido por WhatsApp
       </button>
+      {preguntaEnviado}
+      {noSeAbrio && (
+        <p className="mt-2 text-xs text-gray-600">
+          Tu carrito sigue aquí. Toca de nuevo el botón o escríbeme al{" "}
+          <span className="font-semibold whitespace-nowrap">+52 221 203 4647</span>.
+        </p>
+      )}
       {trustLine}
     </div>
   );
