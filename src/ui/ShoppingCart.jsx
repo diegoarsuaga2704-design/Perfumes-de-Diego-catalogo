@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { X, ShoppingBag } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
+import SugerenciasEnvioGratis from "./SugerenciasEnvioGratis";
 import { formatPrecio } from "../functions/formatPrecio";
 import { getEstadoEnvioGratis } from "../functions/envioGratis";
 import { track } from "@vercel/analytics";
@@ -114,6 +115,7 @@ export default function ShoppingCart() {
           <div className="flex-1 min-h-0 overflow-y-auto">
             {cartItems.length > 0 && <EnvioGratisProgress />}
             <ShoppingCartProduct />
+            {cartItems.length > 0 && <SugerenciasEnvioGratis />}
             {cartItems.length === 0 && (
               <div className="flex flex-1 flex-col items-center justify-center text-center px-6 py-16 text-gray-500">
                 <ShoppingBag className="mb-3 text-gray-300" size={56} />
