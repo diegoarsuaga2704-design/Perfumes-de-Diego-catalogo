@@ -424,13 +424,15 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
   );
 
   const extras = Array.isArray(notas.__extras) ? notas.__extras : [];
+  // Todo decant extra se cobra, aunque el perfume se haya marcado Agotado o
+  // Solo en botella en la tienda después de agregarlo (en la sesión sí se
+  // entregó). Solo si el perfume ya no existe no hay precio: se avisa.
   const lineasExtras = extras.map((e) => {
     const x = parfumPorId(e.id);
     const ml = Number(e.ml) || 0;
-    const motivo = parfums.length > 0 ? motivoNoDecant(x) : null;
-    return { ...e, ml, motivo, monto: x && !motivo ? calcularPrecioDecant(x, ml) : 0 };
+    const sinPrecio = parfums.length > 0 && !x;
+    return { ...e, ml, sinPrecio, monto: x ? calcularPrecioDecant(x, ml) : 0 };
   });
-  const extrasValidos = lineasExtras.filter((l) => !l.motivo);
   const setExtras = (fn) =>
     setNotas((prev) => ({ ...prev, __extras: fn(Array.isArray(prev.__extras) ? prev.__extras : []) }));
 
@@ -473,13 +475,13 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
   const incluidas = lineasNotas.filter((l) => l.incluido);
   const totalPedido =
     incluidas.reduce((acc, l) => acc + l.monto, 0) +
-    extrasValidos.reduce((acc, l) => acc + l.monto, 0);
+    lineasExtras.reduce((acc, l) => acc + l.monto, 0);
   const credito = creditoSesion(sesionData);
   const diferencia = totalPedido - credito;
   const porcentaje = credito > 0 ? Math.min(100, (totalPedido / credito) * 100) : 0;
 
   const enviarPedido = async () => {
-    const pedidoLimpio = [...incluidas, ...extrasValidos]
+    const pedidoLimpio = [...incluidas, ...lineasExtras]
       .filter((l) => l.ml > 0)
       .map(({ id, nombre: n, casa, ml, monto }) => ({ id, nombre: n, casa, ml, monto }));
     if (pedidoLimpio.length === 0 || enviandoPedido) return;
@@ -916,10 +918,9 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
                     <div className="min-w-0">
                       <p className="text-sm" style={{ color: "#f4efe6" }}>{l.nombre}</p>
                       <p className="text-xs text-gray-500">{l.casa} · extra</p>
-                      {l.motivo && (
+                      {l.sinPrecio && (
                         <p className="text-xs mt-0.5" style={{ color: "#d98c8c" }}>
-                          {l.motivo === "No disponible" ? "Ya no está en el catálogo" : l.motivo} · no se
-                          incluye en el pedido
+                          Ya no está en el catálogo · Diego te confirma el precio
                         </p>
                       )}
                     </div>
