@@ -18,7 +18,7 @@ export default function Terminos() {
           Términos y condiciones
         </h1>
         <p className="text-sm text-gray-500 mb-10">
-          Última actualización: junio de 2026
+          Última actualización: octubre de 2026
         </p>
 
         <section className="space-y-4 text-[15px] leading-relaxed">
@@ -121,10 +121,12 @@ export default function Terminos() {
             Los precios de los productos no incluyen el costo de envío. Dicho
             costo se calcula según tu código postal y se te informa antes de
             confirmar el pedido. El envío es gratuito únicamente en pedidos de
-            decants iguales o mayores a $1,950 MXN.
+            decants iguales o mayores a $1,950 MXN, enviados a zonas regulares
+            de DHL; no aplica en botellas completas o parciales ni en zonas
+            extendidas.
           </p>
           <p>
-            El descuento de 10% de bienvenida esta topado a $500, es de uso único por correo electrónico y por número de celular.
+            El descuento de 10% de bienvenida está topado a $500, es de uso único por correo electrónico y por número de celular.
           </p>
           <p>
             Entregamos tu pedido a la paquetería en un plazo máximo de 48 horas

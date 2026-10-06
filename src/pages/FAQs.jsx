@@ -7,7 +7,7 @@ const faqs = [
   {
     pregunta: "¿Qué es un decant?",
     respuesta:
-      "Un decant es una porción de perfume transferida desde un frasco original a un envase más pequeño. Te permite probar perfumes exclusivas sin invertir en un frasco completo, o llevar tu perfume favorito de forma práctica.",
+      "Un decant es una porción de perfume transferida desde un frasco original a un envase más pequeño. Te permite probar perfumes exclusivos sin invertir en un frasco completo, o llevar tu perfume favorito de forma práctica.",
   },
   {
     pregunta: "¿Los perfumes son 100% originales?",
@@ -17,22 +17,22 @@ const faqs = [
   {
     pregunta: "¿Cómo realizo mi pedido?",
     respuesta:
-      'Agrega los perfumes a tu carrito, presiona "Realizar pedido" y automáticamente se abrirá WhatsApp con el detalle de tu compra. Desde ahí coordinamos el pago y el envío.',
+      'Agrega los perfumes a tu carrito, presiona "Finalizar pedido" y luego "Enviar pedido por WhatsApp": se abrirá WhatsApp con el detalle de tu compra. Por ahí te confirmo la disponibilidad, el total y el costo de envío, y coordinamos el pago.',
   },
   {
     pregunta: "¿Qué métodos de pago aceptan?",
     respuesta:
-      "Transferencia bancaria y depósito. Los detalles los compartimos por WhatsApp una vez confirmado el pedido.",
+      "Transferencia (SPEI), depósito en efectivo y tarjeta de crédito o débito a través de Mercado Pago. El pago con tarjeta tiene una comisión adicional que se suma al total. Los datos de pago te los comparto por WhatsApp al confirmar tu pedido, y el pedido se procesa una vez confirmado el pago.",
   },
   {
     pregunta: "¿Cuánto tarda el envío?",
     respuesta:
-      "Los envíos a todo México tardan entre 2 y 5 días hábiles una vez confirmado el pago. Uso paqueterías confiables con número de guía para que rastrees tu pedido.",
+      "Envío a todo México por DHL Express (o FedEx cuando sea necesario), con número de guía para rastrearlo. Entrego tu pedido a la paquetería en máximo 48 horas hábiles después de confirmar tu pago; casi siempre sale el mismo día y normalmente llega al día siguiente. El tiempo final depende de la paquetería y de tu zona.",
   },
   {
     pregunta: "¿Cuánto cuesta el envío?",
     respuesta:
-      "El costo depende de tu código postal y el peso del paquete. Al hacer tu pedido te lo cotizo sin compromiso.",
+      "Depende de tu código postal y del peso del paquete; te lo cotizo por WhatsApp antes de confirmar tu pedido. Es gratis en pedidos de decants desde $1,950 MXN enviados a zonas regulares de DHL (no aplica en botellas ni en zonas extendidas).",
   },
   {
     pregunta: "¿Puedo pedir una muestra antes de comprar un frasco completo?",
@@ -42,7 +42,7 @@ const faqs = [
   {
     pregunta: "¿Qué pasa si mi pedido llega dañado?",
     respuesta:
-      "Todos los pedidos viajan bien empacados. En el caso excepcional de que llegue dañado, escríbeme por WhatsApp con fotos en las primeras 24 horas y lo resolvemos juntos.",
+      "Todos los pedidos viajan bien empacados. Si un producto llega roto, escríbeme por WhatsApp con el video completo del desempaquetado: debe mostrar la caja sellada antes de abrirla y grabarse de forma continua, sin cortes. Sin ese video no procede reembolso ni compensación. Los derrames menores durante el transporte y los daños en zonas extendidas no aplican. Los detalles están en los Términos y condiciones, sección 7.",
   },
 ];
 
