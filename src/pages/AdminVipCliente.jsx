@@ -28,6 +28,21 @@ function CerrarSesion({ s, onCancelar, onCerrada }) {
   );
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
+  // Costo de la sesión (no redimible), según la config y las personas.
+  const [costoSesion, setCostoSesion] = useState(null);
+  useEffect(() => {
+    supabase
+      .from("config_vip")
+      .select("costo_sesion, costo_extra")
+      .eq("id", 1)
+      .single()
+      .then(({ data }) => {
+        const n = Math.max(1, Number(s.num_personas) || 1);
+        const base = Number(data?.costo_sesion) || 1100;
+        const extra = Number(data?.costo_extra) || 500;
+        setCostoSesion(base + Math.max(0, n - 3) * extra);
+      });
+  }, [s.num_personas]);
 
   const setFila = (i, campo, val) =>
     setFilas((prev) => prev.map((f, idx) => (idx === i ? { ...f, [campo]: val } : f)));
@@ -119,6 +134,21 @@ function CerrarSesion({ s, onCancelar, onCerrada }) {
         Recarga <strong>{fmt(recarga)}</strong> − Gasto <strong>{fmt(gasto)}</strong> ={" "}
         <strong>{fmt((Number(recarga) || 0) - gasto)}</strong> al saldo
       </p>
+      {costoSesion != null && (
+        <div className="mt-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-gray-800">
+          <p>
+            Costo de la sesión ({Math.max(1, Number(s.num_personas) || 1)}{" "}
+            {Number(s.num_personas) === 1 ? "persona" : "personas"}):{" "}
+            <strong>{fmt(costoSesion)}</strong> (no redimible)
+          </p>
+          <p className="mt-1">
+            Cobrar al cliente: lo mayor entre recarga y gasto + sesión ={" "}
+            <strong>
+              {fmt(Math.max(Number(recarga) || 0, gasto) + costoSesion)}
+            </strong>
+          </p>
+        </div>
+      )}
       <div className="flex gap-2 mt-3">
         <button
           onClick={confirmar}

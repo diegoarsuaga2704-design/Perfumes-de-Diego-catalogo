@@ -76,6 +76,12 @@ function fechaSesionTexto(sx) {
   return null;
 }
 
+// Costo de la sesión (no redimible): fijo hasta 3 personas + extra por persona.
+function costoSesionPara(numPersonas, cfg) {
+  const n = Math.max(1, Number(numPersonas) || 1);
+  return Number(cfg.costo_sesion) + Math.max(0, n - 3) * Number(cfg.costo_extra);
+}
+
 // Crédito de la sesión: lo declarado al agendar, o la recarga registrada en el admin.
 const creditoSesion = (sx) => Number(sx?.inversion_declarada) || Number(sx?.recarga) || 0;
 
@@ -246,7 +252,7 @@ const VEREDICTOS = [
 
 // Detalle de una sesión: notas + veredicto por perfume (autoguardado)
 // y pedido final con cualquier decant del catálogo.
-function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minSiempre = 0, onVolver, onActualizado }) {
+function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, cfg = CFG_DEFAULT, minSiempre = 0, onVolver, onActualizado }) {
   const perfumesInteres = Array.isArray(sesionData.perfumes) ? sesionData.perfumes : [];
   const esPendiente = sesionData.estado !== "realizada";
   // Nunca por debajo de lo que ya eligió: si sube el precio por perfume en la
@@ -478,6 +484,10 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
     lineasExtras.reduce((acc, l) => acc + l.monto, 0);
   const credito = creditoSesion(sesionData);
   const diferencia = totalPedido - credito;
+  // Se cobra todo al final: lo mayor entre el pedido y la inversión (lo no
+  // usado queda como saldo) + el costo de la sesión (no redimible).
+  const costoSesion = costoSesionPara(sesionData.num_personas, cfg);
+  const totalAPagar = Math.max(totalPedido, credito) + costoSesion;
   const porcentaje = credito > 0 ? Math.min(100, (totalPedido / credito) * 100) : 0;
 
   const enviarPedido = async () => {
@@ -498,8 +508,13 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
       `Total del pedido: ${fmt(totalPedido)}`,
       `Inversión acordada: ${fmt(credito)}`,
       diferencia > 0
-        ? `Diferencia a cubrir: ${fmt(diferencia)}`
+        ? `Decants arriba de la inversión: ${fmt(diferencia)}`
         : `Crédito restante (saldo en tienda): ${fmt(-diferencia)}`,
+      `Costo de la sesión (no redimible, ${sesionData.num_personas || 1} ${
+        Number(sesionData.num_personas) === 1 ? "persona" : "personas"
+      }): ${fmt(costoSesion)}`,
+      "",
+      `TOTAL A PAGAR: ${fmt(totalAPagar)}`,
     ];
     window.open(
       `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`,
@@ -565,6 +580,10 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
         </p>
         <p>
           Inversión acordada: <span style={{ color: ORO }}>{fmt(credito)}</span>
+        </p>
+        <p>
+          Costo de la sesión: <span style={{ color: ORO }}>{fmt(costoSesion)}</span>{" "}
+          <span className="text-gray-500">(no redimible)</span>
         </p>
         {sesionData.lugar && <p>{sesionData.lugar}</p>}
       </div>
@@ -964,22 +983,30 @@ function DetalleSesion({ sesionData, username, nombre, parfums, porPerfume, minS
               <span>Inversión acordada</span>
               <span>{fmt(credito)}</span>
             </div>
+            <div className="flex justify-between text-sm text-gray-300 mt-1">
+              <span>{diferencia > 0 ? "Decants arriba de tu inversión" : "Crédito restante (saldo)"}</span>
+              <span>{fmt(Math.abs(diferencia))}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-300 mt-1">
+              <span>Costo de la sesión (no redimible)</span>
+              <span>{fmt(costoSesion)}</span>
+            </div>
             <div
               className="flex justify-between items-baseline mt-3 pt-3"
               style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
             >
               <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
-                {diferencia > 0 ? "Diferencia a cubrir" : "Crédito restante"}
+                Total a pagar
               </span>
               <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
-                {fmt(Math.abs(diferencia))}
+                {fmt(totalAPagar)}
               </span>
             </div>
-            {diferencia < 0 && (
-              <p className="text-xs text-gray-400 mt-2">
-                El crédito restante queda como saldo en tienda para futuros decants.
-              </p>
-            )}
+            <p className="text-xs text-gray-400 mt-2">
+              {diferencia < 0
+                ? "Pagas tu inversión completa + la sesión. El crédito restante queda como saldo en tienda para futuros decants."
+                : "Tu pedido + el costo de la sesión."}
+            </p>
           </div>
         )}
 
@@ -1178,10 +1205,7 @@ export default function ExperienciaPrivada() {
     setMsgAgenda(null);
   };
 
-  const costoSesion = useMemo(() => {
-    const n = Math.max(1, Number(numPersonas) || 1);
-    return Number(cfg.costo_sesion) + Math.max(0, n - 3) * Number(cfg.costo_extra);
-  }, [numPersonas, cfg]);
+  const costoSesion = useMemo(() => costoSesionPara(numPersonas, cfg), [numPersonas, cfg]);
 
   const montoNum = Number(monto) || 0;
   const montoValido = montoNum >= Number(cfg.inversion_min);
@@ -1408,6 +1432,7 @@ export default function ExperienciaPrivada() {
             nombre={nombre}
             parfums={parfums}
             porPerfume={cfg.inversion_por_perfume}
+            cfg={cfg}
             minSiempre={minDecantSiempre}
             onVolver={() => setSesionAbiertaId(null)}
             onActualizado={() => cargarSesiones(sesion.username)}
