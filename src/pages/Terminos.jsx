@@ -129,12 +129,11 @@ export default function Terminos() {
             El descuento de 10% de bienvenida está topado a $500, es de uso único por correo electrónico y por número de celular.
           </p>
           <p>
-            Entregamos tu pedido a la paquetería en un plazo máximo de 48 horas
-            hábiles a partir de la confirmación del pago. En la mayoría de los
-            casos lo entregamos a la paquetería el mismo día en que se realiza el
-            pago, y normalmente los clientes lo reciben al día siguiente. Los
-            tiempos de entrega finales dependen de la paquetería y están fuera de
-            nuestro control.
+            Normalmente entregamos tu pedido a la paquetería el mismo día en que
+            se confirma el pago o al día hábil siguiente. Los tiempos de entrega
+            dependen de la paquetería y de la zona de destino, están fuera de
+            nuestro control y pueden variar; ningún plazo de entrega está
+            garantizado.
           </p>
           <p>
             Todos nuestros tiempos y estimados de entrega se expresan en días

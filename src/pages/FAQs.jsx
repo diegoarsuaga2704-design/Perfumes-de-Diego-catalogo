@@ -27,7 +27,7 @@ const faqs = [
   {
     pregunta: "¿Cuánto tarda el envío?",
     respuesta:
-      "Envío a todo México por DHL Express (o FedEx cuando sea necesario), con número de guía para rastrearlo. Entrego tu pedido a la paquetería en máximo 48 horas hábiles después de confirmar tu pago; casi siempre sale el mismo día y normalmente llega al día siguiente. El tiempo final depende de la paquetería y de tu zona.",
+      "Envío a todo México por DHL Express (o FedEx cuando sea necesario), con número de guía para rastrearlo. Normalmente entrego tu pedido a la paquetería el mismo día o al día hábil siguiente de confirmar tu pago. El tiempo de entrega depende de la paquetería y de tu zona, y a veces puede tardar más; no es un plazo garantizado.",
   },
   {
     pregunta: "¿Cuánto cuesta el envío?",
