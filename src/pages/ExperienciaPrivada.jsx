@@ -108,10 +108,10 @@ function puntos(cfg) {
   return [
     "Sesión personalizada de curación de perfumes, uno a uno, para hasta 3 personas.",
     "Durante la sesión atomizamos una muestra de cada perfume que quieras oler, compartida entre los asistentes.",
-    `La inversión mínima es de ${fmt(cfg.inversion_min)} MXN, que se cubren por adelantado (transferencia o efectivo) y son 100% redimibles en decants.`,
+    `La inversión mínima es de ${fmt(cfg.inversion_min)} MXN, que se pagan al final de la sesión (transferencia o efectivo) y son 100% redimibles en decants.`,
     "Ese crédito se usa en cualquier perfume del catálogo, al precio normal de la página, sin límite por perfume. Tu inversión define cuántos perfumes puedes elegir.",
     "El crédito no usado no se reembolsa: queda como saldo en tienda para futuros decants (o, como última opción, en una botella disponible o bajo pedido).",
-    "Si durante la sesión quieres llevarte decants por un valor mayor a tu inversión, puedes hacerlo pagando la diferencia en ese momento.",
+    "Si durante la sesión quieres llevarte decants por un valor mayor a tu inversión, puedes hacerlo pagando la diferencia al final de la sesión.",
     "Experiencia disponible únicamente en Puebla, sujeta a disponibilidad de agenda (nuestra y tuya).",
   ];
 }
@@ -187,8 +187,8 @@ const TYC_EXPERIENCIA = [
   "El lugar debe estar techado y sin luz solar directa, para proteger la integridad de los perfumes.",
   "El cliente debe contar con una mesa o superficie segura y estable donde colocar los frascos durante la sesión.",
   "Los perfumes son propiedad de Perfumes de Diego hasta el momento de su compra. Si el cliente o sus acompañantes derraman, dañan o rompen un frasco, se cobrará el valor completo del perfume.",
-  "El costo de la sesión se cubre por adelantado para confirmar la cita y no es reembolsable.",
-  "La inversión en decants se acuerda y se cubre por adelantado; el crédito no usado no se reembolsa y queda como saldo en tienda.",
+  "El costo de la sesión se paga al final de la sesión, junto con tu inversión en decants, y no es reembolsable ni redimible.",
+  "La inversión en decants se acuerda al agendar y se paga al final de la sesión; el crédito no usado no se reembolsa y queda como saldo en tienda.",
   "Solo participan los asistentes registrados. Personas adicionales se cobran según la tarifa vigente.",
   "La fecha y el horario se confirman por WhatsApp, sujetos a disponibilidad de ambas partes. Para reagendar, avisa con al menos 24 horas de anticipación.",
   "Para cuidar el olfato de todos, se recomienda un espacio ventilado pero sin corrientes de aire fuertes, libre de humo, comida con olores intensos o velas encendidas.",
@@ -1298,7 +1298,7 @@ export default function ExperienciaPrivada() {
       `Asistentes: ${nombres.length ? nombres.join(", ") : "por definir"}`,
       `Costo de sesión (no redimible): ${fmt(costoSesion)}`,
       `Inversión en decants (redimible): ${fmt(montoNum)}`,
-      `TOTAL a cubrir: ${fmt(costoSesion + montoNum)}`,
+      `TOTAL mínimo a pagar al final de la sesión: ${fmt(costoSesion + montoNum)}`,
       `Perfumes que puede elegir: hasta ${maxPerfumes}`,
       `Perfumes de interés (${perfumesSel.length}): ${perfumesSel.join(", ")}`,
       `Preferencia de experiencia: ${preferencia || "por definir"}`,
@@ -1633,7 +1633,7 @@ export default function ExperienciaPrivada() {
               style={{ borderTop: "1px solid rgba(198,161,91,0.3)" }}
             >
               <span className="uppercase text-xs tracking-widest" style={{ color: ORO }}>
-                Total a cubrir
+                Total mínimo a pagar al final
               </span>
               <span className="text-2xl" style={{ fontFamily: SERIF, color: ORO }}>
                 {fmt(costoSesion + montoNum)}
