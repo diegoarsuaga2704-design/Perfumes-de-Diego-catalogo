@@ -152,9 +152,13 @@ export default function AdminCodigosList() {
     }
   }
 
-  const filtrados = codigos.filter((c) =>
-    (c.codigo || "").toLowerCase().includes(busqueda.toLowerCase().trim()),
-  );
+  const filtrados = codigos.filter((c) => {
+    const q = busqueda.toLowerCase().trim();
+    return (
+      (c.codigo || "").toLowerCase().includes(q) ||
+      (c.email || "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -182,7 +186,7 @@ export default function AdminCodigosList() {
             />
             <input
               type="text"
-              placeholder="Buscar código..."
+              placeholder="Buscar código o correo..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#A47E3B] focus:outline-none text-sm"
@@ -236,6 +240,21 @@ export default function AdminCodigosList() {
                   </div>
 
                   <div className="text-xs text-gray-500 space-y-0.5 mb-3">
+                    {(c.email || (c.codigo || "").startsWith("BIENVENIDA")) && (
+                      <p className="truncate">
+                        Enviado a:{" "}
+                        {c.email ? (
+                          <a
+                            href={`mailto:${c.email}`}
+                            className="text-gray-800 font-medium hover:underline"
+                          >
+                            {c.email}
+                          </a>
+                        ) : (
+                          <span className="italic">sin registro</span>
+                        )}
+                      </p>
+                    )}
                     <p>
                       Expira:{" "}
                       {textoExpira(c) ? (

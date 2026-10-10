@@ -40,7 +40,7 @@ export default async function handler(req, res) {
   }
 
   // 1) Cupón (best-effort): si falla, codigo = null y seguimos.
-  const codigo = await generarCupon();
+  const codigo = await generarCupon(email);
 
   // 2) Alta en EmailOctopus, con el cupón en el campo.
   let r = await crearContacto(LIST_ID, API_KEY, email, codigo);
@@ -92,19 +92,25 @@ async function crearContacto(LIST_ID, API_KEY, email, codigo) {
   }
 }
 
-async function generarCupon() {
+// Genera el cupón guardando a qué correo se envió (se ve en el admin de
+// cupones). Si la función con correo aún no existe en Supabase, usa la
+// anterior sin correo para no romper la suscripción.
+async function generarCupon(email) {
   const ANON = process.env.SUPABASE_ANON_KEY;
   if (!ANON) return null;
-  try {
-    const cr = await fetch(`${SUPABASE_URL}/rest/v1/rpc/generar_cupon_bienvenida`, {
+  const llamar = (fn, body) =>
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
       method: "POST",
       headers: {
         apikey: ANON,
         Authorization: `Bearer ${ANON}`,
         "Content-Type": "application/json",
       },
-      body: "{}",
+      body: JSON.stringify(body),
     });
+  try {
+    let cr = await llamar("generar_cupon_bienvenida_email", { p_email: email });
+    if (!cr.ok) cr = await llamar("generar_cupon_bienvenida", {});
     if (!cr.ok) return null;
     const val = await cr.json().catch(() => null);
     return typeof val === "string" ? val : null;
