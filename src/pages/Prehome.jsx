@@ -4,6 +4,7 @@ import HomeBrand from "../ui/HomeBrand";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
 import TestimoniosSeccion from "../ui/TestimoniosSeccion";
 import SEO from "../ui/SEO";
+import GrupoWhatsApp from "../ui/GrupoWhatsApp";
 
 function Prehome() {
   const collections = [
@@ -37,6 +38,7 @@ function Prehome() {
       <div className="text-[#A47E3B] text-center font-extrabold sm:text-3xl text-2xl px-14 py-4 subpixel-antialiased ">
         Compra tus perfumes favoritos.
       </div>
+      <GrupoWhatsApp variant="tarjeta" />
       <div className="grid gap-6 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 max-w-6xl mx-auto p-6">
         {collections.map((item, index) => (
           <HomeBrand

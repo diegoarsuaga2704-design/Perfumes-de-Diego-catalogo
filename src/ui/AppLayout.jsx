@@ -11,6 +11,7 @@ import MainMenu from "./MainMenu";
 import ScrollToTop from "./ScrollToTop";
 import InAppBrowserModal from "./InAppBrowserModal";
 import LoadingSpinner from "./LoadingSpinner";
+import GrupoWhatsApp from "./GrupoWhatsApp";
 import { useToast } from "../context/ToastContext";
 import { guardarCupon } from "../functions/cuponBienvenida";
 
@@ -49,6 +50,8 @@ function AppLayout() {
         <Header onSearchResult={setSearchResult} />
         {!esCheckout && <MainMenu />}
       </div>
+      {/* En la portada ya está la tarjeta grande del grupo. */}
+      {!esCheckout && pathname !== "/" && <GrupoWhatsApp />}
       <main className="flex-1">
         <Suspense fallback={<LoadingSpinner />}>
           <Outlet context={{ searchResult }} />
