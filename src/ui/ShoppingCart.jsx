@@ -34,33 +34,24 @@ export default function ShoppingCart() {
     discountTarget,
   });
 
-  // Bloquear scroll del body al abrir el carrito, preservando la posición.
+  // Bloquear scroll del body al abrir el carrito y, al cerrarlo, regresar a
+  // la misma posición. (Antes la limpieza borraba la posición guardada antes
+  // de usarla y la página brincaba hasta arriba al cerrar el carrito.)
   useEffect(() => {
-    if (isCartOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.width = "100%";
-      document.body.style.top = `-${scrollY}px`;
-    } else {
-      const topValue = document.body.style.top;
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.width = "";
-      document.body.style.top = "";
-      if (topValue) {
-        window.scrollTo(0, parseInt(topValue || "0", 10) * -1);
-      }
-    }
-
+    if (!isCartOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.top = `-${scrollY}px`;
     return () => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
       document.body.style.position = "";
       document.body.style.width = "";
       document.body.style.top = "";
+      window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
     };
   }, [isCartOpen]);
 

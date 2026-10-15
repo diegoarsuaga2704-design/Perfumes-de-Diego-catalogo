@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 // El navegador hace su propia restauración de scroll y pelea con la de este
@@ -20,18 +20,36 @@ function ScrollToTop() {
   const location = useLocation();
   const navigationType = useNavigationType();
 
-  // Guardar posición de scroll al salir de cada página
+  // Última posición de scroll de la página actual. Se lleva con el evento de
+  // scroll porque al navegar la página nueva ya subió antes de que corra
+  // cualquier limpieza (antes se guardaba siempre 0 y "atrás" volvía arriba).
+  const ultimaPos = useRef(0);
+  const keyActual = useRef(location.key);
   useEffect(() => {
-    return () => {
-      sessionStorage.setItem(
-        `scroll-pos-${location.key}`,
-        window.scrollY.toString(),
-      );
+    const onScroll = () => {
+      ultimaPos.current = window.scrollY;
     };
-  }, [location.key]);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Restaurar (atrás/adelante) o ir arriba (recarga, PUSH/REPLACE)
+  const yaInicio = useRef(false);
   useLayoutEffect(() => {
+    // Misma página (p. ej. cerrar el carrito con "atrás", que solo quita una
+    // entrada propia del historial): no se toca el scroll.
+    if (yaInicio.current && keyActual.current === location.key) return;
+    yaInicio.current = true;
+
+    // Guarda la posición de la página que se deja, antes de mover el scroll.
+    if (keyActual.current !== location.key) {
+      sessionStorage.setItem(
+        `scroll-pos-${keyActual.current}`,
+        String(ultimaPos.current),
+      );
+      keyActual.current = location.key;
+    }
+
     if (keyInicial === null) keyInicial = location.key;
     if (location.key !== keyInicial) huboNavegacion = true;
 

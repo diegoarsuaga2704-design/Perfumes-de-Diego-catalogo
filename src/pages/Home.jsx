@@ -9,22 +9,10 @@ import SEO from "../ui/SEO";
 function Home({ forcedMode }) {
   const { searchResult } = useOutletContext();
   const location = useLocation();
-  const [, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { slug } = useParams();
   const { parfums } = useParfums();
   const navigate = useNavigate();
-
-  // Helper para resetear paginación cuando cambian filtros
-  const resetPage = () => {
-    setSearchParams(
-      (prev) => {
-        const newParams = new URLSearchParams(prev);
-        newParams.delete("page");
-        return newParams;
-      },
-      { replace: true }
-    );
-  };
 
   // Detecta el modo. Prioridad:
   // 1. forcedMode (prop) — viene de las rutas /botellas y /decants
@@ -38,10 +26,27 @@ function Home({ forcedMode }) {
   // true = solo stock
   // false = solo decants
 
-  // Estados de filtros normales
+  // Estados de filtros normales. Disponibilidad y categoría viven en la URL
+  // (?disponible=...&categoria=...) para que sobrevivan al abrir un perfume
+  // y regresar con "atrás". La casa vive en la ruta /casa/:slug.
   const [selectedCasa, setSelectedCasa] = useState(null);
-  const [selectedOcasion, setSelectedOcasion] = useState(null);
-  const [selectedCategoria, setSelectedCategoria] = useState(null);
+  const selectedOcasion = searchParams.get("disponible");
+  const selectedCategoria = searchParams.get("categoria");
+
+  // Pone un solo filtro de URL (son excluyentes) y vuelve a la página 1.
+  const setFiltroUrl = (clave, valor) => {
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev);
+        n.delete("page");
+        n.delete("disponible");
+        n.delete("categoria");
+        if (clave && valor) n.set(clave, valor);
+        return n;
+      },
+      { replace: true },
+    );
+  };
 
   // Aplicar el modo (stock/decants) solo cuando realmente cambia, no en cada montaje
   useEffect(() => {
@@ -67,39 +72,28 @@ function Home({ forcedMode }) {
     ];
     const casaReal = casasUnicas.find((casa) => slugify(casa) === slug);
 
-    if (casaReal) {
-      setSelectedCasa(casaReal);
-      setSelectedOcasion(null);
-      setSelectedCategoria(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (casaReal) setSelectedCasa(casaReal);
   }, [slug, parfums]);
 
   const handleSelectCasa = (value) => {
     setSelectedCasa(value);
-    setSelectedOcasion(null);
-    setSelectedCategoria(null);
-    resetPage();
     navigate(`/casa/${slugify(value)}`);
   };
 
-  const handleSelectOcasion = (value) => {
-    setSelectedOcasion(value);
-    setSelectedCasa(null);
-    setSelectedCategoria(null);
-    resetPage();
+  // Desde /casa/:slug, elegir otro filtro sale de la casa (son excluyentes).
+  const elegirFiltro = (clave, value) => {
+    if (slug) {
+      setSelectedCasa(null);
+      navigate(`/home?${new URLSearchParams({ [clave]: value })}`);
+    } else {
+      setSelectedCasa(null);
+      setFiltroUrl(clave, value);
+    }
   };
-
-  const handleSelectCategoria = (value) => {
-    setSelectedCategoria(value);
-    setSelectedCasa(null);
-    setSelectedOcasion(null);
-    resetPage();
-  };
+  const handleSelectOcasion = (value) => elegirFiltro("disponible", value);
+  const handleSelectCategoria = (value) => elegirFiltro("categoria", value);
 
   const handleSelectLimpiar = () => {
-    setSelectedCategoria(null);
-    setSelectedOcasion(null);
     setSelectedCasa(null);
     if (!forcedMode) {
       setStockFilter(null);
@@ -107,7 +101,7 @@ function Home({ forcedMode }) {
     if (slug) {
       navigate("/home");
     } else {
-      resetPage();
+      setFiltroUrl(null, null);
     }
   };
 
