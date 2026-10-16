@@ -120,7 +120,8 @@ function SearchBar({ onSearchResult }) {
 
     setShowSuggestions(false);
     inputRef.current?.blur();
-    navigate("/home");
+    // La búsqueda va en la URL (?q=) para que siga ahí al regresar con "atrás".
+    navigate(`/home?${new URLSearchParams({ q: query.trim() })}`);
     subirTrasBuscar();
   };
 
@@ -129,6 +130,10 @@ function SearchBar({ onSearchResult }) {
     setSuggestions([]);
     setShowSuggestions(false);
     onSearchResult(null);
+    // Si estaba viendo resultados, vuelve al catálogo completo.
+    if (location.pathname === "/home" && new URLSearchParams(location.search).has("q")) {
+      navigate("/home", { replace: true });
+    }
   };
 
   if (error) {

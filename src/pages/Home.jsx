@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useOutletContext, useLocation, useSearchParams, useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useLocation, useSearchParams, useParams, useNavigate } from "react-router-dom";
+import { normalizarTexto } from "../functions/normalizarTexto";
 import Navbar from "../ui/Navbar";
 import ProductGrid from "../ui/ProductGrid";
 import { useParfums } from "../context/ParfumsContext";
@@ -7,11 +8,19 @@ import { slugify } from "../functions/slugify";
 import SEO from "../ui/SEO";
 
 function Home({ forcedMode }) {
-  const { searchResult } = useOutletContext();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug } = useParams();
   const { parfums } = useParfums();
+
+  // Búsqueda desde la URL (?q=): sobrevive al abrir un perfume y regresar.
+  // Si el texto es el nombre exacto de un perfume, muestra solo ese.
+  const q = searchParams.get("q");
+  const searchResult = useMemo(() => {
+    if (!q) return null;
+    const exacto = parfums.find((p) => normalizarTexto(p.nombre) === normalizarTexto(q));
+    return exacto ? { nombre: exacto.nombre } : { query: q };
+  }, [q, parfums]);
   const navigate = useNavigate();
 
   // Detecta el modo. Prioridad:
@@ -41,6 +50,7 @@ function Home({ forcedMode }) {
         n.delete("page");
         n.delete("disponible");
         n.delete("categoria");
+        n.delete("q"); // elegir un filtro sale de la búsqueda
         if (clave && valor) n.set(clave, valor);
         return n;
       },
@@ -137,6 +147,14 @@ function Home({ forcedMode }) {
         onSelectCategoria={handleSelectCategoria}
       />
 
+      {q && (
+        <p className="bg-gray-100 text-center text-sm text-gray-600 pt-4 px-4">
+          Resultados para <strong className="text-gray-900">“{q}”</strong> ·{" "}
+          <Link to="/home" className="text-[#A47E3B] hover:underline">
+            Ver todo el catálogo
+          </Link>
+        </p>
+      )}
       <ProductGrid
         selectedCasa={selectedCasa}
         selectedOcasion={selectedOcasion}
