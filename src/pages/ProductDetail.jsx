@@ -205,15 +205,17 @@ export default function ProductDetail() {
         type="product"
         schema={productSchema}
       />
-      <div className="flex flex-col lg:flex-row gap-10 bg-white p-6 rounded-2xl shadow-md max-w-6xl mx-auto my-10 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* IMAGEN */}
-          <div>
+      <div className="flex flex-col lg:flex-row gap-10 bg-white p-4 sm:p-6 rounded-2xl shadow-md max-w-6xl mx-auto my-3 sm:my-10 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+          {/* IMAGEN — en celular la flecha va encima de la foto y la foto es
+              más baja, para que nombre y precio se vean sin bajar. */}
+          <div className="relative">
             <button
               onClick={() => {
                 navigate(-1);
               }}
-              className="text-sm text-gray-600 mb-4 hover:text-gray-900 flex"
+              aria-label="Regresar"
+              className="absolute top-0 left-0 z-10 rounded-full bg-white/80 p-1 text-gray-600 hover:text-gray-900 sm:static sm:bg-transparent sm:p-0 sm:mb-4 flex"
             >
               <ArrowLeft size={24} />
             </button>
@@ -223,7 +225,7 @@ export default function ProductDetail() {
               alt={parfum.nombre}
               loading="eager"
               onError={() => setImgOriginal(true)}
-              className="max-h-60 sm:max-h-full mx-auto rounded-xl object-contain"
+              className="max-h-52 sm:max-h-full mx-auto rounded-xl object-contain"
             />
           </div>
 

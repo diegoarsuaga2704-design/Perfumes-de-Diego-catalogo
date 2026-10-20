@@ -7,7 +7,6 @@ import NewsletterPopup from "./NewsletterPopup";
 import WhatsAppFlotante from "./WhatsAppFlotante";
 import ShoppingCart from "./ShoppingCart";
 import TopBanner from "./TopBanner";
-import MainMenu from "./MainMenu";
 import ScrollToTop from "./ScrollToTop";
 import InAppBrowserModal from "./InAppBrowserModal";
 import LoadingSpinner from "./LoadingSpinner";
@@ -47,8 +46,7 @@ function AppLayout() {
       <ScrollToTop />
       {!esCheckout && <TopBanner />}
       <div className="sticky top-0 z-30 shadow-sm">
-        <Header onSearchResult={setSearchResult} />
-        {!esCheckout && <MainMenu />}
+        <Header onSearchResult={setSearchResult} sinMenu={esCheckout} />
       </div>
       {/* En la portada ya está la tarjeta grande del grupo. */}
       {!esCheckout && pathname !== "/" && <GrupoWhatsApp />}
