@@ -63,7 +63,7 @@ function ProductCard({ parfum }) {
         </div>
         <div className="border-t border-gray-200 pt-4 flex flex-col justify-between">
           <span className="text-gray-800 text-sm font-semibold">
-            Precio: ${formatPrecio(parfum.precio)}
+            ${formatPrecio(parfum.precio)}
             {!parfum.stock && "/ml"}
           </span>
           <span className="hidden sm:block text-xs text-gray-600">
