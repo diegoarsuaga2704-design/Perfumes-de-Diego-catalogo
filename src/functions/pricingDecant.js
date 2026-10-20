@@ -147,5 +147,5 @@ export function getMililitrosMinimosMonto(item, minSiempre = 0) {
  * Para el placeholder/label del select, según la casa.
  */
 export function getPlaceholderMililitros(parfum) {
-  return "-- Elige mililitros --";
+  return "Elige mililitros";
 }

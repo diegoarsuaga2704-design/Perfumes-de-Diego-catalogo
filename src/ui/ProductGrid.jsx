@@ -215,10 +215,9 @@ export default function ProductGrid({
     <section className="bg-gray-100 py-12">
       <div className="max-w-12xl mx-auto sm:mx-8 lg:mx-12 px-6">
         <div className="mb-4 text-right space-x-3">
-          {(selectedCasa ||
-            selectedOcasion ||
-            selectedCategoria ||
-            stockFilter !== null) && (
+          {/* Solo con un filtro elegido por el cliente (en Decants/Botellas
+              el tipo viene de la sección, no es un filtro que se pueda quitar). */}
+          {(selectedCasa || selectedOcasion || selectedCategoria) && (
             <button
               onClick={onSelectLimpiar}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"

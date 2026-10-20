@@ -6,6 +6,7 @@ import { slugify } from "../functions/slugify";
 import { getBadgeEstatus } from "../functions/getBadgeEstatus";
 import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
+import { formatNotasTexto } from "../functions/formatNotas";
 
 function ProductCard({ parfum }) {
   const [imgError, setImgError] = useState(false);
@@ -16,9 +17,7 @@ function ProductCard({ parfum }) {
 
   return (
     <div
-      className={`bg-white relative shadow-md rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300
-        ${parfum.disponible === "Agotado" ? "shadow-red-600" : ""}
-      ${parfum.disponible === "Próximamente" ? "shadow-sky-600" : ""}`}
+      className="bg-white relative shadow-md rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300"
     >
       {/* Enlace real que cubre toda la tarjeta: permite abrir en otra pestaña
           (o pulsación larga en el celular) y que Google siga el enlace. */}
@@ -67,7 +66,7 @@ function ProductCard({ parfum }) {
             {!parfum.stock && "/ml"}
           </span>
           <span className="hidden sm:block text-xs text-gray-600">
-            {parfum.notas}
+            {formatNotasTexto(parfum.notas)}
           </span>
 
           {parfum.tiktokLink && (

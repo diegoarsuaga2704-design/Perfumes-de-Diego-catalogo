@@ -78,10 +78,9 @@ export default function SugerenciasEnvioGratis() {
 
   return (
     <div className="px-6 pb-4">
-      <p className="text-sm font-semibold text-gray-900">
-        Te faltan ${formatPrecio(falta)} para el envío gratis
+      <p className="text-sm font-semibold text-gray-900 mb-3">
+        Agrega uno de los favoritos de mis clientes
       </p>
-      <p className="text-xs text-gray-500 mb-3">Agrega uno de los favoritos de mis clientes:</p>
       <div className="space-y-2">
         {sugerencias.map((s) => (
           <div

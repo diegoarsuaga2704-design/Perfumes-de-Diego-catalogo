@@ -6,6 +6,7 @@ import { getParfumById } from "../functions/getParfums";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
 import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
+import { formatNota } from "../functions/formatNotas";
 import { registrarVisto } from "../functions/vistosRecientes";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -428,7 +429,7 @@ export default function ProductDetail() {
                         key={idx}
                         className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full"
                       >
-                        {nota}
+                        {formatNota(nota)}
                       </span>
                     ))}
                 </div>
