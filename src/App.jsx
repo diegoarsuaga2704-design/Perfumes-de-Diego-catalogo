@@ -35,6 +35,7 @@ const AdminVipCliente = lazy(() => import("./pages/AdminVipCliente"));
 const AdminPerfumesList = lazy(() => import("./pages/AdminPerfumesList"));
 const AdminPerfumeEdit = lazy(() => import("./pages/AdminPerfumeEdit"));
 const AdminPerfumeCreate = lazy(() => import("./pages/AdminPerfumeCreate"));
+const AdminVincular = lazy(() => import("./pages/AdminVincular"));
 const AdminTestimoniosList = lazy(() => import("./pages/AdminTestimoniosList"));
 const AdminTestimonioCreate = lazy(() =>
   import("./pages/AdminTestimonioCreate"),
@@ -159,6 +160,15 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPerfumesList />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/vincular",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminVincular />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,
