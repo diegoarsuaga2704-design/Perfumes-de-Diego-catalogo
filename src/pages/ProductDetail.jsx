@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { slugify } from "../functions/slugify";
 import { useEffect, useState, useRef } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
@@ -7,6 +7,8 @@ import { calcularPrecioDecant } from "../functions/pricingDecant";
 import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
 import { formatNota } from "../functions/formatNotas";
+import { otrosFormatosDisponibles } from "../functions/mismoPerfume";
+import { useParfums } from "../context/ParfumsContext";
 import { registrarVisto } from "../functions/vistosRecientes";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -44,6 +46,7 @@ export default function ProductDetail() {
     setImgOriginal(false);
   }, [parfum?.image]);
   const { addToCart, openCart } = useCart();
+  const { parfums: catalogo = [] } = useParfums() || {};
 
   useEffect(() => {
     // Al cambiar de perfume, limpia el error/estado del anterior.
@@ -131,6 +134,9 @@ export default function ProductDetail() {
   const esDecant = parfum.stock === false;
   const estaDisponible = parfum.disponible === "Disponible";
   const puedeAgregar = !esDecant || Boolean(mililitros);
+
+  // El mismo perfume en el otro formato (botella ↔ decant), si está disponible.
+  const otrosFormatos = otrosFormatosDisponibles(parfum, catalogo);
 
   const totalPrice = esBotellaCompleta
     ? parfum.precio * botellas
@@ -286,6 +292,24 @@ export default function ProductDetail() {
                   </>
                 )}
               </div>
+
+              {/* Ir al mismo perfume en el otro formato */}
+              {otrosFormatos.length > 0 && (
+                <div className="flex flex-wrap gap-2 -mt-2 mb-4">
+                  {otrosFormatos.map((o) => (
+                    <Link
+                      key={o.id}
+                      to={`/product/${slugify(o.nombre)}/${o.id}`}
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-[#A47E3B] border border-[#A47E3B] rounded-full px-4 py-1.5 hover:bg-[#A47E3B] hover:text-white transition-colors"
+                    >
+                      {o.stock
+                        ? `Ver botella completa · $${formatPrecio(o.precio)}`
+                        : `Probar en decant · $${formatPrecio(o.precio)}/ml`}{" "}
+                      →
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* SELECTOR PARA BOTELLAS */}
               {esBotellaCompleta && estaDisponible && (
