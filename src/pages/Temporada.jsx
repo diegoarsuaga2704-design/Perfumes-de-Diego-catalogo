@@ -6,10 +6,15 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import SEO from "../ui/SEO";
 import DecoracionTemporada from "../ui/DecoracionTemporada";
 import { getTemporada, TEXTOS_TEMPORADA, puntajeTemporada } from "../functions/temporada";
+import { esMismoPerfume } from "../functions/mismoPerfume";
 
-// Colección de temporada: se arma sola con los perfumes cuyas notas son
-// "oscuras" (oud, cuero, incienso, vainilla…). Mismo orden que el catálogo:
-// casa A-Z, luego precio y nombre.
+// Tamaño de la selección: corta a propósito (es una curaduría, no un catálogo).
+const MAX_COLECCION = 12;
+
+// Colección de temporada: selección corta que se arma sola. Toma los
+// perfumes disponibles con más notas "oscuras" (oud, cuero, incienso,
+// vainilla…), uno por perfume (si hay decant y botella, el decant), hasta
+// MAX_COLECCION. Se muestran como el catálogo: casa A-Z, precio y nombre.
 export default function Temporada() {
   const { parfums = [], loading } = useParfums() || {};
   const temporada = getTemporada() || "halloween";
@@ -17,9 +22,18 @@ export default function Temporada() {
 
   const lista = useMemo(() => {
     const txt = (v) => (v ?? "").toString();
-    return parfums
-      .filter((p) => p.disponible !== "Agotado" && puntajeTemporada(p) >= 2)
-      .sort(
+    const candidatos = parfums
+      .filter((p) => p.disponible === "Disponible")
+      .map((p) => ({ p, puntos: puntajeTemporada(p) }))
+      .filter((x) => x.puntos >= 2)
+      // Más notas oscuras primero; a empate, el decant (más accesible).
+      .sort((a, b) => b.puntos - a.puntos || Number(a.p.stock) - Number(b.p.stock));
+    const elegidos = [];
+    for (const { p } of candidatos) {
+      if (elegidos.length >= MAX_COLECCION) break;
+      if (!elegidos.some((e) => esMismoPerfume(e, p))) elegidos.push(p);
+    }
+    return elegidos.sort(
         (a, b) =>
           txt(a.casa).localeCompare(txt(b.casa)) ||
           (Number(a.precio) || 0) - (Number(b.precio) || 0) ||
