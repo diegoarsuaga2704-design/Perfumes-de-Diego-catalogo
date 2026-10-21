@@ -4,6 +4,7 @@ import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { createParfumAdmin, getAllParfumsAdmin } from "../functions/getParfumsAdmin";
 import { normalizarTexto } from "../functions/normalizarTexto";
+import { esMismoPerfume } from "../functions/mismoPerfume";
 import { ensureCasaExists } from "../functions/getCasas";
 import ImageUploader from "../ui/ImageUploader";
 import CasaAutocomplete from "../ui/CasaAutocomplete";
@@ -82,8 +83,16 @@ export default function AdminPerfumeCreate() {
   }, [form.nombre, existentes]);
 
   const copiarDe = (p) => {
+    // ¿Qué formatos de este perfume ya existen? Si solo hay decant, lo que
+    // falta es la botella (y al revés): se preselecciona el que no existe.
+    const versiones = existentes.filter((x) => x.id === p.id || esMismoPerfume(p, x));
+    const hayDecant = versiones.some((x) => x.stock === false);
+    const hayBotella = versiones.some((x) => x.stock === true);
+    const tipoFaltante = hayDecant && !hayBotella ? true : hayBotella && !hayDecant ? false : null;
+
     setForm((prev) => ({
       ...prev,
+      ...(tipoFaltante !== null ? { stock: tipoFaltante } : {}),
       nombre: p.nombre || "",
       casa: p.casa || "",
       categoria: p.categoria || prev.categoria,
@@ -93,7 +102,7 @@ export default function AdminPerfumeCreate() {
       fraganticaLink: p.fraganticaLink || "",
       tiktokLink: p.tiktokLink || "",
     }));
-    setCopiadoDe(p);
+    setCopiadoDe({ ...p, tipoFaltante, hayDecant, hayBotella });
     setMostrarSug(false);
   };
 
@@ -246,8 +255,15 @@ export default function AdminPerfumeCreate() {
                 </div>
                 {copiadoDe && (
                   <p className="text-xs text-green-700 mt-1">
-                    Datos copiados de {copiadoDe.nombre} ({copiadoDe.stock ? "botella" : "decant"}).
-                    Revisa el tipo, el precio y la disponibilidad.
+                    Datos copiados de {copiadoDe.nombre} ({copiadoDe.stock ? "botella" : "decant"}).{" "}
+                    {copiadoDe.tipoFaltante === true &&
+                      "Ya existe en decant: lo marqué como Botella. "}
+                    {copiadoDe.tipoFaltante === false &&
+                      "Ya existe en botella: lo marqué como Decant. "}
+                    {copiadoDe.hayDecant &&
+                      copiadoDe.hayBotella &&
+                      "Ya existe en decant y en botella: elige el tipo. "}
+                    Revisa el precio y la disponibilidad.
                   </p>
                 )}
               </Field>
