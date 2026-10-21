@@ -1,45 +1,89 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useParfums } from "../context/ParfumsContext";
 import ProductCard from "../ui/ProductCard";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SEO from "../ui/SEO";
 import DecoracionTemporada from "../ui/DecoracionTemporada";
-import { getTemporada, TEXTOS_TEMPORADA, puntajeTemporada } from "../functions/temporada";
+import {
+  getTemporada,
+  TEXTOS_TEMPORADA,
+  puntajeTemporada,
+  CASAS_COLECCION,
+  esDeCasa,
+} from "../functions/temporada";
 import { esMismoPerfume } from "../functions/mismoPerfume";
+import supabase from "../services/supabase";
 
 // Tamaño de la selección: corta a propósito (es una curaduría, no un catálogo).
 const MAX_COLECCION = 12;
 
-// Colección de temporada: selección corta que se arma sola. Toma los
-// perfumes disponibles con más notas "oscuras" (oud, cuero, incienso,
-// vainilla…), uno por perfume (si hay decant y botella, el decant), hasta
-// MAX_COLECCION. Se muestran como el catálogo: casa A-Z, precio y nombre.
+// Colección de temporada. Si en el admin (/admin/temporada) elegiste
+// perfumes, se muestran esos (sin los agotados). Si no hay ninguno elegido,
+// se arma sola como selección corta (MAX_COLECCION): entran todos los
+// disponibles de las casas "fijas" (Benneviento, Toskovat) y los lugares
+// que falten se llenan alternando las casas de "relleno" (Filippo
+// Sorcinelli, Ensar Oud), primero los de notas más oscuras. Uno por perfume
+// (si hay decant y botella, el decant). Se muestran casa A-Z, precio, nombre.
 export default function Temporada() {
   const { parfums = [], loading } = useParfums() || {};
   const temporada = getTemporada() || "halloween";
   const t = TEXTOS_TEMPORADA[temporada];
 
+  // Perfumes elegidos a mano en el admin. Si la columna aún no existe o
+  // falla la consulta, queda vacío y se usa la selección automática.
+  const [elegidosAdmin, setElegidosAdmin] = useState(null);
+  useEffect(() => {
+    supabase
+      .from("parfums")
+      .select("id")
+      .eq("en_temporada", true)
+      .then(
+        ({ data, error }) => setElegidosAdmin(error ? [] : (data || []).map((d) => d.id)),
+        () => setElegidosAdmin([]),
+      );
+  }, []);
+
   const lista = useMemo(() => {
     const txt = (v) => (v ?? "").toString();
-    const candidatos = parfums
-      .filter((p) => p.disponible === "Disponible")
-      .map((p) => ({ p, puntos: puntajeTemporada(p) }))
-      .filter((x) => x.puntos >= 2)
-      // Más notas oscuras primero; a empate, el decant (más accesible).
-      .sort((a, b) => b.puntos - a.puntos || Number(a.p.stock) - Number(b.p.stock));
-    const elegidos = [];
-    for (const { p } of candidatos) {
-      if (elegidos.length >= MAX_COLECCION) break;
-      if (!elegidos.some((e) => esMismoPerfume(e, p))) elegidos.push(p);
+    const porCasa = (a, b) =>
+      txt(a.casa).localeCompare(txt(b.casa)) ||
+      (Number(a.precio) || 0) - (Number(b.precio) || 0) ||
+      txt(a.nombre).localeCompare(txt(b.nombre));
+    if (elegidosAdmin === null) return [];
+    if (elegidosAdmin.length > 0) {
+      const ids = new Set(elegidosAdmin);
+      return parfums.filter((p) => ids.has(p.id) && p.disponible !== "Agotado").sort(porCasa);
     }
-    return elegidos.sort(
+    // Disponibles; más notas oscuras primero y, a empate, el decant.
+    const disponibles = parfums
+      .filter((p) => p.disponible === "Disponible")
+      .sort(
         (a, b) =>
-          txt(a.casa).localeCompare(txt(b.casa)) ||
-          (Number(a.precio) || 0) - (Number(b.precio) || 0) ||
-          txt(a.nombre).localeCompare(txt(b.nombre)),
+          puntajeTemporada(b) - puntajeTemporada(a) || Number(a.stock) - Number(b.stock),
       );
-  }, [parfums]);
+    const elegidos = [];
+    const agregar = (p) => {
+      if (elegidos.length >= MAX_COLECCION) return false;
+      if (elegidos.some((e) => e.id === p.id || esMismoPerfume(e, p))) return false;
+      elegidos.push(p);
+      return true;
+    };
+    for (const casa of CASAS_COLECCION.fijas) {
+      disponibles.filter((p) => esDeCasa(p, casa)).forEach(agregar);
+    }
+    const colas = CASAS_COLECCION.relleno.map((casa) =>
+      disponibles.filter((p) => esDeCasa(p, casa)),
+    );
+    while (elegidos.length < MAX_COLECCION && colas.some((c) => c.length)) {
+      for (const cola of colas) {
+        while (cola.length && !agregar(cola.shift())) {
+          // salta repetidos
+        }
+      }
+    }
+    return elegidos.sort(porCasa);
+  }, [parfums, elegidosAdmin]);
 
   return (
     <section className="bg-gray-100 py-10 min-h-screen">
@@ -55,7 +99,7 @@ export default function Temporada() {
       </div>
       </div>
 
-      {loading ? (
+      {loading || elegidosAdmin === null ? (
         <LoadingSpinner />
       ) : lista.length === 0 ? (
         <p className="text-center text-gray-500">

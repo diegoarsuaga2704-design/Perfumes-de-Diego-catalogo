@@ -56,3 +56,13 @@ export function puntajeTemporada(parfum) {
   const notas = normalizarTexto(parfum?.notas);
   return NOTAS_OSCURAS.reduce((n, k) => n + (notas.includes(normalizarTexto(k)) ? 1 : 0), 0);
 }
+
+// Casas de la colección de temporada (basta con que el nombre de la casa
+// contenga el texto). "fijas": entran todos sus perfumes disponibles.
+// "relleno": completan los lugares que falten, alternando entre casas.
+export const CASAS_COLECCION = {
+  fijas: ["benneviento", "toskovat"],
+  relleno: ["filippo", "ensar oud"],
+};
+
+export const esDeCasa = (parfum, casa) => normalizarTexto(parfum?.casa).includes(casa);
