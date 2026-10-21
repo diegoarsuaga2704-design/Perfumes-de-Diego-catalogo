@@ -3,6 +3,7 @@ import { ShoppingCart, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import { useCart } from "../context/CartContext";
+import { getTemporada, TEXTOS_TEMPORADA } from "../functions/temporada";
 
 function Header({ onSearchResult, sinMenu = false }) {
   const { toggleCart, cartItems, isCartOpen } = useCart();
@@ -16,7 +17,11 @@ function Header({ onSearchResult, sinMenu = false }) {
 
   const totalItems = cartItems.length;
 
+  const temporada = getTemporada();
   const categorias = [
+    ...(temporada
+      ? [{ nombre: TEXTOS_TEMPORADA[temporada].corto, accion: () => navigate("/temporada") }]
+      : []),
     {
       nombre: "Decants",
       accion: () => navigate("/decants"),
