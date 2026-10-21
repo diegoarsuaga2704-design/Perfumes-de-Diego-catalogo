@@ -302,9 +302,11 @@ export default function ProductDetail() {
                       to={`/product/${slugify(o.nombre)}/${o.id}`}
                       className="inline-flex items-center gap-1 text-sm font-semibold text-[#A47E3B] border border-[#A47E3B] rounded-full px-4 py-1.5 hover:bg-[#A47E3B] hover:text-white transition-colors"
                     >
-                      {o.stock
-                        ? `Ver botella completa · $${formatPrecio(o.precio)}`
-                        : `Probar en decant · $${formatPrecio(o.precio)}/ml`}{" "}
+                      {o.stock ? "Ver botella completa" : "Probar en decant"}
+                      {" · "}
+                      {o.disponible === "Próximamente"
+                        ? "próximamente"
+                        : `$${formatPrecio(o.precio)}${o.stock ? "" : "/ml"}`}{" "}
                       →
                     </Link>
                   ))}

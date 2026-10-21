@@ -15,16 +15,22 @@ export function esMismoPerfume(a, b) {
   return true;
 }
 
-// Versiones disponibles del otro formato: botellas si es decant, decants si es botella.
+// Versiones del otro formato (botellas si es decant, decants si es botella)
+// que estén Disponibles o Próximamente. Agotadas no. Primero las disponibles.
 export function otrosFormatosDisponibles(parfum, todos = []) {
+  const orden = { Disponible: 0, Próximamente: 1 };
   return todos
     .filter(
       (p) =>
         esMismoPerfume(parfum, p) &&
         p.stock !== parfum.stock &&
-        p.disponible === "Disponible",
+        (p.disponible === "Disponible" || p.disponible === "Próximamente"),
     )
-    .sort((a, b) => (Number(a.precio) || 0) - (Number(b.precio) || 0));
+    .sort(
+      (a, b) =>
+        orden[a.disponible] - orden[b.disponible] ||
+        (Number(a.precio) || 0) - (Number(b.precio) || 0),
+    );
 }
 
 // Distancia de edición (cuántas letras hay que cambiar para igualar dos textos).
