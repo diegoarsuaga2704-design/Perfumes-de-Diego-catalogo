@@ -8,24 +8,23 @@ import DecoracionTemporada from "../ui/DecoracionTemporada";
 import { getTemporada, TEXTOS_TEMPORADA, puntajeTemporada } from "../functions/temporada";
 
 // Colección de temporada: se arma sola con los perfumes cuyas notas son
-// "oscuras" (oud, cuero, incienso, vainilla…). Primero los disponibles y los
-// que tienen más de esas notas.
+// "oscuras" (oud, cuero, incienso, vainilla…). Mismo orden que el catálogo:
+// casa A-Z, luego precio y nombre.
 export default function Temporada() {
   const { parfums = [], loading } = useParfums() || {};
   const temporada = getTemporada() || "halloween";
   const t = TEXTOS_TEMPORADA[temporada];
 
   const lista = useMemo(() => {
-    const orden = { Disponible: 0, Próximamente: 1 };
+    const txt = (v) => (v ?? "").toString();
     return parfums
-      .filter((p) => p.disponible !== "Agotado")
-      .map((p) => ({ p, puntos: puntajeTemporada(p) }))
-      .filter((x) => x.puntos >= 2)
+      .filter((p) => p.disponible !== "Agotado" && puntajeTemporada(p) >= 2)
       .sort(
         (a, b) =>
-          (orden[a.p.disponible] ?? 2) - (orden[b.p.disponible] ?? 2) || b.puntos - a.puntos,
-      )
-      .map((x) => x.p);
+          txt(a.casa).localeCompare(txt(b.casa)) ||
+          (Number(a.precio) || 0) - (Number(b.precio) || 0) ||
+          txt(a.nombre).localeCompare(txt(b.nombre)),
+      );
   }, [parfums]);
 
   return (
