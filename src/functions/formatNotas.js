@@ -5,14 +5,13 @@ export function formatNota(nota) {
   return t ? t.charAt(0).toLocaleUpperCase("es-MX") + t.slice(1) : "";
 }
 
-// Lista de notas como texto corrido: "Amaderado, dulce, ámbar".
+// Lista de notas como texto corrido, cada nota con su primera letra en
+// mayúscula: "Amaderado, Dulce, Flor de azahar".
 export function formatNotasTexto(notas) {
-  const lista = (notas ?? "")
+  return (notas ?? "")
     .toString()
     .split(",")
-    .map((n) => n.trim().toLocaleLowerCase("es-MX"))
-    .filter(Boolean);
-  if (lista.length === 0) return "";
-  lista[0] = formatNota(lista[0]);
-  return lista.join(", ");
+    .map(formatNota)
+    .filter(Boolean)
+    .join(", ");
 }
