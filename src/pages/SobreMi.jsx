@@ -1,6 +1,20 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FaWhatsapp } from "react-icons/fa";
+import { sobreMiIntro, sobreMiSecciones } from "../data/sobreMi";
+
+// "**texto**" → <strong>texto</strong>
+function conNegritas(texto) {
+  return texto
+    .split(/(\*\*[^*]+\*\*)/g)
+    .map((parte, i) =>
+      parte.startsWith("**") ? (
+        <strong key={i}>{parte.slice(2, -2)}</strong>
+      ) : (
+        parte
+      ),
+    );
+}
 
 export default function SobreMi() {
   return (
@@ -21,73 +35,32 @@ export default function SobreMi() {
         <p className="text-sm text-gray-500 mb-10">México</p>
 
         <section className="space-y-4 text-[15px] leading-relaxed">
-          <p>
-            Me llamo Diego. Soy ingeniero automotriz de profesión, no perfumista.
-            Lo cuento al inicio porque me parece importante: no tengo
-            certificaciones en perfumería, no estudié química olfativa, no
-            trabajo para ninguna casa.
-          </p>
-          <p>
-            Lo que sí tengo: varios años oliendo perfumes en serio. Comprando
-            frascos completos, comprando muestras, comparando, equivocándome y
-            aprendiendo de los errores. Lo suficiente para tener un criterio
-            formado sobre qué vale la pena y qué no.
-          </p>
+          {sobreMiIntro.map((p, i) => (
+            <p key={i}>{conNegritas(p)}</p>
+          ))}
         </section>
 
-        <h2 className="text-xl font-bold text-gray-900 mt-12 mb-4">
-          Por qué empecé esto
-        </h2>
-        <section className="space-y-4 text-[15px] leading-relaxed">
-          <p>
-            Por una razón concreta: en México es difícil acceder a perfumería de
-            nicho real. Las tiendas departamentales venden lo mismo que llevan
-            vendiendo veinte años. Las perfumerías online masivas tienen
-            catálogos enormes pero sin algo realmente propositivo. Y casas como Ensar Oud,
-            Toskovat, Filippo Sorcinelli o Areej Le Doré prácticamente no
-            llegan al país.
-          </p>
-          <p>
-            Empecé comprando para mí. Después amigos me pidieron decants.
-            Después más gente me empezó a escribir por TikTok. En algún momento
-            dejó de ser solo mi colección y se volvió un proyecto.
-          </p>
-        </section>
-
-        <h2 className="text-xl font-bold text-gray-900 mt-12 mb-4">
-          Cómo funciono
-        </h2>
-        <ul className="space-y-3 text-[15px] leading-relaxed list-disc pl-5">
-          <li>
-            Vendo <strong>decants desde 1 ml</strong>. Permite probar perfumes
-            caros sin pagar el frasco completo.
-          </li>
-          <li>También vendo botellas completas y parciales.</li>
-          <li>
-            Compro todo de distribuidores autorizados. <strong>Originales 100%.</strong>
-          </li>
-          <li>
-            La venta se cierra por WhatsApp. No hay carrito automático sin
-            contacto humano: si tienes una duda, me llega a mí directo.
-          </li>
-          <li>
-            Si no sabes qué elegir, te ayudo. Cuéntame qué te gusta o qué
-            perfume conoces que ya uses, y te recomiendo algo especial para tí.
-          </li>
-          <li>Envíos a todo México, 1-5 días hábiles.</li>
-        </ul>
-
-        <h2 className="text-xl font-bold text-gray-900 mt-12 mb-4">
-          Lo que no soy
-        </h2>
-        <ul className="space-y-3 text-[15px] leading-relaxed list-disc pl-5">
-          <li>No soy perfumista profesional.</li>
-          <li>No soy "el experto #1". Sigo aprendiendo.</li>
-          <li>No vendo lo que no usaría yo mismo.</li>
-          <li>
-            No exagero en las descripciones. Si un perfume no me gustó, lo digo.
-          </li>
-        </ul>
+        {sobreMiSecciones.map((sec) => (
+          <div key={sec.titulo}>
+            <h2 className="text-xl font-bold text-gray-900 mt-12 mb-4">
+              {sec.titulo}
+            </h2>
+            {sec.parrafos && (
+              <section className="space-y-4 text-[15px] leading-relaxed">
+                {sec.parrafos.map((p, i) => (
+                  <p key={i}>{conNegritas(p)}</p>
+                ))}
+              </section>
+            )}
+            {sec.lista && (
+              <ul className="space-y-3 text-[15px] leading-relaxed list-disc pl-5">
+                {sec.lista.map((item, i) => (
+                  <li key={i}>{conNegritas(item)}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
 
         <div className="mt-14 p-6 bg-gray-50 border border-gray-200 rounded-xl">
           <h2 className="text-lg font-bold text-gray-900 mb-2">

@@ -7,6 +7,11 @@ import {
   metaDescripcionProducto,
   parrafosDescripcion,
 } from "../src/functions/seoProducto.js";
+import {
+  paginaBot,
+  otrosDeLaCasaHtml,
+  perfumesDeCasaHtml,
+} from "../src/seo/paginasBot.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -87,7 +92,7 @@ function ogImage(url) {
   )}&w=1200&output=jpg&q=80`;
 }
 
-function buildOgHtml({ title, description, image, url, bodyHtml = "", jsonLd = [] }) {
+function buildOgHtml({ title, description, image, url, bodyHtml = "", jsonLd = [], noindex = false }) {
   const img = ogImage(image);
   const ldScripts = jsonLd
     .map(
@@ -101,7 +106,7 @@ function buildOgHtml({ title, description, image, url, bodyHtml = "", jsonLd = [
   <meta charset="UTF-8" />
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}" />
-  <link rel="canonical" href="${esc(url)}" />
+${noindex ? '  <meta name="robots" content="noindex" />' : `  <link rel="canonical" href="${esc(url)}" />`}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="${esc(title)}" />
   <meta property="og:description" content="${esc(description)}" />
@@ -150,6 +155,8 @@ export default async function handler(req, res) {
   let url = SITE_URL;
   let bodyHtml = `<h1>${esc(SITE_NAME)}</h1><p>${esc(description)}</p>`;
   let jsonLd = [];
+  let encontrado = false; // la URL corresponde a algo que existe
+  let fallo = false; // error temporal (Supabase)
 
   try {
     const supabase = createClient(
@@ -158,13 +165,16 @@ export default async function handler(req, res) {
     );
 
     if (type === "product" && id) {
-      const { data: perfume } = await supabase
+      const { data: perfume, error: errPerfume } = await supabase
         .from("parfums")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
+      // 22P02 = id inválido (no numérico): es un "no existe", no una falla.
+      if (errPerfume && errPerfume.code !== "22P02") throw errPerfume;
 
       if (perfume) {
+        encontrado = true;
         const h1 = `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}`;
         title = tituloSeoProducto(perfume);
         description = metaDescripcionProducto(perfume);
@@ -198,7 +208,8 @@ export default async function handler(req, res) {
           (perfume.tiktokLink
             ? `<p><a href="${esc(perfume.tiktokLink)}">Reseña en video de ${esc(perfume.nombre)} en TikTok</a></p>`
             : "") +
-          `<p><a href="${esc(url)}">Ver ${esc(perfume.nombre)} en ${esc(SITE_NAME)}</a></p>`;
+          `<p><a href="${esc(url)}">Ver ${esc(perfume.nombre)} en ${esc(SITE_NAME)}</a></p>` +
+          (await otrosDeLaCasaHtml(supabase, perfume));
 
         // Migas de pan: Inicio › Casa › Producto
         const migas = [
@@ -275,13 +286,28 @@ export default async function handler(req, res) {
         }
       }
     } else if (type === "casa" && slug) {
-      const { data: casas } = await supabase
+      const { data: casas, error: errCasas } = await supabase
         .from("casas")
         .select("nombre, imagen_hero, descripcion");
+      if (errCasas) throw errCasas;
 
-      const casa = (casas || []).find((c) => slugify(c.nombre) === slug);
+      let casa = (casas || []).find((c) => slugify(c.nombre) === slug);
+
+      // Casa que existe en los perfumes pero no tiene ficha en "casas":
+      // la página sí existe en el sitio, así que no es 404.
+      if (!casa) {
+        const { data: nombres, error: errNombres } = await supabase
+          .from("parfums")
+          .select("casa");
+        if (errNombres) throw errNombres;
+        const nombre = (nombres || [])
+          .map((p) => p.casa)
+          .find((c) => c && slugify(c) === slug);
+        if (nombre) casa = { nombre, imagen_hero: null, descripcion: null };
+      }
 
       if (casa) {
+        encontrado = true;
         title = `${casa.nombre} | ${SITE_NAME}`;
         description =
           casa.descripcion ||
@@ -292,7 +318,8 @@ export default async function handler(req, res) {
           `<h1>${esc(casa.nombre)}</h1>` +
           (casa.descripcion ? `<p>${esc(casa.descripcion)}</p>` : "") +
           `<p>Explora los decants y botellas de ${esc(casa.nombre)} disponibles en ${esc(SITE_NAME)}.</p>` +
-          `<p><a href="${esc(url)}">Ver perfumes de ${esc(casa.nombre)}</a></p>`;
+          `<p><a href="${esc(url)}">Ver perfumes de ${esc(casa.nombre)}</a></p>` +
+          (await perfumesDeCasaHtml(supabase, casa.nombre));
 
         jsonLd.push({
           "@context": "https://schema.org",
@@ -309,8 +336,14 @@ export default async function handler(req, res) {
           ],
         });
       }
+    } else if (type === "pagina") {
+      const pagina = await paginaBot(supabase, req.query.ruta || "inicio");
+      if (pagina) {
+        encontrado = true;
+        ({ title, description, url, bodyHtml, jsonLd } = pagina);
+      }
     } else if (type === "post" && slug) {
-      const { data: post } = await supabase
+      const { data: post, error: errPost } = await supabase
         .from("posts")
         .select(
           "slug, titulo, extracto, contenido, imagen, creado_en, actualizado_en",
@@ -318,8 +351,10 @@ export default async function handler(req, res) {
         .eq("slug", slug)
         .eq("publicado", true)
         .maybeSingle();
+      if (errPost) throw errPost;
 
       if (post) {
+        encontrado = true;
         title = `${post.titulo} | ${SITE_NAME}`;
         description =
           post.extracto ||
@@ -366,9 +401,39 @@ export default async function handler(req, res) {
     }
   } catch (err) {
     console.error("OG error:", err);
+    fallo = true;
   }
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+
+  // Falla temporal (p. ej. Supabase caído): 503 para que Google reintente
+  // después y NO saque la página del índice.
+  if (fallo) {
+    res.setHeader("Retry-After", "600");
+    res.setHeader("Cache-Control", "no-store");
+    res
+      .status(503)
+      .send(buildOgHtml({ title, description, image, url, bodyHtml, jsonLd }));
+    return;
+  }
+
+  // URL que no existe (perfume borrado, ruta inventada): 404 real, para que
+  // Google no la cuente como "Soft 404".
+  if (!encontrado) {
+    res.setHeader("Cache-Control", "s-maxage=600");
+    res.status(404).send(
+      buildOgHtml({
+        title: `Página no encontrada | ${SITE_NAME}`,
+        description: "Esta página no existe.",
+        image: DEFAULT_IMAGE,
+        url: SITE_URL,
+        bodyHtml: `<h1>Página no encontrada</h1><p><a href="${SITE_URL}/home">Ver el catálogo de ${esc(SITE_NAME)}</a></p>`,
+        noindex: true,
+      }),
+    );
+    return;
+  }
+
   res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
   res
     .status(200)

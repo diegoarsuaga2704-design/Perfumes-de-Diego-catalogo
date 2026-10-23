@@ -7,14 +7,22 @@
   "headers": [
     {
       "source": "/experiencia-privada",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ],
   "redirects": [
     {
       "source": "/:path*",
       "has": [
-        { "type": "host", "value": "perfumes-de-diego-catalogo.vercel.app" }
+        {
+          "type": "host",
+          "value": "perfumes-de-diego-catalogo.vercel.app"
+        }
       ],
       "destination": "https://perfumesdediego.com/:path*",
       "permanent": true
@@ -54,7 +62,35 @@
       ],
       "destination": "/api/og?type=post&slug=:slug"
     },
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-    { "source": "/((?!api/).*)", "destination": "/" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/:ruta(home|decants|botellas|best-sellers|recien-llegados|casas|tiktok|faqs|sobre-mi|testimonios|blog|pedido-especial|temporada|terminos|privacidad)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare|perplexity|claude|anthropic|chatgpt|gpt|oai-search|cohere|google-extended|google-inspectiontool|meta-external|duckassist|mistral).*"
+        }
+      ],
+      "destination": "/api/og?type=pagina&ruta=:ruta"
+    },
+    {
+      "source": "/((?!api/|admin|experiencia-privada|checkout|product/|casa/|blog/).+)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare|perplexity|claude|anthropic|chatgpt|gpt|oai-search|cohere|google-extended|google-inspectiontool|meta-external|duckassist|mistral).*"
+        }
+      ],
+      "destination": "/api/og?type=404"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/"
+    }
   ]
 }
