@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import {
+  tituloSeoProducto,
   metaDescripcionProducto,
   parrafosDescripcion,
 } from "../src/functions/seoProducto.js";
@@ -165,7 +166,7 @@ export default async function handler(req, res) {
 
       if (perfume) {
         const h1 = `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}`;
-        title = `${h1} | ${SITE_NAME}`;
+        title = tituloSeoProducto(perfume);
         description = metaDescripcionProducto(perfume);
         image = perfume.image || DEFAULT_IMAGE;
         url = `${SITE_URL}/product/${slugify(perfume.nombre)}/${id}`;

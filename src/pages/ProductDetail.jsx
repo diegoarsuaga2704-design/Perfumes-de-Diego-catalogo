@@ -25,6 +25,7 @@ import { MAX_BOTELLAS } from "../functions/limitesCarrito";
 import CustomSelect from "../ui/CustomSelect";
 import SEO from "../ui/SEO";
 import {
+  tituloSeoProducto,
   metaDescripcionProducto,
   parrafosDescripcion,
 } from "../functions/seoProducto";
@@ -184,7 +185,7 @@ export default function ProductDetail() {
   };
 
   // Texto SEO específico del producto
-  const seoTitle = `${parfum.nombre}${parfum.casa ? ` de ${parfum.casa}` : ""}`;
+  const seoTitle = tituloSeoProducto(parfum);
   const seoDescription = metaDescripcionProducto(parfum);
   const parrafos = parrafosDescripcion(parfum.descripcion);
   const seoImage = parfum.image;
@@ -223,6 +224,7 @@ export default function ProductDetail() {
         url={seoUrl}
         type="product"
         schema={productSchema}
+        sinMarca
       />
       <div className="flex flex-col lg:flex-row gap-10 bg-white p-4 sm:p-6 rounded-2xl shadow-md max-w-6xl mx-auto my-3 sm:my-10 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">

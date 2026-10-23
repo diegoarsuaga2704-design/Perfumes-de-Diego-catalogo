@@ -19,10 +19,16 @@ export default function SEO({
   type = "website",
   noindex = false,
   schema = null,
+  sinMarca = false,
 }) {
-  // Si la página pasa un título propio, lo combinamos con el nombre del sitio.
-  // Si no, usamos el default.
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
+  // Si la página pasa un título propio, lo combinamos con el nombre del sitio
+  // (salvo sinMarca, p. ej. productos, donde el espacio se usa para
+  // "Decant en México"). Si no, usamos el default.
+  const fullTitle = title
+    ? sinMarca
+      ? title
+      : `${title} | ${SITE_NAME}`
+    : DEFAULT_TITLE;
   const fullDescription = description || DEFAULT_DESCRIPTION;
   const fullImage = image || DEFAULT_IMAGE;
   const fullUrl = url || SITE_URL;
