@@ -103,19 +103,36 @@ export default async function handler(req, res) {
     return;
   }
 
+  const payload = JSON.stringify({
+    host: HOST,
+    key: CLAVE,
+    keyLocation: `${SITE_URL}/${CLAVE}.txt`,
+    urlList: urls.slice(0, 10000),
+  });
+
+  // Primero directo a Bing (el que usa ChatGPT); si no lo acepta, al
+  // distribuidor general de IndexNow. Se regresa el detalle para diagnosticar.
+  // 200/202 = recibido. 403 = clave no válida todavía. 422 = URL inválida.
   try {
-    const r = await fetch("https://api.indexnow.org/indexnow", {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({
-        host: HOST,
-        key: CLAVE,
-        keyLocation: `${SITE_URL}/${CLAVE}.txt`,
-        urlList: urls.slice(0, 10000),
-      }),
-    });
-    // 200 o 202 = recibido. 403 = clave no encontrada. 422 = URL inválida.
-    res.status(200).json({ ok: r.status === 200 || r.status === 202, status: r.status, enviadas: urls.length });
+    const intentos = [];
+    for (const endpoint of [
+      "https://www.bing.com/indexnow",
+      "https://api.indexnow.org/indexnow",
+    ]) {
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: payload,
+      });
+      const detalle = (await r.text().catch(() => "")).slice(0, 300);
+      intentos.push({ endpoint, status: r.status, detalle });
+      if (r.status === 200 || r.status === 202) {
+        res.status(200).json({ ok: true, status: r.status, enviadas: urls.length, intentos });
+        return;
+      }
+    }
+    const ultimo = intentos[intentos.length - 1];
+    res.status(200).json({ ok: false, status: ultimo.status, enviadas: 0, intentos });
   } catch (e) {
     console.error("IndexNow error:", e);
     res.status(502).json({ ok: false, error: "No se pudo contactar IndexNow" });

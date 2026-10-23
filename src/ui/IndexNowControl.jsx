@@ -18,7 +18,12 @@ export default function IndexNowControl() {
       const r = await avisarTodo();
       if (r?.omitido) setEstado("Solo funciona en perfumesdediego.com.");
       else if (r?.ok) setEstado(`Listo: ${r.enviadas} páginas enviadas a Bing.`);
-      else setEstado(`No se pudo enviar (código ${r?.status ?? "?"}).`);
+      else
+        setEstado(
+          `No se pudo enviar. ${(r?.intentos || [])
+            .map((i) => `${new URL(i.endpoint).hostname}: ${i.status} ${i.detalle || ""}`)
+            .join(" · ") || `Código ${r?.status ?? "?"}`}`,
+        );
     } catch {
       setEstado("No se pudo enviar.");
     } finally {
