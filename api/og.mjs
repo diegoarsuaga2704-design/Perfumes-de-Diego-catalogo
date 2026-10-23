@@ -18,7 +18,7 @@ try {
 }
 
 const BOT_PATTERN =
-  /bot|crawl|spider|slurp|WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Discordbot|Slackbot|LinkedInBot|Applebot|Googlebot|Bingbot|DuckDuckBot|Pinterest|Snapchat|metatag|opengraph|iframely|embedly|preview|MetaInspector|curl|wget|python-requests/i;
+  /bot|crawl|spider|slurp|WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Discordbot|Slackbot|LinkedInBot|Applebot|Googlebot|Bingbot|DuckDuckBot|Pinterest|Snapchat|metatag|opengraph|iframely|embedly|preview|MetaInspector|curl|wget|python-requests|perplexity|claude|anthropic|chatgpt|gpt|oai-search|cohere|google-extended|google-inspectiontool|meta-external|duckassist|mistral/i;
 
 function slugify(text) {
   if (!text) return "";
