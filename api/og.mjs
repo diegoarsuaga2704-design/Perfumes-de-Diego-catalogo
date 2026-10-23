@@ -11,6 +11,7 @@ import {
   paginaBot,
   otrosDeLaCasaHtml,
   perfumesDeCasaHtml,
+  garantiasHtml,
 } from "../src/seo/paginasBot.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -209,6 +210,7 @@ export default async function handler(req, res) {
             ? `<p><a href="${esc(perfume.tiktokLink)}">Reseña en video de ${esc(perfume.nombre)} en TikTok</a></p>`
             : "") +
           `<p><a href="${esc(url)}">Ver ${esc(perfume.nombre)} en ${esc(SITE_NAME)}</a></p>` +
+          garantiasHtml() +
           (await otrosDeLaCasaHtml(supabase, perfume));
 
         // Migas de pan: Inicio › Casa › Producto
@@ -319,6 +321,7 @@ export default async function handler(req, res) {
           (casa.descripcion ? `<p>${esc(casa.descripcion)}</p>` : "") +
           `<p>Explora los decants y botellas de ${esc(casa.nombre)} disponibles en ${esc(SITE_NAME)}.</p>` +
           `<p><a href="${esc(url)}">Ver perfumes de ${esc(casa.nombre)}</a></p>` +
+          garantiasHtml() +
           (await perfumesDeCasaHtml(supabase, casa.nombre));
 
         jsonLd.push({

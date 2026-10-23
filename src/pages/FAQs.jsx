@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import SEO from "../ui/SEO";
 import { faqs } from "../data/faqs";
+import { garantias } from "../data/garantias";
 
 function FAQs() {
   const navigate = useNavigate();
@@ -26,6 +27,19 @@ function FAQs() {
           <p className="text-gray-600 text-sm sm:text-base">
             Todo lo que necesitas saber antes de tu compra
           </p>
+        </div>
+
+        {/* Cómo trabajo: garantías concretas (mismo texto que leen Google y las IAs) */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 sm:p-6 mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Cómo trabajo</h2>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            {garantias.map((g) => (
+              <li key={g.titulo}>
+                <p className="font-semibold text-gray-900 text-sm">{g.titulo}</p>
+                <p className="text-gray-600 text-sm leading-relaxed">{g.texto}</p>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="space-y-3">

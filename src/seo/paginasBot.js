@@ -14,9 +14,29 @@ import {
   inicioDescripcion,
   inicioParrafos,
 } from "../data/inicio.js";
+import { garantias } from "../data/garantias.js";
 
 const SITE_URL = "https://perfumesdediego.com";
 const SITE_NAME = "Perfumes de Diego";
+
+/** "Cómo trabajo en Perfumes de Diego": garantías concretas de cada pedido. */
+export function garantiasHtml() {
+  return (
+    `<h2>Cómo trabajo en ${SITE_NAME}</h2><ul>` +
+    garantias
+      .map((g) => `<li><strong>${escHtml(g.titulo)}.</strong> ${escHtml(g.texto)}</li>`)
+      .join("") +
+    `</ul><p><a href="${SITE_URL}/faqs">Preguntas frecuentes</a></p>`
+  );
+}
+
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 const esc = (s) =>
   String(s ?? "")
@@ -140,6 +160,7 @@ export async function paginaBot(supabase, ruta) {
       cuerpo =
         `<h1>${esc(SITE_NAME)}</h1>` +
         inicioParrafos.map((p) => `<p>${esc(p)}</p>`).join("") +
+        garantiasHtml() +
         (best.length ? `<h2>Más vendidos</h2>${listaPerfumesHtml(best)}` : "") +
         (casas.length
           ? `<h2>Casas</h2><ul>${casas
@@ -245,6 +266,7 @@ export async function paginaBot(supabase, ruta) {
         "¿Qué es un decant? ¿Son originales? ¿Cuánto tarda el envío? Todas las dudas frecuentes resueltas.";
       cuerpo =
         `<h1>Preguntas frecuentes</h1>` +
+        garantiasHtml() +
         faqs
           .map((f) => `<h2>${esc(f.pregunta)}</h2><p>${esc(f.respuesta)}</p>`)
           .join("");
