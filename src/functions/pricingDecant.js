@@ -2,13 +2,13 @@
  * Utilidades de precio y opciones de mililitros para decants.
  *
  * Casos especiales que maneja:
- * - Ensar Oud: opciones [0.5, 1, 1.5, 2, 2.5, 3], 0.5 ml = precio * 0.6
+ * - Ensar Oud: opciones [0.5 ... 5] de 0.5 en 0.5, 0.5 ml = precio * 0.6
  * - Resto: opciones [1...10, 30], precio * mililitros
  *
  * Toda la lógica vive aquí. Los componentes solo consumen estas funciones.
  */
 
-const OPCIONES_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3];
+const OPCIONES_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 const OPCIONES_DEFAULT = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30];
 const FACTOR_MEDIO_ML = 0.6; // 0.5 ml cuesta 60% del precio de 1 ml
 const INCREMENTO_ENSAR_OUD = 0.5;
