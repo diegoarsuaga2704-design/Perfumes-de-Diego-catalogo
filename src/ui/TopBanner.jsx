@@ -6,16 +6,26 @@ const MENSAJES = [
   "Envíos a todo México",
 ];
 
-// Repetimos los mensajes en DOS mitades idénticas: la animación recorre -50%
-// (una mitad), así el loop es continuo y sin saltos. 6 pasadas llenan pantallas
-// anchas para que nunca quede hueco.
-const SECUENCIA = Array.from({ length: 6 }).flatMap(() => MENSAJES);
+import { getTemporada, TEXTOS_TEMPORADA } from "../functions/temporada";
 
 function TopBanner() {
+  // En temporada (Halloween / Día de Muertos) la barra pasa a modo noche:
+  // fondo negro, texto dorado y mensajes de temporada intercalados.
+  const temporada = getTemporada();
+  const t = temporada ? TEXTOS_TEMPORADA[temporada] : null;
+  const mensajes = t ? [t.banner[0], ...MENSAJES.slice(0, 2), t.banner[1], ...MENSAJES.slice(2)] : MENSAJES;
+  // Repetimos los mensajes en DOS mitades idénticas: la animación recorre -50%
+  // (una mitad), así el loop es continuo y sin saltos. 6 pasadas llenan
+  // pantallas anchas para que nunca quede hueco.
+  const secuencia = Array.from({ length: 6 }).flatMap(() => mensajes);
+
   return (
-    <div className="bg-[#A47E3B] text-white text-[11px] sm:text-base py-2 sm:py-3 overflow-hidden">
+    <div
+      className={`${t ? "bg-[#141014] text-[#D4AF7A]" : "bg-[#A47E3B] text-white"} text-[11px] sm:text-base py-2 sm:py-3 overflow-hidden`}
+      style={t ? { borderBottom: `1px solid ${t.acento}55` } : undefined}
+    >
       <div className="flex w-max pdd-marquee font-medium">
-        {SECUENCIA.map((m, i) => (
+        {secuencia.map((m, i) => (
           <span key={i} className="flex items-center whitespace-nowrap">
             <span className="mx-6">{m}</span>
             <span className="opacity-70">•</span>

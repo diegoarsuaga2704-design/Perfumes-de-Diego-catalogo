@@ -28,15 +28,25 @@ export function getEstadoEnvioGratis({
     0,
   );
 
+  // Parte de los decants a la que aplica el cupón: todos (ALL / DECANT) o
+  // solo los de una casa (cupón por casa). Los cupones de botellas no cuentan.
+  let descontable = 0;
+  if (isDiscountApplied) {
+    if (discountTarget === "ALL" || discountTarget === "DECANT") {
+      descontable = subtotal;
+    } else if (discountTarget !== "BOTELLA" && discountTarget !== "BOTELLA_SELLADA") {
+      descontable = elegibles
+        .filter((i) => i.casa === discountTarget)
+        .reduce((sum, item) => sum + calcularPrecioDecantCarrito(item), 0);
+    }
+  }
+
   let total = subtotal;
-  if (
-    isDiscountApplied &&
-    (discountTarget === "ALL" || discountTarget === "DECANT")
-  ) {
+  if (descontable > 0) {
     if (discountType === "percentage") {
-      total = subtotal * (1 - discountValue / 100);
+      total = subtotal - (descontable * discountValue) / 100;
     } else if (discountType === "amount") {
-      total = Math.max(0, subtotal - discountValue);
+      total = subtotal - Math.min(discountValue, descontable);
     }
   }
 

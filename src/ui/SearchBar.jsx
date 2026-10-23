@@ -3,6 +3,8 @@ import { Search } from "lucide-react";
 import { useParfums } from "../context/ParfumsContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { slugify } from "../functions/slugify";
+import { normalizarTexto } from "../functions/normalizarTexto";
+import { imagenThumb } from "../functions/imagenThumb";
 
 function SearchBar({ onSearchResult }) {
   const { parfums, error } = useParfums();
@@ -30,6 +32,19 @@ function SearchBar({ onSearchResult }) {
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);
+  const timerFoco = useRef(null);
+
+  // Al ir a resultados o a un perfume desde el buscador: cancela el ajuste de
+  // scroll pendiente del foco y, cuando el teclado del celular ya se cerró,
+  // vuelve a subir la página nueva. Sin esto, en celular la página nueva podía
+  // abrir hasta abajo (el teclado al cerrarse restaura la posición anterior).
+  const subirTrasBuscar = () => {
+    clearTimeout(timerFoco.current);
+    [0, 150, 400].forEach((ms) =>
+      setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }), ms),
+    );
+  };
+  useEffect(() => () => clearTimeout(timerFoco.current), []);
 
   useEffect(() => {
     if (query.trim() === "") {
@@ -39,8 +54,8 @@ function SearchBar({ onSearchResult }) {
       return;
     }
 
-    const lowerQuery = query.toLowerCase();
-    const safeLower = (v) => (v ?? "").toString().toLowerCase();
+    const lowerQuery = normalizarTexto(query.trim());
+    const safeLower = normalizarTexto;
     // Separar en dos grupos:
     // 1️⃣ los que empiezan con el texto
     const startsWithMatches = parfums.filter(
@@ -83,6 +98,7 @@ function SearchBar({ onSearchResult }) {
     setShowSuggestions(false);
     inputRef.current?.blur();
     navigate(`/product/${slugify(item.nombre)}/${item.id}`);
+    subirTrasBuscar();
   };
 
   const handleSubmit = (e) => {
@@ -91,7 +107,7 @@ function SearchBar({ onSearchResult }) {
 
     // ¿Hay un perfume con ese nombre exacto?
     const exactMatch = parfums.find(
-      (p) => (p.nombre ?? "").toString().toLowerCase() === query.toLowerCase(),
+      (p) => normalizarTexto(p.nombre) === normalizarTexto(query.trim()),
     );
 
     if (exactMatch) {
@@ -104,7 +120,9 @@ function SearchBar({ onSearchResult }) {
 
     setShowSuggestions(false);
     inputRef.current?.blur();
-    navigate("/home");
+    // La búsqueda va en la URL (?q=) para que siga ahí al regresar con "atrás".
+    navigate(`/home?${new URLSearchParams({ q: query.trim() })}`);
+    subirTrasBuscar();
   };
 
   const handleClear = () => {
@@ -112,6 +130,10 @@ function SearchBar({ onSearchResult }) {
     setSuggestions([]);
     setShowSuggestions(false);
     onSearchResult(null);
+    // Si estaba viendo resultados, vuelve al catálogo completo.
+    if (location.pathname === "/home" && new URLSearchParams(location.search).has("q")) {
+      navigate("/home", { replace: true });
+    }
   };
 
   if (error) {
@@ -121,7 +143,7 @@ function SearchBar({ onSearchResult }) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full sm:w-[500px] xl:w-[360px] my-3 sm:mt-0"
+      className="relative w-full sm:w-[500px] xl:w-[360px] sm:mb-3"
     >
       <form onSubmit={handleSubmit} className="flex items-center w-full">
         <div className="relative w-full">
@@ -137,13 +159,17 @@ function SearchBar({ onSearchResult }) {
               // En mobile, esperar a que aparezca el teclado virtual y
               // scrollear el input al top para que las sugerencias queden
               // visibles. En desktop el efecto es imperceptible.
-              setTimeout(() => {
-                inputRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+              // Solo si la barra no está ya arriba (la barra es fija, casi
+              // nunca hace falta); se cancela si el cliente busca antes.
+              clearTimeout(timerFoco.current);
+              timerFoco.current = setTimeout(() => {
+                const el = inputRef.current;
+                if (!el || document.activeElement !== el) return;
+                if (el.getBoundingClientRect().top < 120) return;
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
               }, 300);
             }}
+            onBlur={() => clearTimeout(timerFoco.current)}
           />
 
           {query && (
@@ -181,9 +207,15 @@ function SearchBar({ onSearchResult }) {
               }}
             >
               <img
-                src={item.image}
+                src={imagenThumb(item.image, 80)}
                 alt={item.nombre}
-                className="h-7 rounded object-cover mr-3"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  // Si falla la miniatura, usa la imagen original.
+                  if (e.currentTarget.src !== item.image) e.currentTarget.src = item.image;
+                }}
+                className="h-7 w-7 rounded object-cover mr-3 shrink-0"
               />
               <span className="text-sm text-gray-600">{item.nombre}</span>
             </li>

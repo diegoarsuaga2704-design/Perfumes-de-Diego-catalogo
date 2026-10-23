@@ -1,8 +1,12 @@
-function HomeBrand({ image, title, description, onClick, eager = false }) {
+import { Link } from "react-router-dom";
+
+// Tarjeta de la portada. Es un enlace real: se puede abrir en otra pestaña y
+// Google lo sigue.
+function HomeBrand({ image, title, description, to, eager = false }) {
   return (
-    <div
-      onClick={onClick}
-      className="relative rounded-lg overflow-hidden shadow-lg group cursor-pointer"
+    <Link
+      to={to}
+      className="block relative rounded-lg overflow-hidden shadow-lg group cursor-pointer"
     >
       {/* Imagen de fondo */}
       <img
@@ -19,14 +23,11 @@ function HomeBrand({ image, title, description, onClick, eager = false }) {
       <div className="absolute bottom-0 p-6 text-white text-center w-full">
         <h2 className="text-xl font-bold mb-2">{title}</h2>
         <p className="text-sm mb-4">{description}</p>
-        <button
-          type="button"
-          className="bg-white text-black font-semibold py-2 px-4 rounded hover:bg-gray-200 active:bg-gray-300 transition"
-        >
+        <span className="inline-block bg-white text-black font-semibold py-2 px-4 rounded group-hover:bg-gray-200 group-active:bg-gray-300 transition">
           Ir a comprar
-        </button>
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }
 

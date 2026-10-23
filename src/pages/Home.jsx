@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useOutletContext, useLocation, useSearchParams, useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useLocation, useSearchParams, useParams, useNavigate } from "react-router-dom";
+import { normalizarTexto } from "../functions/normalizarTexto";
 import Navbar from "../ui/Navbar";
 import ProductGrid from "../ui/ProductGrid";
 import { useParfums } from "../context/ParfumsContext";
@@ -7,24 +8,20 @@ import { slugify } from "../functions/slugify";
 import SEO from "../ui/SEO";
 
 function Home({ forcedMode }) {
-  const { searchResult } = useOutletContext();
   const location = useLocation();
-  const [, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { slug } = useParams();
   const { parfums } = useParfums();
-  const navigate = useNavigate();
 
-  // Helper para resetear paginación cuando cambian filtros
-  const resetPage = () => {
-    setSearchParams(
-      (prev) => {
-        const newParams = new URLSearchParams(prev);
-        newParams.delete("page");
-        return newParams;
-      },
-      { replace: true }
-    );
-  };
+  // Búsqueda desde la URL (?q=): sobrevive al abrir un perfume y regresar.
+  // Si el texto es el nombre exacto de un perfume, muestra solo ese.
+  const q = searchParams.get("q");
+  const searchResult = useMemo(() => {
+    if (!q) return null;
+    const exacto = parfums.find((p) => normalizarTexto(p.nombre) === normalizarTexto(q));
+    return exacto ? { nombre: exacto.nombre } : { query: q };
+  }, [q, parfums]);
+  const navigate = useNavigate();
 
   // Detecta el modo. Prioridad:
   // 1. forcedMode (prop) — viene de las rutas /botellas y /decants
@@ -38,10 +35,28 @@ function Home({ forcedMode }) {
   // true = solo stock
   // false = solo decants
 
-  // Estados de filtros normales
+  // Estados de filtros normales. Disponibilidad y categoría viven en la URL
+  // (?disponible=...&categoria=...) para que sobrevivan al abrir un perfume
+  // y regresar con "atrás". La casa vive en la ruta /casa/:slug.
   const [selectedCasa, setSelectedCasa] = useState(null);
-  const [selectedOcasion, setSelectedOcasion] = useState(null);
-  const [selectedCategoria, setSelectedCategoria] = useState(null);
+  const selectedOcasion = searchParams.get("disponible");
+  const selectedCategoria = searchParams.get("categoria");
+
+  // Pone un solo filtro de URL (son excluyentes) y vuelve a la página 1.
+  const setFiltroUrl = (clave, valor) => {
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev);
+        n.delete("page");
+        n.delete("disponible");
+        n.delete("categoria");
+        n.delete("q"); // elegir un filtro sale de la búsqueda
+        if (clave && valor) n.set(clave, valor);
+        return n;
+      },
+      { replace: true },
+    );
+  };
 
   // Aplicar el modo (stock/decants) solo cuando realmente cambia, no en cada montaje
   useEffect(() => {
@@ -67,39 +82,28 @@ function Home({ forcedMode }) {
     ];
     const casaReal = casasUnicas.find((casa) => slugify(casa) === slug);
 
-    if (casaReal) {
-      setSelectedCasa(casaReal);
-      setSelectedOcasion(null);
-      setSelectedCategoria(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (casaReal) setSelectedCasa(casaReal);
   }, [slug, parfums]);
 
   const handleSelectCasa = (value) => {
     setSelectedCasa(value);
-    setSelectedOcasion(null);
-    setSelectedCategoria(null);
-    resetPage();
     navigate(`/casa/${slugify(value)}`);
   };
 
-  const handleSelectOcasion = (value) => {
-    setSelectedOcasion(value);
-    setSelectedCasa(null);
-    setSelectedCategoria(null);
-    resetPage();
+  // Desde /casa/:slug, elegir otro filtro sale de la casa (son excluyentes).
+  const elegirFiltro = (clave, value) => {
+    if (slug) {
+      setSelectedCasa(null);
+      navigate(`/home?${new URLSearchParams({ [clave]: value })}`);
+    } else {
+      setSelectedCasa(null);
+      setFiltroUrl(clave, value);
+    }
   };
-
-  const handleSelectCategoria = (value) => {
-    setSelectedCategoria(value);
-    setSelectedCasa(null);
-    setSelectedOcasion(null);
-    resetPage();
-  };
+  const handleSelectOcasion = (value) => elegirFiltro("disponible", value);
+  const handleSelectCategoria = (value) => elegirFiltro("categoria", value);
 
   const handleSelectLimpiar = () => {
-    setSelectedCategoria(null);
-    setSelectedOcasion(null);
     setSelectedCasa(null);
     if (!forcedMode) {
       setStockFilter(null);
@@ -107,7 +111,7 @@ function Home({ forcedMode }) {
     if (slug) {
       navigate("/home");
     } else {
-      resetPage();
+      setFiltroUrl(null, null);
     }
   };
 
@@ -143,6 +147,14 @@ function Home({ forcedMode }) {
         onSelectCategoria={handleSelectCategoria}
       />
 
+      {q && (
+        <p className="bg-gray-100 text-center text-sm text-gray-600 pt-4 px-4">
+          Resultados para <strong className="text-gray-900">“{q}”</strong> ·{" "}
+          <Link to="/home" className="text-[#A47E3B] hover:underline">
+            Ver todo el catálogo
+          </Link>
+        </p>
+      )}
       <ProductGrid
         selectedCasa={selectedCasa}
         selectedOcasion={selectedOcasion}

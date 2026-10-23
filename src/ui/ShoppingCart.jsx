@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { X, ShoppingBag } from "lucide-react";
 import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
+import SugerenciasEnvioGratis from "./SugerenciasEnvioGratis";
 import { formatPrecio } from "../functions/formatPrecio";
 import { getEstadoEnvioGratis } from "../functions/envioGratis";
 import { track } from "@vercel/analytics";
@@ -33,34 +34,45 @@ export default function ShoppingCart() {
     discountTarget,
   });
 
-  // Bloquear scroll del body al abrir el carrito, preservando la posición.
+  // Bloquear scroll del body al abrir el carrito y, al cerrarlo, regresar a
+  // la misma posición. (Antes la limpieza borraba la posición guardada antes
+  // de usarla y la página brincaba hasta arriba al cerrar el carrito.)
   useEffect(() => {
-    if (isCartOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.width = "100%";
-      document.body.style.top = `-${scrollY}px`;
-    } else {
-      const topValue = document.body.style.top;
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.width = "";
-      document.body.style.top = "";
-      if (topValue) {
-        window.scrollTo(0, parseInt(topValue || "0", 10) * -1);
-      }
-    }
-
+    if (!isCartOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.top = `-${scrollY}px`;
     return () => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
       document.body.style.position = "";
       document.body.style.width = "";
       document.body.style.top = "";
+      window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
     };
+  }, [isCartOpen]);
+
+  // Con el carrito abierto, "atrás" (Android/navegador) y Escape lo cierran
+  // en vez de salir de la página. Se agrega una entrada al historial al
+  // abrirlo; si se cierra con la X, se quita esa entrada.
+  useEffect(() => {
+    if (!isCartOpen) return;
+    window.history.pushState({ ...window.history.state, carritoAbierto: true }, "");
+    const onPop = () => closeCart();
+    const onKey = (e) => {
+      if (e.key === "Escape") closeCart();
+    };
+    window.addEventListener("popstate", onPop);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      document.removeEventListener("keydown", onKey);
+      if (window.history.state?.carritoAbierto) window.history.back();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCartOpen]);
 
   if (!isCartOpen) return null;
@@ -94,6 +106,7 @@ export default function ShoppingCart() {
           <div className="flex-1 min-h-0 overflow-y-auto">
             {cartItems.length > 0 && <EnvioGratisProgress />}
             <ShoppingCartProduct />
+            {cartItems.length > 0 && <SugerenciasEnvioGratis />}
             {cartItems.length === 0 && (
               <div className="flex flex-1 flex-col items-center justify-center text-center px-6 py-16 text-gray-500">
                 <ShoppingBag className="mb-3 text-gray-300" size={56} />
@@ -141,7 +154,9 @@ export default function ShoppingCart() {
                 onClick={() => {
                   track("ir_a_checkout");
                   closeCart();
-                  navigate("/checkout");
+                  // replace: sustituye la entrada del carrito abierto, así
+                  // "atrás" desde el checkout regresa a la página anterior.
+                  navigate("/checkout", { replace: true });
                 }}
                 className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors"
               >

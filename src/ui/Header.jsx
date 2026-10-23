@@ -1,15 +1,27 @@
-import { ShoppingCart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShoppingCart, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import { useCart } from "../context/CartContext";
+import { getTemporada, TEXTOS_TEMPORADA } from "../functions/temporada";
 
-function Header({ onSearchResult }) {
-  const { toggleCart, cartItems } = useCart();
+function Header({ onSearchResult, sinMenu = false }) {
+  const { toggleCart, cartItems, isCartOpen } = useCart();
   const navigate = useNavigate();
+  // Menú del celular: el botón va en la misma fila del logo (antes era una
+  // fila aparte que ocupaba espacio fijo en pantalla).
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  useEffect(() => {
+    if (isCartOpen) setMenuAbierto(false);
+  }, [isCartOpen]);
 
   const totalItems = cartItems.length;
 
+  const temporada = getTemporada();
   const categorias = [
+    ...(temporada
+      ? [{ nombre: TEXTOS_TEMPORADA[temporada].corto, accion: () => navigate("/temporada") }]
+      : []),
     {
       nombre: "Decants",
       accion: () => navigate("/decants"),
@@ -43,13 +55,25 @@ function Header({ onSearchResult }) {
   return (
     <header className="w-full border-b border-gray-200 bg-gray-200">
       {/* Fila superior: Logo + (menú en xl) + Buscador + Carrito */}
-      <div className="flex flex-row justify-between items-center px-3 sm:px-6 pt-4 pb-0 xl:py-2 gap-3">
+      <div className="flex flex-row justify-between items-center px-3 sm:px-6 py-2 sm:pt-4 sm:pb-0 xl:py-2 gap-2 sm:gap-3">
+        {/* Menú (solo celular) */}
+        {!sinMenu && (
+          <button
+            type="button"
+            onClick={() => setMenuAbierto((v) => !v)}
+            aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+            className="sm:hidden shrink-0 text-gray-700 -ml-1 p-1"
+          >
+            {menuAbierto ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        )}
+
         {/* Logo */}
         <Link to="/" className="flex sm:gap-2 items-center flex-shrink-0">
           <img
             src="https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/perfumes-de-diego-letras-horizontal.png"
             alt="Logo"
-            className="sm:h-20 sm:w-48 w-24 my-3 xl:h-14 xl:w-40 xl:my-0"
+            className="w-20 sm:h-20 sm:w-48 sm:my-3 xl:h-14 xl:w-40 xl:my-0"
           />
         </Link>
 
@@ -67,7 +91,7 @@ function Header({ onSearchResult }) {
         </nav>
 
         {/* Search + Carrito */}
-        <div className="flex items-center gap-3 sm:gap-6 text-[#F5F5F5] mt-3 sm:mt-0 flex-1 min-w-0 justify-end xl:flex-none">
+        <div className="flex items-center gap-3 sm:gap-6 text-[#F5F5F5] flex-1 min-w-0 justify-end xl:flex-none">
           <SearchBar onSearchResult={onSearchResult} />
 
           <div className="relative">
@@ -82,6 +106,24 @@ function Header({ onSearchResult }) {
           </div>
         </div>
       </div>
+
+      {/* Menú del celular desplegado */}
+      {menuAbierto && !sinMenu && (
+        <nav className="sm:hidden bg-white border-t border-gray-200 py-1">
+          {categorias.map((cat, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                cat.accion();
+                setMenuAbierto(false);
+              }}
+              className="block w-full text-left px-5 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#A47E3B] font-medium text-sm"
+            >
+              {cat.nombre}
+            </button>
+          ))}
+        </nav>
+      )}
 
       {/* Menú de categorías - escritorio chico/mediano (en su propia fila) */}
       <div className="hidden sm:block xl:hidden px-6 pb-3">

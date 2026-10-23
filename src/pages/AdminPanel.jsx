@@ -10,6 +10,8 @@ import {
   Bell,
   Ticket,
   Newspaper,
+  Link2,
+  Sparkles,
   PenLine,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -148,6 +150,32 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Crear un perfume nuevo en el catálogo
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/temporada")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Sparkles className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Colección de temporada
+              </h3>
+              <p className="text-sm text-gray-600">
+                Elige qué perfumes salen en la colección de Halloween / Día de Muertos
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/vincular")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Link2 className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Vincular decants y botellas
+              </h3>
+              <p className="text-sm text-gray-600">
+                Revisa cuáles están enlazados y vincula los que estén escritos distinto
               </p>
             </button>
           </div>

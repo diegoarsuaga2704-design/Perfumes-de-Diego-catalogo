@@ -2,19 +2,51 @@
  * Utilidades de precio y opciones de mililitros para decants.
  *
  * Casos especiales que maneja:
- * - Ensar Oud: opciones [0.5, 1, 1.5, 2, 2.5, 3], 0.5 ml = precio * 0.6
- * - Resto: opciones [1...10], precio * mililitros
+ * - Ensar Oud: opciones [0.5 ... 5] de 0.5 en 0.5, 0.5 ml = precio * 0.6
+ * - Resto: opciones [1...10, 30], precio * mililitros
  *
  * Toda la lógica vive aquí. Los componentes solo consumen estas funciones.
  */
 
-const OPCIONES_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3];
-const OPCIONES_DEFAULT = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const OPCIONES_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+const OPCIONES_DEFAULT = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30];
 const FACTOR_MEDIO_ML = 0.6; // 0.5 ml cuesta 60% del precio de 1 ml
 const INCREMENTO_ENSAR_OUD = 0.5;
 const INCREMENTO_DEFAULT = 1;
 
 const isEnsarOud = (parfum) => parfum?.casa === "Ensar Oud";
+
+// Promociones por tamaño: precio fijo para ciertos ml según casa y precio
+// por ml. Louis Vuitton 30 ml: $70/ml → $1,900 (en vez de $2,100) y
+// $80/ml → $2,200 (en vez de $2,400).
+const PROMOS = [
+  { casa: "louisvuitton", ml: 30, precioMl: 70, total: 1900 },
+  { casa: "louisvuitton", ml: 30, precioMl: 80, total: 2200 },
+];
+const claveCasa = (c) =>
+  (c ?? "")
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+const esCasaPromo = (casa, promo) => {
+  const k = claveCasa(casa);
+  return k === promo.casa || (promo.casa === "louisvuitton" && k === "lv");
+};
+
+/**
+ * Precio de promoción para una casa/precio por ml/ml, o null si no aplica.
+ */
+export function precioPromo(casa, precioMl, mililitros) {
+  const promo = PROMOS.find(
+    (p) =>
+      esCasaPromo(casa, p) &&
+      Number(mililitros) === p.ml &&
+      Number(precioMl) === p.precioMl,
+  );
+  return promo ? promo.total : null;
+}
 
 /**
  * Devuelve las opciones de ml disponibles para un perfume.
@@ -41,7 +73,8 @@ export function getOpcionesMililitros(parfum, opts = {}) {
 
   return valores.map((num) => ({
     value: num,
-    label: `${num} ml`,
+    label:
+      precioPromo(parfum?.casa, parfum?.precio, num) != null ? `${num} ml · Promo` : `${num} ml`,
   }));
 }
 
@@ -55,6 +88,9 @@ export function calcularPrecioDecant(parfum, mililitros) {
   if (!parfum || mililitros == null || mililitros <= 0) return 0;
 
   const precio = Number(parfum.precio) || 0;
+
+  const promo = precioPromo(parfum.casa, precio, mililitros);
+  if (promo != null) return promo;
 
   // Caso Ensar Oud (medios ml con factor especial)
   if (isEnsarOud(parfum)) {
@@ -83,6 +119,9 @@ export function calcularPrecioDecantCarrito(item, mililitros = null) {
   if (ml <= 0) return 0;
 
   const precio = Number(item.precioUnitario) || 0;
+
+  const promo = precioPromo(item.casa, precio, ml);
+  if (promo != null) return promo;
 
   // Caso Ensar Oud
   if (item.casa === "Ensar Oud") {
@@ -147,5 +186,5 @@ export function getMililitrosMinimosMonto(item, minSiempre = 0) {
  * Para el placeholder/label del select, según la casa.
  */
 export function getPlaceholderMililitros(parfum) {
-  return "-- Elige mililitros --";
+  return "Elige mililitros";
 }

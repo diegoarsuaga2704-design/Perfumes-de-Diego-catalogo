@@ -1,4 +1,5 @@
 import { useCart } from "../context/CartContext";
+import { MAX_BOTELLAS } from "../functions/limitesCarrito";
 import { useParfums } from "../context/ParfumsContext";
 import { useState } from "react";
 import { Package, Trash2 } from "lucide-react";
@@ -62,7 +63,7 @@ function ShoppingCartProduct({ soloLectura = false }) {
 
   const handleIncrease = (item) => {
     if (item.tipoVenta === "botella") {
-      if (item.cantidad < item.stockDisponible) {
+      if (item.cantidad < MAX_BOTELLAS) {
         updateCartItem(item.id, "botella", item.cantidad + 1);
       }
     }
@@ -110,7 +111,7 @@ function ShoppingCartProduct({ soloLectura = false }) {
             : item.mililitros - incremento >= minimo;
         const canIncrease =
           item.tipoVenta === "botella"
-            ? item.cantidad < item.stockDisponible
+            ? item.cantidad < MAX_BOTELLAS
             : true;
 
         const handleRemove = () => {
