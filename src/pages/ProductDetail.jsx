@@ -457,17 +457,19 @@ export default function ProductDetail() {
                   </>
                 )}
 
+                {/* Reseña en desplegable: cerrada por defecto, pero el texto
+                    sigue en la página, así que Google lo lee igual. */}
                 {parrafos.length > 0 && (
-                  <>
-                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
-                      DESCRIPCIÓN:
-                    </h2>
-                    <div className="text-sm text-gray-700 leading-6 space-y-3 mt-1 mb-3">
+                  <details className="mt-2 mb-3">
+                    <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
+                      Leer reseña de {parfum.nombre}
+                    </summary>
+                    <div className="text-sm text-gray-700 leading-6 space-y-3 mt-2">
                       {parrafos.map((p, idx) => (
                         <p key={idx}>{p}</p>
                       ))}
                     </div>
-                  </>
+                  </details>
                 )}
 
                 <h2 className="text-sm font-semibold text-gray-700 mt-2">

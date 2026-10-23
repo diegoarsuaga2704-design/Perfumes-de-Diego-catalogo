@@ -4,6 +4,17 @@
  * para que los dos digan exactamente lo mismo.
  */
 
+/**
+ * Título para Google, WhatsApp y la pestaña del navegador.
+ * "Kaleidoscope Mind de Benneviento — Decant en México"
+ * stock === true → registro de botella; si no, decant.
+ */
+export function tituloSeoProducto(parfum) {
+  if (!parfum) return "";
+  const base = `${parfum.nombre}${parfum.casa ? ` de ${parfum.casa}` : ""}`;
+  return `${base} — ${parfum.stock === true ? "Botella" : "Decant"} en México`;
+}
+
 /** Recorta en la última palabra completa antes del límite. */
 function recortar(texto, max) {
   const limpio = (texto || "").replace(/\s+/g, " ").trim();
