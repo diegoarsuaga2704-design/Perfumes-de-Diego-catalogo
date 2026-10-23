@@ -24,6 +24,7 @@ import { useCart } from "../context/CartContext";
 import { MAX_BOTELLAS } from "../functions/limitesCarrito";
 import CustomSelect from "../ui/CustomSelect";
 import SEO from "../ui/SEO";
+import { getPostDePerfume } from "../functions/getPosts";
 import {
   tituloSeoProducto,
   metaDescripcionProducto,
@@ -90,6 +91,20 @@ export default function ProductDetail() {
     setBotellas(1);
     setYaAgrego(false);
   }, [parfum]);
+
+  // Reseña del blog vinculada a este perfume (si existe).
+  const [postResena, setPostResena] = useState(null);
+  useEffect(() => {
+    setPostResena(null);
+    if (!parfum?.nombre) return;
+    let cancelado = false;
+    getPostDePerfume(parfum.nombre).then((post) => {
+      if (!cancelado) setPostResena(post);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [parfum?.nombre]);
 
   // #7 — Muestra el botón flotante (escritorio) cuando el botón principal
   // de "Añadir al carrito" se sale de la vista al hacer scroll.
@@ -506,6 +521,15 @@ export default function ProductDetail() {
                   >
                     Conocer más sobre "{parfum.nombre}" en Fragrantica
                   </a>
+                )}
+
+                {postResena && (
+                  <Link
+                    to={`/blog/${postResena.slug}`}
+                    className="block mt-2 text-xs text-gray-500 hover:text-[#A47E3B] hover:underline"
+                  >
+                    Reseña completa en el blog →
+                  </Link>
                 )}
               </div>
 

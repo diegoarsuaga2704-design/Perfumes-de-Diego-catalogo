@@ -171,6 +171,14 @@ export default async function handler(req, res) {
         image = perfume.image || DEFAULT_IMAGE;
         url = `${SITE_URL}/product/${slugify(perfume.nombre)}/${id}`;
         const parrafos = parrafosDescripcion(perfume.descripcion);
+        const { data: posts } = await supabase
+          .from("posts")
+          .select("slug, titulo, parfums:perfume_id!inner(nombre)")
+          .eq("publicado", true)
+          .eq("parfums.nombre", perfume.nombre)
+          .order("creado_en", { ascending: false })
+          .limit(1);
+        const postResena = posts?.[0] || null;
         bodyHtml =
           `<h1>${esc(h1)}</h1>` +
           (perfume.concentracion
@@ -184,6 +192,9 @@ export default async function handler(req, res) {
             ? `<p>Notas olfativas: ${esc(perfume.notas)}</p>`
             : "") +
           `<p>Disponible en decant para probar o en botella completa. Envíos a todo México.</p>` +
+          (postResena
+            ? `<p><a href="${SITE_URL}/blog/${esc(postResena.slug)}">${esc(postResena.titulo)}</a></p>`
+            : "") +
           (perfume.tiktokLink
             ? `<p><a href="${esc(perfume.tiktokLink)}">Reseña en video de ${esc(perfume.nombre)} en TikTok</a></p>`
             : "") +

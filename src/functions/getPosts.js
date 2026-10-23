@@ -33,6 +33,25 @@ export async function getPostBySlug(slug) {
   return data;
 }
 
+// Reseña publicada de un perfume (por nombre, para que aparezca tanto en el
+// decant como en la botella aunque el post esté vinculado solo a uno).
+export async function getPostDePerfume(nombre) {
+  if (!nombre) return null;
+  const { data, error } = await supabase
+    .from("posts")
+    .select("slug, titulo, parfums:perfume_id!inner(nombre)")
+    .eq("publicado", true)
+    .eq("parfums.nombre", nombre)
+    .order("creado_en", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error fetching post del perfume:", error);
+    return null;
+  }
+  return data?.[0] || null;
+}
+
 // ---------- Admin (requiere is_admin() vía RLS) ----------
 
 // Todos los posts (publicados y borradores), más recientes primero.
