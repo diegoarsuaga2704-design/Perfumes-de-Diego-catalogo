@@ -98,7 +98,8 @@ export default function AdminPerfumesList() {
     }
   };
 
-  // Filtrado por búsqueda + disponibilidad + rango de precio
+  // Filtrado por búsqueda + disponibilidad + rango de precio.
+  // Orden: casa A-Z y, dentro de cada casa, nombre A-Z.
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const min = precioMin === "" ? null : Number(precioMin);
@@ -117,7 +118,10 @@ export default function AdminPerfumesList() {
       if (min !== null && precio < min) return false;
       if (max !== null && precio > max) return false;
       return true;
-    });
+    }).sort((a, b) =>
+      (a.casa || "").localeCompare(b.casa || "", "es", { sensitivity: "base" }) ||
+      (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" }),
+    );
   }, [parfums, search, filtroDisponible, filtroTipo, precioMin, precioMax]);
 
   const handleDelete = async (id) => {
