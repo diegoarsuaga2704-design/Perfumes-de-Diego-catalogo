@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { createParfumAdmin } from "../functions/getParfumsAdmin";
+import { createParfumAdmin, getAllParfumsAdmin } from "../functions/getParfumsAdmin";
+import { normalizarTexto } from "../functions/normalizarTexto";
+import { esMismoPerfume } from "../functions/mismoPerfume";
 import { ensureCasaExists } from "../functions/getCasas";
 import ImageUploader from "../ui/ImageUploader";
 import CasaAutocomplete from "../ui/CasaAutocomplete";
+import CamposSeoPerfume from "../ui/CamposSeoPerfume";
 
 const OPCIONES_CATEGORIA = ["Nicho", "Diseñador", "Árabe"];
 const OPCIONES_CONCENTRACION = [
@@ -32,6 +35,7 @@ const DEFAULT_FORM = {
   disponible: "Próximamente",
   stock: false,
   notas: "",
+  descripcion: "",
   precio: "",
   mlBotella: null,
   botellasDisponibles: null,
@@ -55,6 +59,54 @@ export default function AdminPerfumeCreate() {
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Autocompletado: al escribir el nombre se listan los perfumes que ya
+  // existen; al elegir uno se copian sus datos descriptivos (no precio, tipo
+  // ni disponibilidad). Así decant y botella quedan con el mismo nombre y
+  // la tienda los enlaza.
+  const [existentes, setExistentes] = useState([]);
+  const [mostrarSug, setMostrarSug] = useState(false);
+  const [copiadoDe, setCopiadoDe] = useState(null);
+  useEffect(() => {
+    getAllParfumsAdmin()
+      .then(setExistentes)
+      .catch(() => setExistentes([]));
+  }, []);
+  const sugerencias = useMemo(() => {
+    const q = normalizarTexto(form.nombre).trim();
+    if (q.length < 2) return [];
+    return existentes
+      .filter(
+        (p) =>
+          normalizarTexto(p.nombre).includes(q) || normalizarTexto(p.casa).includes(q),
+      )
+      .slice(0, 10);
+  }, [form.nombre, existentes]);
+
+  const copiarDe = (p) => {
+    // ¿Qué formatos de este perfume ya existen? Si solo hay decant, lo que
+    // falta es la botella (y al revés): se preselecciona el que no existe.
+    const versiones = existentes.filter((x) => x.id === p.id || esMismoPerfume(p, x));
+    const hayDecant = versiones.some((x) => x.stock === false);
+    const hayBotella = versiones.some((x) => x.stock === true);
+    const tipoFaltante = hayDecant && !hayBotella ? true : hayBotella && !hayDecant ? false : null;
+
+    setForm((prev) => ({
+      ...prev,
+      ...(tipoFaltante !== null ? { stock: tipoFaltante } : {}),
+      nombre: p.nombre || "",
+      casa: p.casa || "",
+      categoria: p.categoria || prev.categoria,
+      concentracion: p.concentracion || prev.concentracion,
+      notas: p.notas || "",
+      descripcion: p.descripcion || "",
+      image: p.image || "",
+      fraganticaLink: p.fraganticaLink || "",
+      tiktokLink: p.tiktokLink || "",
+    }));
+    setCopiadoDe({ ...p, tipoFaltante, hayDecant, hayBotella });
+    setMostrarSug(false);
   };
 
   const handleSubmit = async (e) => {
@@ -160,13 +212,63 @@ export default function AdminPerfumeCreate() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Nombre *">
-                <input
-                  type="text"
-                  value={form.nombre || ""}
-                  onChange={(e) => handleChange("nombre", e.target.value)}
-                  className={inputClass}
-                  placeholder="Ej: Aventus"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={form.nombre || ""}
+                    onChange={(e) => {
+                      handleChange("nombre", e.target.value);
+                      setMostrarSug(true);
+                    }}
+                    onFocus={() => setMostrarSug(true)}
+                    onBlur={() => setTimeout(() => setMostrarSug(false), 150)}
+                    className={inputClass}
+                    placeholder="Ej: Aventus (escribe para ver los que ya existen)"
+                    autoComplete="off"
+                  />
+                  {mostrarSug && sugerencias.length > 0 && (
+                    <ul className="absolute z-20 mt-1 w-full max-h-72 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
+                      {sugerencias.map((p) => (
+                        <li key={p.id}>
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => copiarDe(p)}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-3"
+                          >
+                            {p.image ? (
+                              <img src={p.image} alt="" className="w-8 h-8 object-cover rounded" />
+                            ) : (
+                              <span className="w-8 h-8 rounded bg-gray-100" />
+                            )}
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-medium text-gray-900 truncate">
+                                {p.nombre}
+                              </span>
+                              <span className="block text-xs text-gray-500 truncate">
+                                {p.casa} · {p.concentracion || "—"} ·{" "}
+                                {p.stock ? "Botella" : "Decant"}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {copiadoDe && (
+                  <p className="text-xs text-green-700 mt-1">
+                    Datos copiados de {copiadoDe.nombre} ({copiadoDe.stock ? "botella" : "decant"}).{" "}
+                    {copiadoDe.tipoFaltante === true &&
+                      "Ya existe en decant: lo marqué como Botella. "}
+                    {copiadoDe.tipoFaltante === false &&
+                      "Ya existe en botella: lo marqué como Decant. "}
+                    {copiadoDe.hayDecant &&
+                      copiadoDe.hayBotella &&
+                      "Ya existe en decant y en botella: elige el tipo. "}
+                    Revisa el precio y la disponibilidad.
+                  </p>
+                )}
               </Field>
 
               <Field label="Casa *">
@@ -310,6 +412,12 @@ export default function AdminPerfumeCreate() {
                 />
               </Field>
             </div>
+
+            <CamposSeoPerfume
+              form={form}
+              onChange={handleChange}
+              inputClass={inputClass}
+            />
           </section>
 
           <section className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">

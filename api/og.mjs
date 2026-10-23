@@ -2,6 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import {
+  metaDescripcionProducto,
+  parrafosDescripcion,
+} from "../src/functions/seoProducto.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -155,28 +159,33 @@ export default async function handler(req, res) {
     if (type === "product" && id) {
       const { data: perfume } = await supabase
         .from("parfums")
-        .select("id, nombre, casa, image, notas, concentracion, precio, disponible")
+        .select("*")
         .eq("id", id)
         .single();
 
       if (perfume) {
         const h1 = `${perfume.nombre}${perfume.casa ? ` de ${perfume.casa}` : ""}`;
         title = `${h1} | ${SITE_NAME}`;
-        description =
-          `Compra ${h1}${perfume.concentracion ? ` (${perfume.concentracion})` : ""} en ${SITE_NAME}. ` +
-          `${perfume.notas ? `Notas: ${perfume.notas}. ` : ""}` +
-          `Disponible como decant para probar o botella completa, con envíos a todo México. Perfume de nicho original.`;
+        description = metaDescripcionProducto(perfume);
         image = perfume.image || DEFAULT_IMAGE;
         url = `${SITE_URL}/product/${slugify(perfume.nombre)}/${id}`;
+        const parrafos = parrafosDescripcion(perfume.descripcion);
         bodyHtml =
           `<h1>${esc(h1)}</h1>` +
           (perfume.concentracion
             ? `<p>Concentración: ${esc(perfume.concentracion)}</p>`
             : "") +
+          (parrafos.length
+            ? `<h2>Reseña de ${esc(perfume.nombre)}</h2>` +
+              parrafos.map((p) => `<p>${esc(p)}</p>`).join("")
+            : "") +
           (perfume.notas
             ? `<p>Notas olfativas: ${esc(perfume.notas)}</p>`
             : "") +
           `<p>Disponible en decant para probar o en botella completa. Envíos a todo México.</p>` +
+          (perfume.tiktokLink
+            ? `<p><a href="${esc(perfume.tiktokLink)}">Reseña en video de ${esc(perfume.nombre)} en TikTok</a></p>`
+            : "") +
           `<p><a href="${esc(url)}">Ver ${esc(perfume.nombre)} en ${esc(SITE_NAME)}</a></p>`;
 
         // Migas de pan: Inicio › Casa › Producto
@@ -210,7 +219,7 @@ export default async function handler(req, res) {
             "@context": "https://schema.org",
             "@type": "Product",
             name: h1,
-            description,
+            description: perfume.descripcion?.trim() || description,
             image: [image],
             sku: String(perfume.id ?? id),
             brand: { "@type": "Brand", name: perfume.casa || SITE_NAME },
