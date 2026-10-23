@@ -3,7 +3,7 @@ import { slugify } from "../functions/slugify";
 import { useEffect, useState, useRef } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
 import { getParfumById } from "../functions/getParfums";
-import { calcularPrecioDecant } from "../functions/pricingDecant";
+import { calcularPrecioDecant, precioPromo } from "../functions/pricingDecant";
 import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
 import { formatNota } from "../functions/formatNotas";
@@ -137,6 +137,15 @@ export default function ProductDetail() {
 
   // El mismo perfume en el otro formato (botella ↔ decant), si está disponible.
   const otrosFormatos = otrosFormatosDisponibles(parfum, catalogo);
+
+  // Precio sin promoción, para mostrarlo tachado cuando hay promo (p. ej. LV 30 ml).
+  const precioAntesPromo =
+    esDecant && precioPromo(parfum.casa, parfum.precio, mililitros) != null
+      ? (Number(parfum.precio) || 0) * mililitros
+      : null;
+  const tachado = precioAntesPromo ? (
+    <span className="ml-1 text-gray-400 line-through font-normal">${formatPrecio(precioAntesPromo)}</span>
+  ) : null;
 
   const totalPrice = esBotellaCompleta
     ? parfum.precio * botellas
@@ -363,6 +372,7 @@ export default function ProductDetail() {
                   {esDecant && mililitros && (
                     <div className="text-[#A47E3B] font-semibold">
                       Total: ${formatPrecio(totalPrice)} por {mililitros} ml
+                      {tachado}
                     </div>
                   )}
                   <button
@@ -516,6 +526,7 @@ export default function ProductDetail() {
               ) : (
                 <div className="text-[#A47E3B] text-sm font-semibold text-center">
                   Total: ${formatPrecio(totalPrice)}
+                  {tachado}
                   {esDecant ? ` por ${mililitros} ml` : ""}
                 </div>
               )}
@@ -567,6 +578,7 @@ export default function ProductDetail() {
                 Total:{" "}
                 <span className="text-[#A47E3B]">
                   ${formatPrecio(totalPrice)}
+                  {tachado}
                 </span>
                 {esDecant ? ` / ${mililitros} ml` : ""}
               </>

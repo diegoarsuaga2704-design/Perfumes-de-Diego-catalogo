@@ -16,6 +16,38 @@ const INCREMENTO_DEFAULT = 1;
 
 const isEnsarOud = (parfum) => parfum?.casa === "Ensar Oud";
 
+// Promociones por tamaño: precio fijo para ciertos ml según casa y precio
+// por ml. Louis Vuitton 30 ml: $70/ml → $1,900 (en vez de $2,100) y
+// $80/ml → $2,200 (en vez de $2,400).
+const PROMOS = [
+  { casa: "louisvuitton", ml: 30, precioMl: 70, total: 1900 },
+  { casa: "louisvuitton", ml: 30, precioMl: 80, total: 2200 },
+];
+const claveCasa = (c) =>
+  (c ?? "")
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+const esCasaPromo = (casa, promo) => {
+  const k = claveCasa(casa);
+  return k === promo.casa || (promo.casa === "louisvuitton" && k === "lv");
+};
+
+/**
+ * Precio de promoción para una casa/precio por ml/ml, o null si no aplica.
+ */
+export function precioPromo(casa, precioMl, mililitros) {
+  const promo = PROMOS.find(
+    (p) =>
+      esCasaPromo(casa, p) &&
+      Number(mililitros) === p.ml &&
+      Number(precioMl) === p.precioMl,
+  );
+  return promo ? promo.total : null;
+}
+
 /**
  * Devuelve las opciones de ml disponibles para un perfume.
  * Oculta las cantidades cuyo precio quede por debajo del mínimo de compra por
@@ -41,7 +73,8 @@ export function getOpcionesMililitros(parfum, opts = {}) {
 
   return valores.map((num) => ({
     value: num,
-    label: `${num} ml`,
+    label:
+      precioPromo(parfum?.casa, parfum?.precio, num) != null ? `${num} ml · Promo` : `${num} ml`,
   }));
 }
 
@@ -55,6 +88,9 @@ export function calcularPrecioDecant(parfum, mililitros) {
   if (!parfum || mililitros == null || mililitros <= 0) return 0;
 
   const precio = Number(parfum.precio) || 0;
+
+  const promo = precioPromo(parfum.casa, precio, mililitros);
+  if (promo != null) return promo;
 
   // Caso Ensar Oud (medios ml con factor especial)
   if (isEnsarOud(parfum)) {
@@ -83,6 +119,9 @@ export function calcularPrecioDecantCarrito(item, mililitros = null) {
   if (ml <= 0) return 0;
 
   const precio = Number(item.precioUnitario) || 0;
+
+  const promo = precioPromo(item.casa, precio, ml);
+  if (promo != null) return promo;
 
   // Caso Ensar Oud
   if (item.casa === "Ensar Oud") {
