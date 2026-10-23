@@ -1,4 +1,5 @@
 import supabase from "../services/supabase";
+import { avisarPerfume } from "./avisarBing";
 
 /**
  * Trae TODOS los perfumes (sin filtrar por disponibilidad).
@@ -56,6 +57,7 @@ export async function updateParfumAdmin(id, updates) {
     throw error;
   }
 
+  avisarPerfume(data); // avisa a Bing (no bloquea)
   return data;
 }
 
@@ -74,6 +76,7 @@ export async function createParfumAdmin(newParfum) {
     throw error;
   }
 
+  avisarPerfume(data); // avisa a Bing (no bloquea)
   return data;
 }
 

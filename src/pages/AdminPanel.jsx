@@ -18,6 +18,7 @@ import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
 import MinDecantControl from "../ui/MinDecantControl";
 import ConfigVipControl from "../ui/ConfigVipControl";
+import IndexNowControl from "../ui/IndexNowControl";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -298,6 +299,10 @@ export default function AdminPanel() {
 
         <div className="mt-8">
           <ConfigVipControl />
+        </div>
+
+        <div className="mt-8">
+          <IndexNowControl />
         </div>
 
 

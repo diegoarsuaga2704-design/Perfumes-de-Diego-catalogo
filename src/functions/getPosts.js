@@ -1,4 +1,5 @@
 import supabase from "../services/supabase";
+import { avisarPost } from "./avisarBing";
 
 // ---------- Público ----------
 
@@ -108,6 +109,7 @@ export async function createPost(post) {
     console.error("Error creando post:", error);
     throw error;
   }
+  avisarPost(data); // avisa a Bing si está publicado (no bloquea)
   return data;
 }
 
@@ -123,6 +125,7 @@ export async function updatePost(id, updates) {
     console.error("Error actualizando post:", error);
     throw error;
   }
+  avisarPost(data); // avisa a Bing si está publicado (no bloquea)
   return data;
 }
 
