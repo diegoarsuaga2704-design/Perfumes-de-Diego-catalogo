@@ -36,7 +36,7 @@ export const garantias = [
   {
     titulo: "Envío a todo México",
     texto:
-      "Por DHL Express con número de guía para rastrearlo. Normalmente llega entre 1 y 4 días hábiles.",
+      "Por DHL Express con número de guía para rastrearlo. Normalmente llega entre 1 y 5 días hábiles.",
   },
   {
     titulo: "Formas de pago",
