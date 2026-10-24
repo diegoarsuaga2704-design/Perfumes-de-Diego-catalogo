@@ -34,6 +34,9 @@ export default function AdminPerfumesList() {
   const [filtroTipo, setFiltroTipo] = useState(
     () => sessionStorage.getItem("adminPerfumes_tipo") || "",
   );
+  const [filtroResena, setFiltroResena] = useState(
+    () => sessionStorage.getItem("adminPerfumes_resena") || "",
+  );
   const [precioMin, setPrecioMin] = useState(
     () => sessionStorage.getItem("adminPerfumes_precioMin") || "",
   );
@@ -56,6 +59,10 @@ export default function AdminPerfumesList() {
   useEffect(() => {
     sessionStorage.setItem("adminPerfumes_disponible", filtroDisponible);
   }, [filtroDisponible]);
+
+  useEffect(() => {
+    sessionStorage.setItem("adminPerfumes_resena", filtroResena);
+  }, [filtroResena]);
 
   useEffect(() => {
     sessionStorage.setItem("adminPerfumes_tipo", filtroTipo);
@@ -114,6 +121,9 @@ export default function AdminPerfumesList() {
       if (filtroDisponible && p.disponible !== filtroDisponible) return false;
       if (filtroTipo === "botella" && p.stock !== true) return false;
       if (filtroTipo === "decant" && p.stock !== false) return false;
+      const tieneResena = Boolean(p.descripcion?.trim());
+      if (filtroResena === "sin" && tieneResena) return false;
+      if (filtroResena === "con" && !tieneResena) return false;
       const precio = Number(p.precio) || 0;
       if (min !== null && precio < min) return false;
       if (max !== null && precio > max) return false;
@@ -122,7 +132,7 @@ export default function AdminPerfumesList() {
       (a.casa || "").localeCompare(b.casa || "", "es", { sensitivity: "base" }) ||
       (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" }),
     );
-  }, [parfums, search, filtroDisponible, filtroTipo, precioMin, precioMax]);
+  }, [parfums, search, filtroDisponible, filtroTipo, filtroResena, precioMin, precioMax]);
 
   const handleDelete = async (id) => {
     setDeleting(true);
@@ -241,6 +251,16 @@ export default function AdminPerfumesList() {
             <option value="botella">Botella</option>
           </select>
 
+          <select
+            value={filtroResena}
+            onChange={(e) => setFiltroResena(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B] outline-none"
+          >
+            <option value="">Con y sin reseña</option>
+            <option value="sin">Sin reseña</option>
+            <option value="con">Con reseña</option>
+          </select>
+
           <input
             type="number"
             inputMode="numeric"
@@ -259,11 +279,12 @@ export default function AdminPerfumesList() {
             className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#A47E3B] focus:border-[#A47E3B] outline-none"
           />
 
-          {(filtroDisponible || filtroTipo || precioMin || precioMax) && (
+          {(filtroDisponible || filtroTipo || filtroResena || precioMin || precioMax) && (
             <button
               onClick={() => {
                 setFiltroDisponible("");
                 setFiltroTipo("");
+                setFiltroResena("");
                 setPrecioMin("");
                 setPrecioMax("");
               }}
