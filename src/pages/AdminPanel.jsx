@@ -13,6 +13,7 @@ import {
   Link2,
   Sparkles,
   PenLine,
+  Images,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -177,6 +178,19 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Revisa cuáles están enlazados y vincula los que estén escritos distinto
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/imagenes")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Images className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Unificar fotos
+              </h3>
+              <p className="text-sm text-gray-600">
+                Elige una sola foto para el decant y la botella de cada perfume
               </p>
             </button>
           </div>

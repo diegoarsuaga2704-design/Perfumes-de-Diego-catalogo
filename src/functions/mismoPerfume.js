@@ -4,7 +4,14 @@ import { normalizarTexto } from "./normalizarTexto";
 // mayúsculas, acentos, espacios ni signos: "Torino 22" = "Torino22"). Si los
 // dos tienen concentración y es distinta (p. ej. EDP vs Extrait), no se
 // consideran el mismo.
-const clave = (v) => normalizarTexto(v).replace(/[^a-z0-9]/g, "");
+// "Eau de Parfum" = "EDP", "Eau de Toilette" = "EDT", "Extrait de Parfum" =
+// "Extrait", tanto en el nombre como en la concentración.
+const clave = (v) =>
+  normalizarTexto(v)
+    .replace(/[^a-z0-9]/g, "")
+    .replace(/eaudeparfum/g, "edp")
+    .replace(/eaudetoilette/g, "edt")
+    .replace(/extraitdeparfum/g, "extrait");
 
 export function esMismoPerfume(a, b) {
   if (!a || !b || a.id === b.id) return false;

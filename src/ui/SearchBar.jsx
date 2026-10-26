@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { slugify } from "../functions/slugify";
 import { normalizarTexto } from "../functions/normalizarTexto";
 import { imagenThumb } from "../functions/imagenThumb";
+import { agruparFormatos } from "../functions/mismoPerfume";
 
 function SearchBar({ onSearchResult }) {
   const { parfums, error } = useParfums();
@@ -73,8 +74,8 @@ function SearchBar({ onSearchResult }) {
     );
     // Combinar ambos, priorizando los que empiezan igual
     const orderedSuggestions = [...startsWithMatches, ...containsMatches];
-    // Mostrar máximo 20 sugerencias
-    setSuggestions(orderedSuggestions.slice(0, 20));
+    // Un solo renglón por perfume (decant y botella juntos), máximo 20.
+    setSuggestions(agruparFormatos(orderedSuggestions).slice(0, 20));
     setShowSuggestions(true);
   }, [query, parfums, onSearchResult]);
 
