@@ -428,7 +428,13 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap gap-2">
                     {botellasFilas.map((b) => {
                       const disponible = b.disponible === "Disponible";
-                      const extra = [b.linea_tester, b.estado_botella].filter(Boolean).join(" · ");
+                      const extra = [
+                        b.linea_tester,
+                        b.estado_botella,
+                        b.tiene_caja == null ? null : b.tiene_caja ? "Con caja" : "Sin caja",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ");
                       return (
                         <Opcion
                           key={b.id}
@@ -586,39 +592,6 @@ export default function ProductDetail() {
 
               {/* DETALLES */}
               <div className="my-6">
-                {botellaSel?.mlBotella && (
-                  <>
-                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
-                      TAMAÑO:
-                    </h2>
-                    <ul className="text-sm text-gray-600 leading-6">
-                      <li>{botellaSel.mlBotella} ml</li>
-                    </ul>
-                  </>
-                )}
-
-                {botellaSel?.estado_botella && (
-                  <>
-                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
-                      ESTADO:
-                    </h2>
-                    <ul className="text-sm text-gray-600 leading-6">
-                      <li>{botellaSel.estado_botella}</li>
-                    </ul>
-                  </>
-                )}
-
-                {botellaSel && botellaSel.tiene_caja != null && (
-                  <>
-                    <h2 className="text-sm font-semibold text-gray-700 mt-2">
-                      CAJA:
-                    </h2>
-                    <ul className="text-sm text-gray-600 leading-6">
-                      <li>{botellaSel.tiene_caja ? "Con caja" : "Sin caja"}</li>
-                    </ul>
-                  </>
-                )}
-
                 <h2 className="text-sm font-semibold text-gray-700 mt-2">
                   NOTAS:
                 </h2>
