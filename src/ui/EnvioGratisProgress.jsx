@@ -52,6 +52,10 @@ function EnvioGratisProgress() {
               individuales.
             </li>
             <li>
+              Si usas un código de descuento, el mínimo se cuenta con el
+              descuento ya aplicado.
+            </li>
+            <li>
               Válido solo para <strong>zonas regulares de DHL</strong>. No aplica
               en zonas extendidas o de cobertura especial.
             </li>
