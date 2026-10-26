@@ -477,7 +477,7 @@ export default function ProductDetail() {
                 {parrafos.length > 0 && (
                   <details className="mt-2 mb-3">
                     <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
-                      Leer reseña de {parfum.nombre}
+                      Ver descripción del perfume
                     </summary>
                     <div className="text-sm text-gray-700 leading-6 space-y-3 mt-2">
                       {parrafos.map((p, idx) => (
