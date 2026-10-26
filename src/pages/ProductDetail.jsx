@@ -499,9 +499,9 @@ export default function ProductDetail() {
                   <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
                     Decants
                     <span className="normal-case tracking-normal font-normal">
-                      {" · "}
+                      {" - "}
                       {decantDisponible
-                        ? `$${formatPrecio(decantFila.precio)} por ml`
+                        ? `$${formatPrecio(decantFila.precio)}/ml`
                         : (decantFila.disponible || "Agotado").toLowerCase()}
                     </span>
                   </p>
