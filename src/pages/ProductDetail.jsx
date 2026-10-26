@@ -659,13 +659,6 @@ export default function ProductDetail() {
                     ))}
                 </div>
 
-                <h2 className="text-sm font-semibold text-gray-700 mt-2">
-                  CATEGORÍA:
-                </h2>
-                <ul className="text-sm text-gray-600 leading-6">
-                  <li>{parfum.categoria}</li>
-                </ul>
-
                 {parfum.fraganticaLink && (
                   <a
                     href={parfum.fraganticaLink}
