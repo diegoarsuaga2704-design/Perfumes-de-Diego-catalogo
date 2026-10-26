@@ -46,6 +46,18 @@ const prioridad = (p) =>
   ({ Disponible: 0, Próximamente: 1 })[p.disponible] ?? 2;
 
 /**
+ * Disponibilidad del perfume en conjunto (decant + botella): "Disponible" si
+ * alguna versión lo está; si no, "Próximamente" si alguna lo está; si no, la
+ * de la propia fila.
+ */
+export function estadoGrupo(parfum, todos = []) {
+  if (!parfum) return "";
+  const versiones = [parfum, ...todos.filter((p) => esMismoPerfume(parfum, p))];
+  const mejor = versiones.reduce((a, b) => (prioridad(b) < prioridad(a) ? b : a));
+  return mejor.disponible;
+}
+
+/**
  * Junta en una sola tarjeta el decant y la botella del mismo perfume.
  * Respeta el orden de la lista (la tarjeta queda donde aparece el primero)
  * y agrega `formatos: { decant, botella }` para mostrarlo en la tarjeta.

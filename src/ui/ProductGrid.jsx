@@ -7,7 +7,7 @@ import { useParfums } from "../context/ParfumsContext.jsx";
 import Pagination from "./Paginacion.jsx";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { normalizarTexto } from "../functions/normalizarTexto";
-import { agruparFormatos } from "../functions/mismoPerfume";
+import { agruparFormatos, estadoGrupo } from "../functions/mismoPerfume";
 
 // 🔒 Helper global para blindar strings
 const safeString = (value) => (value ?? "").toString();
@@ -134,9 +134,10 @@ export default function ProductGrid({
         !selectedCasa ||
         safeString(p.casa).toLowerCase() === selectedCasa.toLowerCase();
 
+      // Disponibilidad del perfume en conjunto (decant + botella).
       const ocasionMatch =
         !selectedOcasion ||
-        safeString(p.disponible).toLowerCase() ===
+        safeString(estadoGrupo(p, allParfums)).toLowerCase() ===
           selectedOcasion.toLowerCase();
 
       const categoriaMatch =

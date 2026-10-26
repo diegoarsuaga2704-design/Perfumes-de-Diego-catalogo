@@ -7,13 +7,19 @@ import { getBadgeEstatus } from "../functions/getBadgeEstatus";
 import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
 import { formatNotasTexto } from "../functions/formatNotas";
+import { estadoGrupo } from "../functions/mismoPerfume";
+import { useParfums } from "../context/ParfumsContext";
 
 function ProductCard({ parfum }) {
   const [imgError, setImgError] = useState(false);
   const [usarOriginal, setUsarOriginal] = useState(false);
 
-  // Un solo badge, misma lógica que ProductDetail (fuente única).
-  const badge = getBadgeEstatus(parfum);
+  const { parfums: catalogo = [] } = useParfums() || {};
+
+  // Un solo badge, misma lógica que ProductDetail (fuente única). La
+  // disponibilidad es la del perfume en conjunto: si hay decant pero no
+  // botella (o al revés), sale disponible.
+  const badge = getBadgeEstatus({ ...parfum, disponible: estadoGrupo(parfum, catalogo) });
 
   return (
     <div
