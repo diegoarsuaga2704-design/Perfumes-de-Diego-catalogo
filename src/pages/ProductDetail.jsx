@@ -481,7 +481,7 @@ export default function ProductDetail() {
                     href={`https://wa.me/5212212034647?text=${encodeURIComponent(
                       `Hola Diego, me interesa la botella completa de ${parfum.nombre}${
                         parfum.casa ? ` de ${parfum.casa}` : ""
-                      }${parfum.concentracion ? ` (${parfum.concentracion})` : ""}. ¿Me la puedes cotizar?`,
+                      }. ¿Me la puedes cotizar?`,
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
