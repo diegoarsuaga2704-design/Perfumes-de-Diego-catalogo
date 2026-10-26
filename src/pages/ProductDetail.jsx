@@ -471,6 +471,31 @@ export default function ProductDetail() {
                 </div>
               )}
 
+              {/* Sin botella en la tienda: se cotiza por WhatsApp */}
+              {botellasFilas.length === 0 && (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
+                    Botella completa
+                  </p>
+                  <a
+                    href={`https://wa.me/5212212034647?text=${encodeURIComponent(
+                      `Hola Diego, me interesa la botella completa de ${parfum.nombre}${
+                        parfum.casa ? ` de ${parfum.casa}` : ""
+                      }${parfum.concentracion ? ` (${parfum.concentracion})` : ""}. ¿Me la puedes cotizar?`,
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("cotizar_botella", { producto: parfum.nombre })}
+                    className="inline-block rounded-xl border border-gray-300 bg-white px-4 py-2 text-left text-gray-800 transition-colors hover:border-[#A47E3B]"
+                  >
+                    <span className="block text-sm font-semibold">{parfum.nombre}</span>
+                    <span className="block text-xs text-[#A47E3B] font-semibold">
+                      Solicita cotización →
+                    </span>
+                  </a>
+                </div>
+              )}
+
               {/* DECANTS */}
               {decantFila && (
                 <div className="mb-2">
