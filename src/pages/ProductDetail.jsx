@@ -304,6 +304,9 @@ export default function ProductDetail() {
     });
     setAdded(true);
     setYaAgrego(true);
+    // Limpia la selección para que la siguiente compra empiece de cero.
+    setSeleccion(null);
+    setBotellas(1);
     setTimeout(() => setAdded(false), 2000);
   };
 
