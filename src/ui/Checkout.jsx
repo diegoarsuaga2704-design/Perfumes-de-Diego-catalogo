@@ -346,9 +346,9 @@ Gracias!`;
           setPreguntarEnviado(true);
         }}
         disabled={noListo}
-        className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-2 rounded-md font-medium transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+        className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
       >
-        Enviar pedido por WhatsApp
+        Enviar pedido
       </button>
       {preguntaEnviado}
       {noSeAbrio && (

@@ -164,7 +164,7 @@ export default function CheckoutPage() {
           <EnvioGratisProgress />
 
           {/* Código postal (opcional) */}
-          <div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
             <label
               htmlFor="cp"
               className="text-sm font-medium text-gray-700"
@@ -193,7 +193,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Código de descuento */}
-          <div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
               <label className="text-sm font-medium text-gray-700">
                 Código de descuento
               </label>
@@ -220,7 +220,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Totales */}
-          <div className="border-t pt-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
             <div className="flex justify-between text-gray-700 mb-2">
               <span>Subtotal:</span>
               <span>${formatPrecio(subtotal)}</span>
@@ -254,10 +254,13 @@ export default function CheckoutPage() {
             </p>
           </div>
 
-          {/* Formas de pago (mismas que en Términos y Condiciones) */}
-          <div className="rounded-md border border-gray-200 bg-white px-4 py-3">
-            <p className="text-sm font-semibold text-gray-900 mb-1">Formas de pago</p>
-            <ul className="text-sm text-gray-700 space-y-0.5">
+          {/* Formas de pago (mismas que en Términos y Condiciones), en desplegable */}
+          <details className="rounded-xl border border-gray-200 bg-white p-4 group">
+            <summary className="cursor-pointer list-none flex items-center justify-between text-sm font-semibold text-gray-900">
+              Formas de pago
+              <ChevronDown size={18} className="text-gray-500 transition-transform group-open:rotate-180" />
+            </summary>
+            <ul className="text-sm text-gray-700 space-y-0.5 mt-2">
               <li>• Transferencia (SPEI)</li>
               <li>• Depósito en efectivo</li>
               <li>
@@ -268,7 +271,7 @@ export default function CheckoutPage() {
             <p className="text-xs text-gray-500 mt-1">
               Te paso los datos de pago por WhatsApp al confirmar tu pedido.
             </p>
-          </div>
+          </details>
 
           {/* Enviar por WhatsApp */}
           <Checkout
