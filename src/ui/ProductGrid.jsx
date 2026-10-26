@@ -7,6 +7,7 @@ import { useParfums } from "../context/ParfumsContext.jsx";
 import Pagination from "./Paginacion.jsx";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { normalizarTexto } from "../functions/normalizarTexto";
+import { agruparFormatos } from "../functions/mismoPerfume";
 
 // 🔒 Helper global para blindar strings
 const safeString = (value) => (value ?? "").toString();
@@ -67,7 +68,7 @@ export default function ProductGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order]);
 
-  const filteredParfums = useMemo(() => {
+  const filtradosPorFila = useMemo(() => {
     if (!allParfums || allParfums.length === 0) return [];
 
     // ===== BUSQUEDA DIRECTA =====
@@ -192,6 +193,15 @@ export default function ProductGrid({
     stockFilter,
     recientesFilter,
   ]);
+
+  // Decant y botella del mismo perfume van en una sola tarjeta (en Decants o
+  // Botellas solo hay un formato, así que no cambia nada ahí).
+  const filteredParfums = useMemo(
+    () => (stockFilter === null || stockFilter === undefined
+      ? agruparFormatos(filtradosPorFila)
+      : filtradosPorFila),
+    [filtradosPorFila, stockFilter],
+  );
 
   if (loading) return <LoadingSpinner />;
 

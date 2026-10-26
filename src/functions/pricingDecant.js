@@ -10,6 +10,8 @@
 
 const OPCIONES_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 const OPCIONES_DEFAULT = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30];
+// Página de producto de la tienda: solo estos tamaños.
+const OPCIONES_TIENDA = [1, 2, 3, 5, 10, 30];
 const FACTOR_MEDIO_ML = 0.6; // 0.5 ml cuesta 60% del precio de 1 ml
 const INCREMENTO_ENSAR_OUD = 0.5;
 const INCREMENTO_DEFAULT = 1;
@@ -53,12 +55,17 @@ export function precioPromo(casa, precioMl, mililitros) {
  * Oculta las cantidades cuyo precio quede por debajo del mínimo de compra por
  * decant (minSiempre). Ensar Oud no se toca.
  * @param {object} parfum
- * @param {{minSiempre?: number}} opts
+ * @param {{minSiempre?: number, tienda?: boolean}} opts
+ *   tienda: usa los tamaños de la página de producto (1, 2, 3, 5, 10, 30).
  * @returns {Array<{value: number, label: string}>}
  */
 export function getOpcionesMililitros(parfum, opts = {}) {
-  const { minSiempre = 0 } = opts;
-  const lista = isEnsarOud(parfum) ? OPCIONES_ENSAR_OUD : OPCIONES_DEFAULT;
+  const { minSiempre = 0, tienda = false } = opts;
+  const lista = isEnsarOud(parfum)
+    ? OPCIONES_ENSAR_OUD
+    : tienda
+      ? OPCIONES_TIENDA
+      : OPCIONES_DEFAULT;
 
   const efectivo = minSiempre;
 

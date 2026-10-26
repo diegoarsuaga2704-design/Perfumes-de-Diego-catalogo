@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { getRelacionados } from "../functions/getParfums";
 import ProductCard from "./ProductCard";
 
-function PerfumesRelacionados({ casa, excluirId }) {
+function PerfumesRelacionados({ casa, excluirId, actual = null }) {
   const [relacionados, setRelacionados] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const data = await getRelacionados(casa, excluirId);
+      const data = await getRelacionados(casa, excluirId, actual);
       setRelacionados(data);
       setLoading(false);
     }

@@ -65,6 +65,11 @@ function ProductCard({ parfum }) {
             ${formatPrecio(parfum.precio)}
             {!parfum.stock && "/ml"}
           </span>
+          {parfum.formatos?.decant && parfum.formatos?.botella && (
+            <span className="text-[11px] text-[#A47E3B] font-semibold">
+              Decant y botella
+            </span>
+          )}
           <span className="hidden sm:block text-xs text-gray-600">
             {formatNotasTexto(parfum.notas)}
           </span>

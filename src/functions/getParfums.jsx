@@ -1,3 +1,4 @@
+import { agruparFormatos, esMismoPerfume } from "./mismoPerfume";
 import supabase from "../services/supabase";
 
 // Solo las columnas que usa el grid del catálogo (card + filtros + buscador +
@@ -56,6 +57,17 @@ export async function getParfumById(id) {
   }
   return data;
 }
+/** Filas completas (select *) de varios perfumes por id. */
+export async function getParfumsByIds(ids) {
+  if (!ids?.length) return [];
+  const { data, error } = await supabase.from("parfums").select("*").in("id", ids);
+  if (error) {
+    console.error("Error fetching parfums by ids:", error);
+    return [];
+  }
+  return data || [];
+}
+
 export async function getBestSellers() {
   const { data, error } = await supabase
     .from("parfums")
@@ -68,7 +80,7 @@ export async function getBestSellers() {
   }
   return data;
 }
-export async function getRelacionados(casa, excluirId) {
+export async function getRelacionados(casa, excluirId, actual = null) {
   const { data, error } = await supabase
     .from("parfums")
     .select(COLS_GRID)
@@ -83,8 +95,11 @@ export async function getRelacionados(casa, excluirId) {
 
   if (!data || data.length === 0) return [];
 
+  // Sin el mismo perfume en otro formato, y decant/botella en una tarjeta.
+  const lista = agruparFormatos(data.filter((p) => !esMismoPerfume(actual, p)));
+
   // Shuffle (Fisher-Yates) y limita a 4
-  const shuffled = [...data];
+  const shuffled = [...lista];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];

@@ -2,17 +2,20 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { slugify } from "../functions/slugify";
 import { useEffect, useState, useRef } from "react";
 import { ShoppingCart, ArrowLeft, CheckCircle } from "lucide-react";
-import { getParfumById } from "../functions/getParfums";
-import { calcularPrecioDecant, precioPromo } from "../functions/pricingDecant";
+import { getParfumById, getParfumsByIds } from "../functions/getParfums";
+import {
+  calcularPrecioDecant,
+  precioPromo,
+  getOpcionesMililitros,
+} from "../functions/pricingDecant";
 import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
 import { formatNota } from "../functions/formatNotas";
-import { otrosFormatosDisponibles } from "../functions/mismoPerfume";
+import { esMismoPerfume } from "../functions/mismoPerfume";
 import { useParfums } from "../context/ParfumsContext";
 import { registrarVisto } from "../functions/vistosRecientes";
 import { track } from "@vercel/analytics";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import SelectMililitros from "../ui/SelectMililitros";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
 import BadgesConfianza from "../ui/BadgesConfianza";
 import BadgesEstatus from "../ui/BadgesEstatus";
@@ -31,13 +34,52 @@ import {
   parrafosDescripcion,
 } from "../functions/seoProducto";
 
+// Disponibles primero, luego próximamente, al final agotados.
+const ordenDisponible = (p) =>
+  ({ Disponible: 0, Próximamente: 1 })[p.disponible] ?? 2;
+
+// Botón de opción (botella o tamaño de decant), estilo "chip".
+function Opcion({ titulo, detalle, activa, disabled, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={activa}
+      className={`min-w-[4.75rem] rounded-xl border px-4 py-2 text-left transition-colors ${
+        activa
+          ? "border-[#A47E3B] bg-[#A47E3B] text-white shadow-sm"
+          : disabled
+            ? "border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed"
+            : "border-gray-300 bg-white text-gray-800 hover:border-[#A47E3B]"
+      }`}
+    >
+      <span className={`block text-sm font-semibold ${disabled ? "line-through" : ""}`}>
+        {titulo}
+      </span>
+      {detalle && (
+        <span
+          className={`block text-xs ${
+            activa ? "text-white/85" : disabled ? "text-gray-300" : "text-gray-500"
+          }`}
+        >
+          {detalle}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [parfum, setParfum] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [mililitros, setMililitros] = useState(null);
+  // Opción elegida: { tipo: "botella", id } o { tipo: "decant", ml }.
+  const [seleccion, setSeleccion] = useState(null);
+  // Filas completas del mismo perfume en otros formatos (botella ↔ decant).
+  const [variantes, setVariantes] = useState([]);
   const [botellas, setBotellas] = useState(1);
   const [added, setAdded] = useState(false);
   const [yaAgrego, setYaAgrego] = useState(false);
@@ -52,7 +94,28 @@ export default function ProductDetail() {
     setImgOriginal(false);
   }, [parfum?.image]);
   const { addToCart, openCart } = useCart();
-  const { parfums: catalogo = [] } = useParfums() || {};
+  const { parfums: catalogo = [], minDecantSiempre = 0 } = useParfums() || {};
+
+  // Ids del mismo perfume en otro formato (el catálogo trae todos los perfumes).
+  const idsVariantes = parfum
+    ? catalogo
+        .filter((p) => esMismoPerfume(parfum, p))
+        .map((p) => p.id)
+        .sort((a, b) => a - b)
+        .join(",")
+    : "";
+
+  useEffect(() => {
+    setVariantes([]);
+    if (!idsVariantes) return;
+    let cancelado = false;
+    getParfumsByIds(idsVariantes.split(",").map(Number)).then((filas) => {
+      if (!cancelado) setVariantes(filas);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [idsVariantes]);
 
   useEffect(() => {
     // Al cambiar de perfume, limpia el error/estado del anterior.
@@ -87,7 +150,12 @@ export default function ProductDetail() {
   }, [id]);
 
   useEffect(() => {
-    setMililitros(null);
+    // Si entraste por una botella disponible, queda elegida; si no, eliges tú.
+    setSeleccion(
+      parfum?.stock === true && parfum?.disponible === "Disponible"
+        ? { tipo: "botella", id: parfum.id }
+        : null,
+    );
     setBotellas(1);
     setYaAgrego(false);
   }, [parfum]);
@@ -150,47 +218,87 @@ export default function ProductDetail() {
       </div>
     );
 
-  const esBotellaCompleta = parfum.stock === true;
-  const esDecant = parfum.stock === false;
-  const estaDisponible = parfum.disponible === "Disponible";
-  const puedeAgregar = !esDecant || Boolean(mililitros);
+  // Todas las versiones del perfume: la de esta página + las del otro formato.
+  const filas = [parfum, ...variantes.filter((v) => v.id !== parfum.id)];
+  const botellasFilas = filas
+    .filter((f) => f.stock === true)
+    .sort(
+      (a, b) =>
+        ordenDisponible(a) - ordenDisponible(b) ||
+        (Number(a.mlBotella) || 0) - (Number(b.mlBotella) || 0),
+    );
+  const decantFila =
+    filas.filter((f) => f.stock !== true).sort((a, b) => ordenDisponible(a) - ordenDisponible(b))[0] ||
+    null;
+  const decantDisponible = decantFila?.disponible === "Disponible";
+  const opcionesMl = decantFila
+    ? getOpcionesMililitros(decantFila, { minSiempre: minDecantSiempre, tienda: true })
+    : [];
 
-  // El mismo perfume en el otro formato (botella ↔ decant), si está disponible.
-  const otrosFormatos = otrosFormatosDisponibles(parfum, catalogo);
+  const botellaSel =
+    seleccion?.tipo === "botella"
+      ? botellasFilas.find((b) => b.id === seleccion.id && b.disponible === "Disponible") || null
+      : null;
+  const esBotellaCompleta = Boolean(botellaSel);
+  const esDecant = seleccion?.tipo === "decant" && decantDisponible;
+  const mililitros = esDecant ? seleccion.ml : null;
+  const activo = botellaSel || (esDecant ? decantFila : null);
+  const estaDisponible = filas.some((f) => f.disponible === "Disponible");
+  const puedeAgregar = Boolean(activo);
+
+  // Estado del perfume en conjunto (para el badge): disponible si alguna
+  // versión lo está.
+  const estadoGrupo = estaDisponible
+    ? "Disponible"
+    : filas.some((f) => f.disponible === "Próximamente")
+      ? "Próximamente"
+      : parfum.disponible;
+
+  // Precio "desde": la opción disponible más barata.
+  const preciosDesde = [
+    ...(decantDisponible && opcionesMl[0]
+      ? [calcularPrecioDecant(decantFila, opcionesMl[0].value)]
+      : []),
+    ...botellasFilas
+      .filter((b) => b.disponible === "Disponible")
+      .map((b) => Number(b.precio) || 0),
+  ].filter((n) => n > 0);
+  const precioDesde = preciosDesde.length ? Math.min(...preciosDesde) : null;
 
   // Precio sin promoción, para mostrarlo tachado cuando hay promo (p. ej. LV 30 ml).
   const precioAntesPromo =
-    esDecant && precioPromo(parfum.casa, parfum.precio, mililitros) != null
-      ? (Number(parfum.precio) || 0) * mililitros
+    esDecant && precioPromo(decantFila.casa, decantFila.precio, mililitros) != null
+      ? (Number(decantFila.precio) || 0) * mililitros
       : null;
   const tachado = precioAntesPromo ? (
     <span className="ml-1 text-gray-400 line-through font-normal">${formatPrecio(precioAntesPromo)}</span>
   ) : null;
 
   const totalPrice = esBotellaCompleta
-    ? parfum.precio * botellas
-    : calcularPrecioDecant(parfum, mililitros);
+    ? botellaSel.precio * botellas
+    : esDecant
+      ? calcularPrecioDecant(decantFila, mililitros)
+      : 0;
 
   const handleAddToCart = () => {
-    if (!estaDisponible) return;
-    if (esDecant && !mililitros) return;
+    if (!activo) return;
 
     const product = {
-      id: parfum.id,
-      nombre: parfum.nombre,
-      image: parfum.image,
-      casa: parfum.casa,
+      id: activo.id,
+      nombre: activo.nombre,
+      image: activo.image,
+      casa: activo.casa,
       tipoVenta: esBotellaCompleta ? "botella" : "decant",
-      precioUnitario: parfum.precio,
-      mlBotella: esBotellaCompleta ? parfum.mlBotella : null,
+      precioUnitario: activo.precio,
+      mlBotella: esBotellaCompleta ? activo.mlBotella : null,
       mililitros: esDecant ? mililitros : null,
       cantidad: esBotellaCompleta ? botellas : null,
-      estado_botella: parfum.estado_botella || null,
+      estado_botella: esBotellaCompleta ? activo.estado_botella || null : null,
     };
 
     addToCart(product);
     track("add_to_cart", {
-      producto: parfum.nombre,
+      producto: activo.nombre,
       tipo: esBotellaCompleta ? "botella" : "decant",
       total: totalPrice,
     });
@@ -268,7 +376,7 @@ export default function ProductDetail() {
           {/* INFORMACIÓN */}
           <div className="flex-1 flex flex-col justify-between">
             <div>
-              <BadgesEstatus parfum={parfum} />
+              <BadgesEstatus parfum={{ ...parfum, disponible: estadoGrupo }} />
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <h1 className="text-2xl font-semibold">{parfum.nombre}</h1>
                 {parfum.linea_tester && (
@@ -296,80 +404,104 @@ export default function ProductDetail() {
                 </button>
               )}
 
-              {/* PRECIO */}
-              <div className="flex items-center gap-4 my-5 flex-wrap">
-                {esBotellaCompleta && (
+              {/* PRECIO: el de la opción elegida o "desde" */}
+              <div className="flex items-baseline gap-2 my-5 flex-wrap">
+                {activo ? (
                   <>
                     <span className="text-3xl font-bold text-gray-900">
-                      ${formatPrecio(parfum.precio)}
+                      ${formatPrecio(totalPrice)}
                     </span>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">
-                      Botella completa
-                    </span>
-                  </>
-                )}
-
-                {esDecant && (
-                  <>
-                    <span className="text-3xl font-bold text-gray-900">
-                      ${formatPrecio(parfum.precio)}
-                      <span className="text-lg">/ml</span>
-                    </span>
-                    <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold">
-                      Decant
+                    {tachado}
+                    <span className="text-sm text-gray-500">
+                      {esDecant
+                        ? `por ${mililitros} ml`
+                        : `por ${botellas} botella${botellas > 1 ? "s" : ""}`}
                     </span>
                   </>
-                )}
+                ) : precioDesde != null ? (
+                  <span className="text-3xl font-bold text-gray-900">
+                    <span className="text-lg font-semibold text-gray-500">Desde </span>$
+                    {formatPrecio(precioDesde)}
+                  </span>
+                ) : null}
               </div>
 
-              {/* Ir al mismo perfume en el otro formato */}
-              {otrosFormatos.length > 0 && (
-                <div className="flex flex-wrap gap-2 -mt-2 mb-4">
-                  {otrosFormatos.map((o) => (
-                    <Link
-                      key={o.id}
-                      to={`/product/${slugify(o.nombre)}/${o.id}`}
-                      className="inline-flex items-center gap-1 text-sm font-semibold text-[#A47E3B] border border-[#A47E3B] rounded-full px-4 py-1.5 hover:bg-[#A47E3B] hover:text-white transition-colors"
-                    >
-                      {o.stock ? "Ver botella completa" : "Probar en decant"}
-                      {" · "}
-                      {o.disponible === "Próximamente"
-                        ? "próximamente"
-                        : `$${formatPrecio(o.precio)}${o.stock ? "" : "/ml"}`}{" "}
-                      →
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {/* SELECTOR PARA BOTELLAS */}
-              {esBotellaCompleta && estaDisponible && (
-                <div className="flex flex-col gap-1">
-                  <CustomSelect
-                    label="Selecciona cantidad de piezas"
-                    value={botellas}
-                    onChange={(val) => setBotellas(val)}
-                    options={Array.from({ length: MAX_BOTELLAS }, (_, i) => i + 1).map((num) => ({
-                      value: num,
-                      label: `${num} pieza${num > 1 ? "s" : ""}`,
-                    }))}
-                  />
-
-                  <div className="text-[#D4AF7A] mt-4 font-semibold">
-                    Total: ${formatPrecio(totalPrice)} por {botellas} pieza
-                    {botellas > 1 ? "s" : ""}
+              {/* BOTELLA COMPLETA */}
+              {botellasFilas.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
+                    Botella completa
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {botellasFilas.map((b) => {
+                      const disponible = b.disponible === "Disponible";
+                      const extra = [b.linea_tester, b.estado_botella].filter(Boolean).join(" · ");
+                      return (
+                        <Opcion
+                          key={b.id}
+                          titulo={`${b.nombre}${b.mlBotella ? ` ${b.mlBotella} ml` : ""}`}
+                          detalle={
+                            disponible
+                              ? `$${formatPrecio(b.precio)}${extra ? ` · ${extra}` : ""}`
+                              : b.disponible || "Agotado"
+                          }
+                          activa={botellaSel?.id === b.id}
+                          disabled={!disponible}
+                          onClick={() => {
+                            setSeleccion({ tipo: "botella", id: b.id });
+                            setBotellas(1);
+                          }}
+                        />
+                      );
+                    })}
                   </div>
+                  {esBotellaCompleta && (
+                    <div className="mt-3 max-w-xs">
+                      <CustomSelect
+                        label="Piezas"
+                        value={botellas}
+                        onChange={(val) => setBotellas(val)}
+                        options={Array.from({ length: MAX_BOTELLAS }, (_, i) => i + 1).map((num) => ({
+                          value: num,
+                          label: `${num} pieza${num > 1 ? "s" : ""}`,
+                        }))}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* SELECTOR DE ML PARA DECANTS — grid con precios, visible en todo tamaño */}
-              {esDecant && estaDisponible && (
-                <div className="mt-5">
-                  <SelectMililitros
-                    parfum={parfum}
-                    value={mililitros}
-                    onChange={setMililitros}
-                  />
+              {/* DECANTS */}
+              {decantFila && (
+                <div className="mb-2">
+                  <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
+                    Decants
+                    <span className="normal-case tracking-normal font-normal">
+                      {" · "}
+                      {decantDisponible
+                        ? `$${formatPrecio(decantFila.precio)} por ml`
+                        : (decantFila.disponible || "Agotado").toLowerCase()}
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {opcionesMl.map((o) => {
+                      const promo = precioPromo(decantFila.casa, decantFila.precio, o.value) != null;
+                      return (
+                        <Opcion
+                          key={o.value}
+                          titulo={`${o.value} ml`}
+                          detalle={
+                            decantDisponible
+                              ? `$${formatPrecio(calcularPrecioDecant(decantFila, o.value))}${promo ? " · Promo" : ""}`
+                              : null
+                          }
+                          activa={esDecant && mililitros === o.value}
+                          disabled={!decantDisponible}
+                          onClick={() => setSeleccion({ tipo: "decant", ml: o.value })}
+                        />
+                      );
+                    })}
+                  </div>
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[#A47E3B] hover:underline">
                       ¿Qué es un decant?
@@ -389,11 +521,8 @@ export default function ProductDetail() {
                   ref={addBlockRef}
                   className="mt-4 hidden sm:flex sm:flex-col gap-2 items-start"
                 >
-                  {esDecant && mililitros && (
-                    <div className="text-[#A47E3B] font-semibold">
-                      Total: ${formatPrecio(totalPrice)} por {mililitros} ml
-                      {tachado}
-                    </div>
+                  {!activo && (
+                    <p className="text-sm text-gray-500">Elige una opción para agregar</p>
                   )}
                   <button
                     onClick={handleAddToCart}
@@ -439,35 +568,35 @@ export default function ProductDetail() {
 
               {/* DETALLES */}
               <div className="my-6">
-                {parfum.mlBotella && (
+                {botellaSel?.mlBotella && (
                   <>
                     <h2 className="text-sm font-semibold text-gray-700 mt-2">
                       TAMAÑO:
                     </h2>
                     <ul className="text-sm text-gray-600 leading-6">
-                      <li>{parfum.mlBotella} ml</li>
+                      <li>{botellaSel.mlBotella} ml</li>
                     </ul>
                   </>
                 )}
 
-                {parfum.estado_botella && (
+                {botellaSel?.estado_botella && (
                   <>
                     <h2 className="text-sm font-semibold text-gray-700 mt-2">
                       ESTADO:
                     </h2>
                     <ul className="text-sm text-gray-600 leading-6">
-                      <li>{parfum.estado_botella}</li>
+                      <li>{botellaSel.estado_botella}</li>
                     </ul>
                   </>
                 )}
 
-                {parfum.tiene_caja !== null && parfum.tiene_caja !== undefined && (
+                {botellaSel && botellaSel.tiene_caja != null && (
                   <>
                     <h2 className="text-sm font-semibold text-gray-700 mt-2">
                       CAJA:
                     </h2>
                     <ul className="text-sm text-gray-600 leading-6">
-                      <li>{parfum.tiene_caja ? "Con caja" : "Sin caja"}</li>
+                      <li>{botellaSel.tiene_caja ? "Con caja" : "Sin caja"}</li>
                     </ul>
                   </>
                 )}
@@ -539,7 +668,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      <PerfumesRelacionados casa={parfum.casa} excluirId={parfum.id} />
+      <PerfumesRelacionados casa={parfum.casa} excluirId={parfum.id} actual={parfum} />
 
       <RecentlyViewed excluirId={parfum.id} />
 
@@ -563,9 +692,9 @@ export default function ProductDetail() {
 
           <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.12)] p-3">
             <div className="flex flex-col gap-1.5">
-              {esDecant && !mililitros ? (
+              {!activo ? (
                 <p className="text-center text-sm font-semibold text-gray-600">
-                  Elige tus mililitros 👆 para agregar
+                  Elige botella o mililitros 👆 para agregar
                 </p>
               ) : (
                 <div className="text-[#A47E3B] text-sm font-semibold text-center">
@@ -615,8 +744,8 @@ export default function ProductDetail() {
       {estaDisponible && mostrarFloating && !finVisible && (
         <div className="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-30 items-center gap-4 bg-white border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.18)] rounded-full pl-6 pr-2 py-2">
           <div className="text-sm font-semibold text-gray-800 whitespace-nowrap">
-            {esDecant && !mililitros ? (
-              <span className="text-gray-600">Elige tus mililitros</span>
+            {!activo ? (
+              <span className="text-gray-600">Elige una opción</span>
             ) : (
               <>
                 Total:{" "}

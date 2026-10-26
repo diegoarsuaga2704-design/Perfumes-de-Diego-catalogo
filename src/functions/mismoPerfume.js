@@ -33,6 +33,39 @@ export function otrosFormatosDisponibles(parfum, todos = []) {
     );
 }
 
+// Prioridad para elegir qué fila representa al perfume en el catálogo:
+// primero disponible, luego próximamente; a igualdad, el decant.
+const prioridad = (p) =>
+  ({ Disponible: 0, Próximamente: 1 })[p.disponible] ?? 2;
+
+/**
+ * Junta en una sola tarjeta el decant y la botella del mismo perfume.
+ * Respeta el orden de la lista (la tarjeta queda donde aparece el primero)
+ * y agrega `formatos: { decant, botella }` para mostrarlo en la tarjeta.
+ */
+export function agruparFormatos(lista = []) {
+  const grupos = [];
+  for (const p of lista) {
+    const g = grupos.find((x) => x.filas.some((f) => esMismoPerfume(f, p)));
+    if (g) g.filas.push(p);
+    else grupos.push({ filas: [p] });
+  }
+  return grupos.map(({ filas }) => {
+    const rep = [...filas].sort(
+      (a, b) =>
+        prioridad(a) - prioridad(b) ||
+        Number(a.stock === true) - Number(b.stock === true),
+    )[0];
+    return {
+      ...rep,
+      formatos: {
+        decant: filas.some((f) => f.stock !== true),
+        botella: filas.some((f) => f.stock === true),
+      },
+    };
+  });
+}
+
 // Distancia de edición (cuántas letras hay que cambiar para igualar dos textos).
 function distancia(a, b) {
   const fila = Array.from({ length: b.length + 1 }, (_, i) => i);
