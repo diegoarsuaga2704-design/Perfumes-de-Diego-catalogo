@@ -405,11 +405,9 @@ export default function ProductDetail() {
                       ${formatPrecio(totalPrice)}
                     </span>
                     {tachado}
-                    <span className="text-sm text-gray-500">
-                      {esDecant
-                        ? `por ${mililitros} ml`
-                        : `por ${botellas} botella${botellas > 1 ? "s" : ""}`}
-                    </span>
+                    {esDecant && (
+                      <span className="text-sm text-gray-500">por {mililitros} ml</span>
+                    )}
                   </>
                 ) : precioDesde != null ? (
                   <span className="text-3xl font-bold text-gray-900">
