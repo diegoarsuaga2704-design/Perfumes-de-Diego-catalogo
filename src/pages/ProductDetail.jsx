@@ -150,12 +150,8 @@ export default function ProductDetail() {
   }, [id]);
 
   useEffect(() => {
-    // Si entraste por una botella disponible, queda elegida; si no, eliges tú.
-    setSeleccion(
-      parfum?.stock === true && parfum?.disponible === "Disponible"
-        ? { tipo: "botella", id: parfum.id }
-        : null,
-    );
+    // Al entrar no hay nada elegido: el cliente escoge botella o mililitros.
+    setSeleccion(null);
     setBotellas(1);
     setYaAgrego(false);
   }, [parfum]);
