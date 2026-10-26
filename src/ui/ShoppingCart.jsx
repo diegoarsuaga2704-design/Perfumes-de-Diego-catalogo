@@ -5,7 +5,7 @@ import ShoppingCartProduct from "./ShoppingCartProduct";
 import EnvioGratisProgress from "./EnvioGratisProgress";
 import SugerenciasEnvioGratis from "./SugerenciasEnvioGratis";
 import { formatPrecio } from "../functions/formatPrecio";
-import { getEstadoEnvioGratis } from "../functions/envioGratis";
+import { getEstadoEnvioGratis, COSTO_ENVIO_REGULAR } from "../functions/envioGratis";
 import { track } from "@vercel/analytics";
 import { useEffect } from "react";
 
@@ -33,6 +33,7 @@ export default function ShoppingCart() {
     discountValue,
     discountTarget,
   });
+  const costoEnvio = decantsCalifican ? 0 : COSTO_ENVIO_REGULAR;
 
   // Bloquear scroll del body al abrir el carrito y, al cerrarlo, regresar a
   // la misma posición. (Antes la limpieza borraba la posición guardada antes
@@ -139,14 +140,20 @@ export default function ShoppingCart() {
                 </div>
               )}
 
+              <div className="flex justify-between text-gray-700 mb-2">
+                <span>Envío (DHL):</span>
+                <span className={decantsCalifican ? "text-green-700 font-medium" : ""}>
+                  {decantsCalifican ? "Gratis" : `$${formatPrecio(COSTO_ENVIO_REGULAR)}`}
+                </span>
+              </div>
+
               <div className="flex justify-between text-gray-900 font-semibold border-t pt-3 mb-1">
                 <span>Total:</span>
-                <span>${formatPrecio(totalWithDiscount)}</span>
+                <span>${formatPrecio(totalWithDiscount + costoEnvio)}</span>
               </div>
               <p className="text-xs text-gray-400 mb-4">
-                {decantsCalifican
-                  ? "Tu envío es gratis (zona regular DHL)."
-                  : "El envío no está incluido; se cotiza según tu código postal."}
+                Envío a zona regular de DHL. Si tu código postal es zona
+                extendida, te aviso el costo adicional por WhatsApp.
               </p>
 
               <button

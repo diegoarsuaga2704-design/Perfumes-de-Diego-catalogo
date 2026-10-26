@@ -2,6 +2,10 @@ import { calcularPrecioDecantCarrito } from "./pricingDecant";
 
 export const UMBRAL_ENVIO_GRATIS = 1950;
 
+// Envío por DHL a zona regular cuando el pedido no tiene envío gratis.
+// Las zonas extendidas pagan un costo adicional que se avisa por WhatsApp.
+export const COSTO_ENVIO_REGULAR = 150;
+
 /**
  * Fuente ÚNICA de la lógica de envío gratis.
  * Solo suman los decants individuales.

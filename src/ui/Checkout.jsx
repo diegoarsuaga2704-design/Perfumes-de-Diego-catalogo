@@ -11,7 +11,7 @@ import { borrarCupon } from "../functions/cuponBienvenida";
 
 const KEY_PREGUNTAR = "pedido_preguntar_enviado";
 
-function Checkout({ totalCartPrice = 0, postalCode = "" }) {
+function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
   const {
     cartItems = [],
     isDiscountApplied = false,
@@ -79,18 +79,24 @@ function Checkout({ totalCartPrice = 0, postalCode = "" }) {
       .filter(Boolean)
       .join("\n");
 
+    const envio = Number(costoEnvio) || 0;
+    const totalProductos = isDiscountApplied ? safeTotalWithDiscount : safeTotalCartPrice;
+    const lineaEnvio = `Envío (DHL zona regular): ${envio > 0 ? `$${formatPrecio(envio)}` : "gratis"}`;
     const resumenPrecio = isDiscountApplied
       ? `Subtotal: $${formatPrecio(safeSubtotal)}
 Descuento aplicado (${discountCode}): −$${formatPrecio(
           safeSubtotal - safeTotalWithDiscount,
         )}
-Total con descuento: $${formatPrecio(safeTotalWithDiscount)}`
-      : `Total del pedido: $${formatPrecio(safeTotalCartPrice)}`;
+${lineaEnvio}
+Total a pagar: $${formatPrecio(totalProductos + envio)}`
+      : `Productos: $${formatPrecio(totalProductos)}
+${lineaEnvio}
+Total a pagar: $${formatPrecio(totalProductos + envio)}`;
 
     const cpValido = String(postalCode).trim().length === 5;
     const lineaCP = cpValido
-      ? `Para calcular el costo de envío, este es mi CP: ${postalCode}`
-      : `Te paso mi código postal por aquí para calcular el envío.`;
+      ? `Mi código postal: ${postalCode}`
+      : `Te paso mi código postal por aquí para revisar la zona de envío.`;
 
     return `Hola Diego, me gustaría realizar mi pedido:
 
@@ -108,6 +114,7 @@ Gracias!`;
     safeTotalCartPrice,
     discountCode,
     postalCode,
+    costoEnvio,
   ]);
 
   const enlaceWhatsApp = `https://wa.me/5212212034647?text=${encodeURIComponent(

@@ -16,7 +16,7 @@ export const faqs = [
   {
     pregunta: "¿Cómo realizo mi pedido?",
     respuesta:
-      'Agrega los perfumes a tu carrito, presiona "Finalizar pedido" y luego "Enviar pedido por WhatsApp": se abrirá WhatsApp con el detalle de tu compra. Por ahí te confirmo la disponibilidad, el total y el costo de envío, y coordinamos el pago.',
+      'Agrega los perfumes a tu carrito, presiona "Finalizar pedido" y luego "Enviar pedido por WhatsApp": se abrirá WhatsApp con el detalle de tu compra. Por ahí te confirmo la disponibilidad y el total (el envío a zona regular de DHL cuesta $150; si tu zona es extendida te aviso el costo adicional), y coordinamos el pago.',
   },
   {
     pregunta: "¿Qué métodos de pago aceptan?",

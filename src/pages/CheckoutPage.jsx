@@ -6,7 +6,9 @@ import ShoppingCartProduct from "../ui/ShoppingCartProduct";
 import EnvioGratisProgress from "../ui/EnvioGratisProgress";
 import Checkout from "../ui/Checkout";
 import { formatPrecio } from "../functions/formatPrecio";
-import { getEstadoEnvioGratis } from "../functions/envioGratis";
+import { getEstadoEnvioGratis, COSTO_ENVIO_REGULAR } from "../functions/envioGratis";
+
+const KEY_CP = "perfumes-diego-cp";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -25,7 +27,14 @@ export default function CheckoutPage() {
     closeCart,
   } = useCart();
 
-  const [postalCode, setPostalCode] = useState("");
+  // El código postal se recuerda para la siguiente compra.
+  const [postalCode, setPostalCode] = useState(() => {
+    try {
+      return localStorage.getItem(KEY_CP) || "";
+    } catch {
+      return "";
+    }
+  });
   const [inputCode, setInputCode] = useState("");
   const [applying, setApplying] = useState(false);
   const [resumenAbierto, setResumenAbierto] = useState(false); // solo movil
@@ -59,6 +68,8 @@ export default function CheckoutPage() {
     discountValue,
     discountTarget,
   });
+  const costoEnvio = decantsCalifican ? 0 : COSTO_ENVIO_REGULAR;
+  const totalAPagar = totalWithDiscount + costoEnvio;
 
   const handleApplyCode = async () => {
     if (!inputCode.trim() || applying) return;
@@ -78,7 +89,14 @@ export default function CheckoutPage() {
 
   const handlePostalCodeChange = (e) => {
     const value = e.target.value;
-    if (/^\d{0,5}$/.test(value)) setPostalCode(value);
+    if (!/^\d{0,5}$/.test(value)) return;
+    setPostalCode(value);
+    try {
+      if (value.length === 5) localStorage.setItem(KEY_CP, value);
+      else if (!value) localStorage.removeItem(KEY_CP);
+    } catch {
+      // sin localStorage
+    }
   };
 
   const isPostalCodeValid = postalCode.length === 5;
@@ -114,7 +132,7 @@ export default function CheckoutPage() {
               {cartItems.length === 1 ? "producto" : "productos"})
             </span>
             <span className="flex items-center gap-2 text-gray-900 font-bold">
-              ${formatPrecio(totalWithDiscount)}
+              ${formatPrecio(totalAPagar)}
               <ChevronDown
                 size={18}
                 className={`text-gray-500 transition-transform ${
@@ -154,8 +172,8 @@ export default function CheckoutPage() {
               Tu código postal (opcional)
             </label>
             <p className="text-xs text-gray-500 mt-1 mb-1">
-              Si lo pones, te cotizo el envío de una vez. Si no, lo vemos por
-              WhatsApp.
+              Con él reviso si tu zona es regular o extendida. Si no lo pones,
+              lo vemos por WhatsApp.
             </p>
             <input
               id="cp"
@@ -219,14 +237,20 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            <div className="flex justify-between text-gray-700 mb-2">
+              <span>Envío (DHL):</span>
+              <span className={decantsCalifican ? "text-green-700 font-medium" : ""}>
+                {decantsCalifican ? "Gratis" : `$${formatPrecio(COSTO_ENVIO_REGULAR)}`}
+              </span>
+            </div>
+
             <div className="flex justify-between text-gray-900 font-bold text-lg border-t pt-3">
               <span>Total:</span>
-              <span>${formatPrecio(totalWithDiscount)}</span>
+              <span>${formatPrecio(totalAPagar)}</span>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              {decantsCalifican
-                ? "Tu envío es gratis (zona regular DHL)."
-                : "El envío no está incluido; se cotiza según tu código postal."}
+              Envío a zona regular de DHL. Si tu código postal es zona
+              extendida, te aviso el costo adicional por WhatsApp.
             </p>
           </div>
 
@@ -250,6 +274,7 @@ export default function CheckoutPage() {
           <Checkout
             totalCartPrice={totalWithDiscount}
             postalCode={postalCode}
+            costoEnvio={costoEnvio}
           />
 
           <p className="text-xs text-gray-500 text-center mt-3">

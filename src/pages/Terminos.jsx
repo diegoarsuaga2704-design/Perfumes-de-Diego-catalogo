@@ -118,8 +118,9 @@ export default function Terminos() {
             paquetería preferida) o FedEx cuando sea necesario.
           </p>
           <p>
-            Los precios de los productos no incluyen el costo de envío. Dicho
-            costo se calcula según tu código postal y se te informa antes de
+            Los precios de los productos no incluyen el costo de envío. El
+            envío a zonas regulares de DHL cuesta $150 MXN; si tu código postal
+            es zona extendida, se te informa el costo adicional antes de
             confirmar el pedido. El envío es gratuito únicamente en pedidos de
             decants iguales o mayores a $1,950 MXN, enviados a zonas regulares
             de DHL; no aplica en botellas completas o parciales ni en zonas
