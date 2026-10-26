@@ -313,7 +313,7 @@ export default async function handler(req, res) {
         title = `${casa.nombre} | ${SITE_NAME}`;
         description =
           casa.descripcion ||
-          `Coleccion de perfumes de ${casa.nombre}. Decants y botellas disponibles.`;
+          `Decants y botellas de ${casa.nombre} en México: precios, notas y disponibilidad de cada perfume. Envíos a todo México.`;
         image = casa.imagen_hero || DEFAULT_IMAGE;
         url = `${SITE_URL}/casa/${slug}`;
         bodyHtml =
@@ -321,8 +321,8 @@ export default async function handler(req, res) {
           (casa.descripcion ? `<p>${esc(casa.descripcion)}</p>` : "") +
           `<p>Explora los decants y botellas de ${esc(casa.nombre)} disponibles en ${esc(SITE_NAME)}.</p>` +
           `<p><a href="${esc(url)}">Ver perfumes de ${esc(casa.nombre)}</a></p>` +
-          garantiasHtml() +
-          (await perfumesDeCasaHtml(supabase, casa.nombre));
+          (await perfumesDeCasaHtml(supabase, casa.nombre)) +
+          garantiasHtml();
 
         jsonLd.push({
           "@context": "https://schema.org",

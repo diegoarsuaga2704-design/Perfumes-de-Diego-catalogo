@@ -392,15 +392,70 @@ export async function otrosDeLaCasaHtml(supabase, perfume, max = 12) {
     : "";
 }
 
-/** Todos los perfumes de una casa (para la página de casa). */
+const precioTexto = (p) => {
+  const n = Number(p.precio);
+  if (!n) return "";
+  const monto = `$${n.toLocaleString("es-MX")}`;
+  return p.stock === true ? `${monto} la botella` : `${monto} por ml`;
+};
+
+const recortarTexto = (t, max) => {
+  const limpio = String(t || "").replace(/\s+/g, " ").trim();
+  if (limpio.length <= max) return limpio;
+  const corte = limpio.slice(0, max);
+  return `${corte.slice(0, corte.lastIndexOf(" "))}…`;
+};
+
+/**
+ * Todos los perfumes de una casa (para la página de casa), con un resumen y
+ * los datos de cada uno (concentración, notas, precio, disponibilidad y el
+ * inicio de su descripción). Así cada página de casa tiene contenido propio
+ * y no solo una lista de links.
+ */
 export async function perfumesDeCasaHtml(supabase, nombreCasa) {
   const { data } = await supabase
     .from("parfums")
-    .select("id, nombre, casa, stock")
+    .select("id, nombre, casa, stock, precio, concentracion, notas, disponible, descripcion")
     .eq("casa", nombreCasa);
-  return data?.length
-    ? `<h2>Perfumes de ${esc(nombreCasa)}</h2>${listaPerfumesHtml(
-        [...data].sort(ordenCatalogo),
-      )}`
-    : "";
+  if (!data?.length) return "";
+
+  const lista = [...data].sort(ordenCatalogo);
+  const decants = lista.filter((p) => p.stock !== true);
+  const botellas = lista.filter((p) => p.stock === true);
+  const disponibles = lista.filter((p) => p.disponible === "Disponible");
+  const preciosMl = decants.map((p) => Number(p.precio)).filter((n) => n > 0);
+
+  const partes = [];
+  if (decants.length) partes.push(`${decants.length} en decant`);
+  if (botellas.length) partes.push(`${botellas.length} en botella`);
+  const resumen =
+    `<p>En ${esc(SITE_NAME)} tengo ${lista.length} ${
+      lista.length === 1 ? "perfume" : "perfumes"
+    } de ${esc(nombreCasa)} (${partes.join(" y ")}); ${disponibles.length} ${
+      disponibles.length === 1 ? "está disponible" : "están disponibles"
+    } hoy.` +
+    (preciosMl.length
+      ? ` Los decants van desde $${Math.min(...preciosMl).toLocaleString("es-MX")} por ml.`
+      : "") +
+    "</p>";
+
+  const items = lista
+    .map((p) => {
+      const datos = [
+        p.concentracion,
+        precioTexto(p),
+        p.disponible,
+      ].filter(Boolean);
+      const desc = recortarTexto(p.descripcion, 220);
+      return (
+        `<li><h3><a href="${esc(urlPerfume(p))}">${esc(p.nombre)} (${tipo(p)})</a></h3>` +
+        (datos.length ? `<p>${esc(datos.join(" · "))}</p>` : "") +
+        (p.notas ? `<p>Notas: ${esc(p.notas)}</p>` : "") +
+        (desc ? `<p>${esc(desc)}</p>` : "") +
+        "</li>"
+      );
+    })
+    .join("");
+
+  return `<h2>Perfumes de ${esc(nombreCasa)}</h2>${resumen}<ul>${items}</ul>`;
 }
