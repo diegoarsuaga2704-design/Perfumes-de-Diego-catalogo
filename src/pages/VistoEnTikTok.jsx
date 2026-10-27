@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getPerfumesConTikTok } from "../functions/getParfums";
 import ProductCard from "../ui/ProductCard";
+import { agruparFormatos } from "../functions/mismoPerfume";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import { FaTiktok } from "react-icons/fa";
 import SEO from "../ui/SEO";
@@ -23,7 +24,8 @@ function VistoEnTikTok() {
           if (precioA !== precioB) return precioA - precioB;
           return (a.nombre || "").localeCompare(b.nombre || "");
         });
-        setParfums(ordenados);
+        // Decant y botella del mismo perfume en una sola tarjeta.
+        setParfums(agruparFormatos(ordenados));
       } catch (err) {
         console.error(err);
         setError("Error al cargar los perfumes");

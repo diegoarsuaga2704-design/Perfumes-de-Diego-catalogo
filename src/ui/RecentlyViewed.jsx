@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { getVistosIds } from "../functions/vistosRecientes";
 import { useParfums } from "../context/ParfumsContext";
 import ProductCard from "./ProductCard";
+import { agruparFormatos, esMismoPerfume } from "../functions/mismoPerfume";
 
 export default function RecentlyViewed({ excluirId }) {
   const { parfums } = useParfums();
@@ -10,10 +11,13 @@ export default function RecentlyViewed({ excluirId }) {
   // disponibilidad actuales). Si un perfume ya no existe, se descarta.
   const vistos = useMemo(() => {
     const ids = getVistosIds(excluirId);
-    return ids
+    // Sin el perfume que estás viendo (en ningún formato) y sin repetir
+    // decant y botella del mismo perfume.
+    const actual = parfums.find((p) => String(p.id) === String(excluirId));
+    const lista = ids
       .map((id) => parfums.find((p) => String(p.id) === String(id)))
-      .filter(Boolean)
-      .slice(0, 4);
+      .filter((p) => p && !esMismoPerfume(actual, p));
+    return agruparFormatos(lista).slice(0, 4);
   }, [excluirId, parfums]);
 
   if (vistos.length === 0) return null;

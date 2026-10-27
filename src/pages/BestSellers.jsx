@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getBestSellers } from "../functions/getParfums";
 import ProductCard from "../ui/ProductCard";
+import { agruparFormatos } from "../functions/mismoPerfume";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SEO from "../ui/SEO";
 
@@ -24,7 +25,8 @@ function BestSellers() {
           if (precioA !== precioB) return precioA - precioB;
           return (a.nombre || "").localeCompare(b.nombre || "");
         });
-        setBestSellers(ordenados);
+        // Decant y botella del mismo perfume en una sola tarjeta.
+        setBestSellers(agruparFormatos(ordenados));
       } catch (err) {
         console.error(err);
         setError("Error al cargar los best sellers");
