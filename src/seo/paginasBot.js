@@ -180,7 +180,6 @@ export async function paginaBot(supabase, ruta) {
         "@type": "OnlineStore",
         name: SITE_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}/perfumes-de-diego.png`,
         description: inicioDescripcion,
         areaServed: "MX",
       });
