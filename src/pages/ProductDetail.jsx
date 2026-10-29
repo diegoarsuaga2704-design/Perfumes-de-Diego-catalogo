@@ -99,6 +99,8 @@ export default function ProductDetail() {
   const [seleccion, setSeleccion] = useState(null);
   // Filas completas del mismo perfume en otros formatos (botella ↔ decant).
   const [variantes, setVariantes] = useState([]);
+  // Para qué ids se cargaron las variantes (así sabemos cuándo ya están).
+  const [variantesDe, setVariantesDe] = useState(null);
   const [botellas, setBotellas] = useState(1);
   const [added, setAdded] = useState(false);
   const [yaAgrego, setYaAgrego] = useState(false);
@@ -113,7 +115,11 @@ export default function ProductDetail() {
     setImgOriginal(false);
   }, [parfum?.image]);
   const { addToCart, openCart } = useCart();
-  const { parfums: catalogo = [], minDecantSiempre = 0 } = useParfums() || {};
+  const {
+    parfums: catalogo = [],
+    minDecantSiempre = 0,
+    loading: cargandoCatalogo = false,
+  } = useParfums() || {};
 
   // Ids del mismo perfume en otro formato (el catálogo trae todos los perfumes).
   const idsVariantes = parfum
@@ -129,12 +135,20 @@ export default function ProductDetail() {
     if (!idsVariantes) return;
     let cancelado = false;
     getParfumsByIds(idsVariantes.split(",").map(Number)).then((filas) => {
-      if (!cancelado) setVariantes(filas);
+      if (cancelado) return;
+      setVariantes(filas);
+      setVariantesDe(idsVariantes);
     });
     return () => {
       cancelado = true;
     };
   }, [idsVariantes]);
+
+  // Opciones de compra listas: el catálogo cargó y, si el perfume tiene otra
+  // versión (decant ↔ botella), ya llegaron sus datos. Mientras tanto no se
+  // muestra nada de compra, para no enseñar "Avísame" un instante cuando la
+  // otra versión sí está disponible.
+  const comprasListas = !cargandoCatalogo && (!idsVariantes || variantesDe === idsVariantes);
 
   useEffect(() => {
     // Al cambiar de perfume, limpia el error/estado del anterior.
@@ -203,7 +217,7 @@ export default function ProductDetail() {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [parfum]);
+  }, [parfum, comprasListas]);
 
   // Oculta las barras flotantes al llegar al final del producto (para no tapar
   // el pie de página: Términos y Aviso de privacidad).
@@ -415,6 +429,14 @@ export default function ProductDetail() {
                 </button>
               )}
 
+              {!comprasListas ? (
+                <div className="my-5 space-y-3" aria-busy="true">
+                  <div className="h-8 w-32 rounded bg-gray-100 animate-pulse" />
+                  <div className="h-14 w-full max-w-md rounded-xl bg-gray-100 animate-pulse" />
+                  <div className="h-14 w-full max-w-md rounded-xl bg-gray-100 animate-pulse" />
+                </div>
+              ) : (
+              <>
               {/* PRECIO: el de la opción elegida o "desde" */}
               <div className="flex items-baseline gap-2 my-5 flex-wrap">
                 {activo ? (
@@ -590,6 +612,8 @@ export default function ProductDetail() {
                   <AvisameFormulario parfum={parfum} />
                 </div>
               )}
+              </>
+              )}
 
               {/* DETALLES */}
               <div className="my-6">
@@ -670,7 +694,7 @@ export default function ProductDetail() {
       <div ref={finRef} aria-hidden="true" className="h-px w-full" />
 
       {/* Sticky CTA solo en mobile cuando el perfume está disponible */}
-      {estaDisponible && !finVisible && (
+      {comprasListas && estaDisponible && !finVisible && (
         <>
           {/* Spacer para que el sticky no tape el contenido */}
           <div className="sm:hidden h-20" aria-hidden="true" />
@@ -726,7 +750,7 @@ export default function ProductDetail() {
       )}
 
       {/* #7 — Botón flotante en escritorio cuando el principal se va de vista */}
-      {estaDisponible && mostrarFloating && !finVisible && (
+      {comprasListas && estaDisponible && mostrarFloating && !finVisible && (
         <div className="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-30 items-center gap-4 bg-white border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.18)] rounded-full pl-6 pr-2 py-2">
           <div className="text-sm font-semibold text-gray-800 whitespace-nowrap">
             {!activo ? (
