@@ -70,6 +70,25 @@ function Opcion({ titulo, detalle, activa, disabled, onClick }) {
   );
 }
 
+// Botella sin existencia: botón que abre WhatsApp para pedir cotización.
+function ChipCotizar({ titulo, estado, perfume }) {
+  const mensaje = `Hola Diego, me interesa la botella completa de ${perfume}. ¿Me la puedes cotizar?`;
+  return (
+    <a
+      href={`https://wa.me/5212212034647?text=${encodeURIComponent(mensaje)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => track("cotizar_botella", { producto: perfume })}
+      className="inline-block rounded-xl border border-gray-300 bg-white px-4 py-2 text-left text-gray-800 transition-colors hover:border-[#A47E3B]"
+    >
+      <span className="block text-sm font-semibold">{titulo}</span>
+      <span className="block text-xs text-[#A47E3B] font-semibold">
+        {estado ? `${estado} · ` : ""}Solicita cotización →
+      </span>
+    </a>
+  );
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -416,81 +435,66 @@ export default function ProductDetail() {
                 ) : null}
               </div>
 
-              {/* BOTELLA COMPLETA */}
-              {botellasFilas.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
-                    Botella completa
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {botellasFilas.map((b) => {
-                      const disponible = b.disponible === "Disponible";
-                      const extra = [
-                        b.linea_tester,
-                        b.estado_botella,
-                        b.tiene_caja == null ? null : b.tiene_caja ? "Con caja" : "Sin caja",
-                      ]
-                        .filter(Boolean)
-                        .join(" · ");
+              {/* BOTELLA COMPLETA: las disponibles se agregan al carrito; las
+                  agotadas (o si no hay botella) se cotizan por WhatsApp. */}
+              <div className="mb-5">
+                <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
+                  Botella completa
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {botellasFilas.map((b) => {
+                    const titulo = `${b.nombre}${b.mlBotella ? ` ${b.mlBotella} ml` : ""}`;
+                    if (b.disponible !== "Disponible") {
                       return (
-                        <Opcion
+                        <ChipCotizar
                           key={b.id}
-                          titulo={`${b.nombre}${b.mlBotella ? ` ${b.mlBotella} ml` : ""}`}
-                          detalle={
-                            disponible
-                              ? `$${formatPrecio(b.precio)}${extra ? ` · ${extra}` : ""}`
-                              : b.disponible || "Agotado"
-                          }
-                          activa={botellaSel?.id === b.id}
-                          disabled={!disponible}
-                          onClick={() => {
-                            setSeleccion({ tipo: "botella", id: b.id });
-                            setBotellas(1);
-                          }}
+                          titulo={titulo}
+                          estado={b.disponible || "Agotado"}
+                          perfume={`${titulo}${b.casa ? ` de ${b.casa}` : ""}`}
                         />
                       );
-                    })}
-                  </div>
-                  {esBotellaCompleta && (
-                    <div className="mt-3 max-w-xs">
-                      <CustomSelect
-                        label="Piezas"
-                        value={botellas}
-                        onChange={(val) => setBotellas(val)}
-                        options={Array.from({ length: MAX_BOTELLAS }, (_, i) => i + 1).map((num) => ({
-                          value: num,
-                          label: `${num} pieza${num > 1 ? "s" : ""}`,
-                        }))}
+                    }
+                    const extra = [
+                      b.linea_tester,
+                      b.estado_botella,
+                      b.tiene_caja == null ? null : b.tiene_caja ? "Con caja" : "Sin caja",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
+                    return (
+                      <Opcion
+                        key={b.id}
+                        titulo={titulo}
+                        detalle={`$${formatPrecio(b.precio)}${extra ? ` · ${extra}` : ""}`}
+                        activa={botellaSel?.id === b.id}
+                        onClick={() => {
+                          setSeleccion({ tipo: "botella", id: b.id });
+                          setBotellas(1);
+                        }}
                       />
-                    </div>
+                    );
+                  })}
+                  {botellasFilas.length === 0 && (
+                    <ChipCotizar
+                      titulo={parfum.nombre}
+                      perfume={`${parfum.nombre}${parfum.casa ? ` de ${parfum.casa}` : ""}`}
+                    />
                   )}
                 </div>
-              )}
-
-              {/* Sin botella en la tienda: se cotiza por WhatsApp */}
-              {botellasFilas.length === 0 && (
-                <div className="mb-5">
-                  <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
-                    Botella completa
-                  </p>
-                  <a
-                    href={`https://wa.me/5212212034647?text=${encodeURIComponent(
-                      `Hola Diego, me interesa la botella completa de ${parfum.nombre}${
-                        parfum.casa ? ` de ${parfum.casa}` : ""
-                      }. ¿Me la puedes cotizar?`,
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("cotizar_botella", { producto: parfum.nombre })}
-                    className="inline-block rounded-xl border border-gray-300 bg-white px-4 py-2 text-left text-gray-800 transition-colors hover:border-[#A47E3B]"
-                  >
-                    <span className="block text-sm font-semibold">{parfum.nombre}</span>
-                    <span className="block text-xs text-[#A47E3B] font-semibold">
-                      Solicita cotización →
-                    </span>
-                  </a>
-                </div>
-              )}
+                {esBotellaCompleta && (
+                  <div className="mt-3 max-w-xs">
+                    <CustomSelect
+                      label="Piezas"
+                      value={botellas}
+                      onChange={(val) => setBotellas(val)}
+                      options={Array.from({ length: MAX_BOTELLAS }, (_, i) => i + 1).map((num) => ({
+                        value: num,
+                        label: `${num} pieza${num > 1 ? "s" : ""}`,
+                      }))}
+                    />
+                  </div>
+                )}
+              </div>
 
               {/* DECANTS */}
               {decantFila && (
