@@ -67,27 +67,23 @@ function ProductCard({ parfum }) {
         )}
       </div>
 
-      {/* Texto con alturas fijas: nombre (2 renglones), casa y concentración
-          (1 renglón cada uno), precio y notas (2 renglones) siempre en el
-          mismo lugar. */}
+      {/* Texto con alturas fijas: nombre (2 renglones), casa (1 renglón),
+          precio y notas (2 renglones) siempre en el mismo lugar. */}
       <div className="sm:p-5 px-2 py-4 flex flex-col flex-1">
         <h3 className="sm:text-lg text-sm font-semibold text-gray-900 leading-snug line-clamp-2 min-h-[2.5rem] sm:min-h-[3.5rem]">
           {parfum.nombre}
         </h3>
-        <div className="text-gray-500 text-xs mt-1 mb-3">
-          <p className="truncate">{parfum.casa}</p>
-          <p className="italic truncate min-h-[1rem]">{parfum.concentracion}</p>
-        </div>
+        <p className="text-gray-500 text-sm truncate mt-1 mb-3">{parfum.casa}</p>
         <div className="border-t border-gray-200 pt-3 flex flex-col flex-1">
-          <span className="text-gray-800 text-sm font-semibold">
+          <span className="text-gray-900 text-base sm:text-lg font-semibold">
             ${formatPrecio(parfum.precio)}
             {!parfum.stock && "/ml"}
           </span>
           <span className="text-[11px] text-[#A47E3B] font-semibold min-h-[1rem]">
             {parfum.formatos?.decant && parfum.formatos?.botella ? "Decant y botella" : ""}
           </span>
-          <div className="hidden sm:block mt-1 min-h-[2rem]">
-            <p className="text-xs text-gray-600 line-clamp-2">
+          <div className="hidden sm:block mt-1 min-h-[2.5rem]">
+            <p className="text-[13px] leading-5 text-gray-600 line-clamp-2">
               {formatNotasTexto(parfum.notas)}
             </p>
           </div>
