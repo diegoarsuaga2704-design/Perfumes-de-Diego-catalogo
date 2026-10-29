@@ -180,6 +180,7 @@ export async function paginaBot(supabase, ruta) {
         "@type": "OnlineStore",
         name: SITE_NAME,
         url: SITE_URL,
+        logo: `${SITE_URL}/perfumes-de-diego.png`,
         description: inicioDescripcion,
         areaServed: "MX",
       });
@@ -195,7 +196,7 @@ export async function paginaBot(supabase, ruta) {
       const config = {
         home: {
           t: "Catálogo de perfumes",
-          d: "Explora nuestro catálogo completo de decants y botellas de perfumes de nicho y de diseñador.",
+          d: "Catálogo completo de Perfumes de Diego: decants desde 1 ml y botellas de perfumería de nicho y de diseñador, con envíos a todo México.",
           f: () => true,
         },
         decants: {
@@ -375,7 +376,9 @@ export async function paginaBot(supabase, ruta) {
     }
   }
 
-  return { title, description, url, bodyHtml: NAV + cuerpo, jsonLd };
+  // El menú va al final: Google suele usar el inicio del texto para la
+  // descripción del resultado, y ahí debe ir el contenido de la página.
+  return { title, description, url, bodyHtml: cuerpo + NAV, jsonLd };
 }
 
 /** Links a otros perfumes de la misma casa (para la página de producto). */
