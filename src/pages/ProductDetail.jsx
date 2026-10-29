@@ -11,6 +11,7 @@ import {
 import { formatPrecio } from "../functions/formatPrecio";
 import { imagenThumb } from "../functions/imagenThumb";
 import { formatNota } from "../functions/formatNotas";
+import { normalizarTexto } from "../functions/normalizarTexto";
 import { esMismoPerfume } from "../functions/mismoPerfume";
 import { useParfums } from "../context/ParfumsContext";
 import { registrarVisto } from "../functions/vistosRecientes";
@@ -33,6 +34,11 @@ import {
   metaDescripcionProducto,
   parrafosDescripcion,
 } from "../functions/seoProducto";
+
+// Casas que solo se venden en decant: no se muestra "Botella completa".
+const CASAS_SIN_BOTELLA = ["louisvuitton", "lv"];
+const soloDecant = (casa) =>
+  CASAS_SIN_BOTELLA.includes(normalizarTexto(casa).replace(/[^a-z0-9]/g, ""));
 
 // Disponibles primero, luego próximamente, al final agotados.
 const ordenDisponible = (p) =>
@@ -459,6 +465,7 @@ export default function ProductDetail() {
 
               {/* BOTELLA COMPLETA: las disponibles se agregan al carrito; las
                   agotadas (o si no hay botella) se cotizan por WhatsApp. */}
+              {!soloDecant(parfum.casa) && (
               <div className="mb-5">
                 <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase mb-2">
                   Botella completa
@@ -517,6 +524,7 @@ export default function ProductDetail() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* DECANTS */}
               {decantFila && (
