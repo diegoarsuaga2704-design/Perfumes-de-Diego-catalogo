@@ -266,6 +266,8 @@ export default function ProductDetail() {
     filas.filter((f) => f.stock !== true).sort((a, b) => ordenDisponible(a) - ordenDisponible(b))[0] ||
     null;
   const decantDisponible = decantFila?.disponible === "Disponible";
+  // Link de Fragrantica: el de esta versión o el de la otra (decant ↔ botella).
+  const linkFragrantica = filas.find((f) => f.fraganticaLink)?.fraganticaLink || null;
   const opcionesMl = decantFila
     ? getOpcionesMililitros(decantFila, { minSiempre: minDecantSiempre, tienda: true })
     : [];
@@ -643,9 +645,9 @@ export default function ProductDetail() {
                     ))}
                 </div>
 
-                {parfum.fraganticaLink && (
+                {linkFragrantica && (
                   <a
-                    href={parfum.fraganticaLink}
+                    href={linkFragrantica}
                     className="text-sm text-[#D4AF7A] hover:underline mt-4 inline-block"
                     target="_blank"
                     rel="noopener noreferrer"
