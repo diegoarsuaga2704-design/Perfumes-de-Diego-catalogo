@@ -14,6 +14,7 @@ import {
   Sparkles,
   PenLine,
   Images,
+  LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -191,6 +192,19 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Elige una sola foto para el decant y la botella de cada perfume
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/portada")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <LayoutGrid className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Fotos de la portada
+              </h3>
+              <p className="text-sm text-gray-600">
+                Cambia las fotos de las tarjetas Decants, Mejor vendidos y Botellas
               </p>
             </button>
           </div>

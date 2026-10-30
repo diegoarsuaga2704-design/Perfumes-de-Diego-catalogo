@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { TARJETAS_PORTADA, leerFotosCache, getFotosPortada } from "../functions/portada";
 import ComoFunciona from "../ui/ComoFunciona";
 import HomeBrand from "../ui/HomeBrand";
 import CTAWhatsApp from "../ui/CTAWhatsApp";
@@ -11,30 +13,23 @@ import DecoracionTemporada from "../ui/DecoracionTemporada";
 
 function Prehome() {
   const temporada = getTemporada();
-  const collections = [
-    {
-      image:
-        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/o.rZpkAR0ZbQi.jpg",
-      title: "Decants",
-      to: "/decants",
-      description:
-        "Prueba tus perfumes favoritos antes de comprar el frasco completo.",
-    },
-    {
-      image:
-        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/foto%20portada.jpeg",
-      title: "Mejor vendidos",
-      to: "/best-sellers",
-      description: "Los favoritos de mis clientes.",
-    },
-    {
-      image:
-        "https://xpxfacujdaiugphvpili.supabase.co/storage/v1/object/public/perfumsImages/haec%20foto.webp",
-      title: "Botellas completas y parciales",
-      to: "/botellas",
-      description: "Perfumes sellados y parciales disponibles.",
-    },
-  ];
+  // Fotos de las tarjetas: las guardadas en /admin/portada o las de siempre.
+  // Mientras se consultan (primera visita) se muestra un fondo gris para no
+  // enseñar una foto y luego cambiarla.
+  const [fotos, setFotos] = useState(leerFotosCache);
+  useEffect(() => {
+    let cancelado = false;
+    getFotosPortada().then((f) => {
+      if (!cancelado) setFotos(f);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+  const collections = TARJETAS_PORTADA.map((t) => ({
+    ...t,
+    image: fotos ? fotos[t.clave] || t.image : null,
+  }));
 
   return (
     <div className="bg-gray-100">

@@ -9,14 +9,18 @@ function HomeBrand({ image, title, description, to, eager = false }) {
       className="block relative rounded-lg overflow-hidden shadow-lg group cursor-pointer"
     >
       {/* Imagen de fondo */}
-      <img
-        src={image}
-        alt={title}
-        loading={eager ? "eager" : "lazy"}
-        decoding="async"
-        fetchPriority={eager ? "high" : "auto"}
-        className="w-full h-96 object-cover transition-transform duration-500 group-hover:scale-105"
-      />
+      {image ? (
+        <img
+          src={image}
+          alt={title}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={eager ? "high" : "auto"}
+          className="w-full h-96 object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div className="w-full h-96 bg-gray-300" aria-hidden="true" />
+      )}
       {/* Overlay degradado */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#A47E3B]/70 to-transparent" />
       {/* Contenido */}

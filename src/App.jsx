@@ -38,6 +38,7 @@ const AdminPerfumeEdit = lazy(() => import("./pages/AdminPerfumeEdit"));
 const AdminPerfumeCreate = lazy(() => import("./pages/AdminPerfumeCreate"));
 const AdminVincular = lazy(() => import("./pages/AdminVincular"));
 const AdminImagenes = lazy(() => import("./pages/AdminImagenes"));
+const AdminPortada = lazy(() => import("./pages/AdminPortada"));
 const AdminTemporada = lazy(() => import("./pages/AdminTemporada"));
 const AdminTestimoniosList = lazy(() => import("./pages/AdminTestimoniosList"));
 const AdminTestimonioCreate = lazy(() =>
@@ -191,6 +192,15 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminImagenes />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/portada",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPortada />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,
