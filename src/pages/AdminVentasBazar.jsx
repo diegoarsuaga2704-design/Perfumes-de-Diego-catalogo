@@ -76,7 +76,9 @@ export default function AdminVentasBazar() {
   );
   const ticketPromedio = visibles.length ? totalVendido / visibles.length : 0;
 
-  // Productos más vendidos (por cantidad de ventas), solo del tipo filtrado.
+  // Todos los productos vendidos (por cantidad de ventas), solo del tipo
+  // filtrado. Se muestran los 10 primeros y un botón para ver la lista completa.
+  const [verTodos, setVerTodos] = useState(false);
   const topProductos = useMemo(() => {
     const acc = {};
     for (const p of visibles) {
@@ -88,8 +90,7 @@ export default function AdminVentasBazar() {
       }
     }
     return Object.values(acc)
-      .sort((a, b) => b.veces - a.veces)
-      .slice(0, 10);
+      .sort((a, b) => b.veces - a.veces || b.ingreso - a.ingreso);
   }, [visibles, tipoFiltro]);
 
   const borrar = async (id) => {
@@ -256,12 +257,17 @@ export default function AdminVentasBazar() {
 
             {/* Productos más vendidos */}
             <div className="lg:col-span-1">
-              <h2 className="font-bold text-gray-900 mb-3">Más vendidos</h2>
+              <h2 className="font-bold text-gray-900 mb-3">
+                Más vendidos{" "}
+                <span className="font-normal text-gray-500">
+                  ({topProductos.length} perfumes)
+                </span>
+              </h2>
               {topProductos.length === 0 ? (
                 <p className="text-gray-400 text-sm">Sin datos.</p>
               ) : (
                 <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
-                  {topProductos.map((t, i) => (
+                  {(verTodos ? topProductos : topProductos.slice(0, 10)).map((t, i) => (
                     <div
                       key={t.nombre}
                       className="p-3 flex items-center justify-between gap-2"
@@ -279,6 +285,14 @@ export default function AdminVentasBazar() {
                       </span>
                     </div>
                   ))}
+                  {topProductos.length > 10 && (
+                    <button
+                      onClick={() => setVerTodos((v) => !v)}
+                      className="w-full p-3 text-sm font-semibold text-[#A47E3B] hover:bg-gray-50"
+                    >
+                      {verTodos ? "Ver solo los 10 primeros" : `Ver todos (${topProductos.length})`}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
