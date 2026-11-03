@@ -32,14 +32,14 @@ export function Nieve() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const nuevoCopo = (arriba) => {
-      const r = 1.2 + Math.random() * 2.6;
+      const r = 0.9 + Math.random() * 1.8;
       return {
         x: Math.random() * ancho,
         y: arriba ? -10 - Math.random() * alto : Math.random() * alto,
         r,
-        vy: 0.35 + r * 0.22 + Math.random() * 0.3,
+        vy: 0.22 + r * 0.14 + Math.random() * 0.2,
         fase: Math.random() * Math.PI * 2,
-        amp: 0.3 + Math.random() * 0.6,
+        amp: 0.2 + Math.random() * 0.45,
         dorado: Math.random() < 0.5,
         alfa: 0.55 + Math.random() * 0.4,
       };
