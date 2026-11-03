@@ -16,6 +16,44 @@ const reduceMovimiento = () =>
 /* ------------------------------------------------------------------ */
 /* Nieve: copos dorados y blancos cayendo sobre toda la página.        */
 /* ------------------------------------------------------------------ */
+
+// Dibuja un copo de 6 brazos (con ramitas) en un canvas aparte, una sola vez
+// por tamaño y color; luego cada copo solo se copia girado (más ligero).
+function crearCopo(radio, color, contorno) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const lado = Math.ceil((radio + 2) * 2);
+  const c = document.createElement("canvas");
+  c.width = lado * dpr;
+  c.height = lado * dpr;
+  const g = c.getContext("2d");
+  g.scale(dpr, dpr);
+  g.translate(lado / 2, lado / 2);
+  g.lineCap = "round";
+  const brazos = (ancho, estilo) => {
+    g.strokeStyle = estilo;
+    g.lineWidth = ancho;
+    for (let i = 0; i < 6; i++) {
+      g.save();
+      g.rotate((Math.PI / 3) * i);
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(0, -radio);
+      // ramitas en "V" a media altura y cerca de la punta
+      for (const [p, l] of [[0.45, 0.32], [0.72, 0.22]]) {
+        g.moveTo(0, -radio * p);
+        g.lineTo(-radio * l, -radio * (p + l * 0.9));
+        g.moveTo(0, -radio * p);
+        g.lineTo(radio * l, -radio * (p + l * 0.9));
+      }
+      g.stroke();
+      g.restore();
+    }
+  };
+  if (contorno) brazos(2.4, contorno); // halo para que se vea sobre fondo claro
+  brazos(1.1, color);
+  return { canvas: c, lado };
+}
+
 export function Nieve() {
   const ref = useRef(null);
 
@@ -31,17 +69,25 @@ export function Nieve() {
     let raf = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
+    // Copos ya dibujados: 3 tamaños × 2 colores.
+    const TAMANOS = [3.5, 5, 6.5];
+    const modelos = TAMANOS.flatMap((r) => [
+      { r, ...crearCopo(r, "rgba(201,162,75,0.9)") },
+      { r, ...crearCopo(r, "rgba(255,255,255,0.95)", "rgba(120,120,120,0.22)") },
+    ]);
+
     const nuevoCopo = (arriba) => {
-      const r = 0.9 + Math.random() * 1.8;
+      const modelo = modelos[Math.floor(Math.random() * modelos.length)];
       return {
         x: Math.random() * ancho,
         y: arriba ? -10 - Math.random() * alto : Math.random() * alto,
-        r,
-        vy: 0.22 + r * 0.14 + Math.random() * 0.2,
+        modelo,
+        vy: 0.22 + modelo.r * 0.05 + Math.random() * 0.2,
         fase: Math.random() * Math.PI * 2,
         amp: 0.2 + Math.random() * 0.45,
-        dorado: Math.random() < 0.5,
-        alfa: 0.55 + Math.random() * 0.4,
+        giro: Math.random() * Math.PI,
+        vgiro: (Math.random() - 0.5) * 0.012,
+        alfa: 0.6 + Math.random() * 0.4,
       };
     };
 
@@ -67,19 +113,14 @@ export function Nieve() {
         if (c.x > ancho + 10) c.x = -10;
         if (c.x < -10) c.x = ancho + 10;
 
-        if (c.dorado) {
-          ctx.fillStyle = `rgba(201,162,75,${c.alfa * 0.8})`;
-        } else {
-          // Copo blanco con un halo gris muy suave para que se vea sobre fondo claro.
-          ctx.fillStyle = "rgba(120,120,120,0.18)";
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, c.r + 0.9, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = `rgba(255,255,255,${c.alfa})`;
-        }
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-        ctx.fill();
+        c.giro += c.vgiro;
+        const { canvas: img, lado } = c.modelo;
+        ctx.save();
+        ctx.globalAlpha = c.alfa;
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.giro);
+        ctx.drawImage(img, -lado / 2, -lado / 2, lado, lado);
+        ctx.restore();
       }
       raf = requestAnimationFrame(dibujar);
     };
