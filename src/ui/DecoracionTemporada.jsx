@@ -1,4 +1,5 @@
 import { getTemporada } from "../functions/temporada";
+import { RamaPino } from "./Navidad";
 
 const DORADO = "#A47E3B";
 
@@ -57,6 +58,15 @@ function Arana({ className = "" }) {
 export default function DecoracionTemporada() {
   const temporada = getTemporada();
   if (!temporada) return null;
+
+  if (temporada === "navidad") {
+    return (
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <RamaPino className="absolute -left-3 top-0 w-40 sm:w-72" />
+        <RamaPino className="absolute -right-3 top-0 w-40 sm:w-72" espejo />
+      </div>
+    );
+  }
 
   if (temporada === "muertos") {
     return (

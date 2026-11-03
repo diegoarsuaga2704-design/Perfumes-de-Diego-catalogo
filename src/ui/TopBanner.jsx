@@ -21,8 +21,20 @@ function TopBanner() {
 
   return (
     <div
-      className={`${t ? "bg-[#141014] text-[#D4AF7A]" : "bg-[#A47E3B] text-white"} text-[11px] sm:text-base py-2 sm:py-3 overflow-hidden`}
-      style={t ? { borderBottom: `1px solid ${t.acento}55` } : undefined}
+      className={`${
+        temporada === "navidad"
+          ? "bg-[#123B29] text-[#E9D29A]"
+          : t
+            ? "bg-[#141014] text-[#D4AF7A]"
+            : "bg-[#A47E3B] text-white"
+      } text-[11px] sm:text-base py-2 sm:py-3 overflow-hidden`}
+      style={
+        temporada === "navidad"
+          ? { borderBottom: `3px solid ${t.acento}`, boxShadow: "inset 0 -4px 0 #C9A24B" }
+          : t
+            ? { borderBottom: `1px solid ${t.acento}55` }
+            : undefined
+      }
     >
       <div className="flex w-max pdd-marquee font-medium">
         {secuencia.map((m, i) => (

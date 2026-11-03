@@ -4,7 +4,9 @@ import { normalizarTexto } from "./normalizarTexto";
 // (hora de México) y se repiten cada año:
 //   halloween: 20 al 31 de octubre
 //   muertos:   1 y 2 de noviembre
-// Para previsualizar en cualquier fecha: ?temporada=halloween | muertos | ninguna
+//   navidad:   1 de diciembre al 6 de enero (Día de Reyes)
+// Para previsualizar en cualquier fecha:
+//   ?temporada=halloween | muertos | navidad | ninguna
 // (se recuerda en la pestaña).
 const KEY = "temporada_preview";
 
@@ -13,7 +15,7 @@ export function getTemporada(fecha = new Date()) {
     const q = new URLSearchParams(window.location.search).get("temporada");
     if (q) sessionStorage.setItem(KEY, q);
     const p = sessionStorage.getItem(KEY);
-    if (p === "halloween" || p === "muertos") return p;
+    if (p === "halloween" || p === "muertos" || p === "navidad") return p;
     if (p === "ninguna") return null;
   } catch {
     // sin window/sessionStorage
@@ -23,6 +25,7 @@ export function getTemporada(fecha = new Date()) {
   const dia = mx.getDate();
   if (mes === 10 && dia >= 20) return "halloween";
   if (mes === 11 && dia <= 2) return "muertos";
+  if (mes === 12 || (mes === 1 && dia <= 6)) return "navidad";
   return null;
 }
 
@@ -41,9 +44,25 @@ export const TEXTOS_TEMPORADA = {
     banner: ["🌼 Aromas para recordar", "🕯️ Día de Muertos en Perfumes de Diego"],
     acento: "#F2A007", // cempasúchil
   },
+  navidad: {
+    titulo: "Regalos de Navidad",
+    corto: "Navidad",
+    subtitulo: "Perfumes para regalar (o regalarte): cálidos, especiados, gourmand y elegantes.",
+    banner: [
+      "Regala perfume esta Navidad",
+      "Haz tu pedido con anticipación para recibirlo antes del 24",
+    ],
+    acento: "#B3202A", // rojo navidad
+  },
 };
 
 // Notas que definen la colección de temporada (sin acentos, en minúsculas).
+const NOTAS_NAVIDAD = [
+  "canela", "clavo", "jengibre", "nuez moscada", "cardamomo", "vainilla",
+  "tonka", "ambar", "pino", "abeto", "cedro", "incienso", "mirra", "naranja",
+  "mandarina", "chocolate", "cacao", "praline", "almendra", "castana",
+  "caramelo", "miel", "ron", "cognac", "coñac", "licor",
+];
 const NOTAS_OSCURAS = [
   "oud", "agar", "cuero", "incienso", "ahumad", "humo", "tabaco", "vainilla",
   "especia", "canela", "clavo", "cardamomo", "pimienta", "licor", "alicorad",
@@ -52,9 +71,10 @@ const NOTAS_OSCURAS = [
 ];
 
 // Cuántas notas "oscuras" tiene un perfume (0 = no entra a la colección).
-export function puntajeTemporada(parfum) {
+export function puntajeTemporada(parfum, temporada = "halloween") {
   const notas = normalizarTexto(parfum?.notas);
-  return NOTAS_OSCURAS.reduce((n, k) => n + (notas.includes(normalizarTexto(k)) ? 1 : 0), 0);
+  const lista = temporada === "navidad" ? NOTAS_NAVIDAD : NOTAS_OSCURAS;
+  return lista.reduce((n, k) => n + (notas.includes(normalizarTexto(k)) ? 1 : 0), 0);
 }
 
 // Casas de la colección de temporada (basta con que el nombre de la casa

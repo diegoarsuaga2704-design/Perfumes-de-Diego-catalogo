@@ -34,7 +34,11 @@ function Prehome() {
   return (
     <div className="bg-gray-100">
       <SEO />
-      <div className="relative text-[#A47E3B] text-center font-extrabold sm:text-3xl text-2xl px-14 py-4 subpixel-antialiased ">
+      <div
+        className={`relative text-[#A47E3B] text-center font-extrabold sm:text-3xl text-2xl px-14 subpixel-antialiased ${
+          temporada === "navidad" ? "pt-16 pb-4 sm:pt-20 sm:pb-6" : "py-4"
+        }`}
+      >
         <DecoracionTemporada />
         <span
           style={
@@ -48,7 +52,9 @@ function Prehome() {
               : undefined
           }
         >
-          Compra tus perfumes favoritos.
+          {temporada === "navidad"
+            ? "Regala perfume esta Navidad."
+            : "Compra tus perfumes favoritos."}
         </span>
       </div>
       {temporada && (
@@ -58,7 +64,9 @@ function Prehome() {
             className="font-semibold hover:underline"
             style={{ color: TEXTOS_TEMPORADA[temporada].acento }}
           >
-            {temporada === "halloween" ? "🎃" : "🌼"} Ve la colección {TEXTOS_TEMPORADA[temporada].titulo.replace("Perfumes para ", "de ").replace("Aromas para ", "de ")} →
+            {temporada === "navidad"
+              ? "Ve los regalos de Navidad →"
+              : `${temporada === "halloween" ? "🎃" : "🌼"} Ve la colección ${TEXTOS_TEMPORADA[temporada].titulo.replace("Perfumes para ", "de ").replace("Aromas para ", "de ")} →`}
           </Link>
         </p>
       )}
@@ -72,6 +80,7 @@ function Prehome() {
             description={item.description}
             eager={index === 0}
             to={item.to}
+            navidad={temporada === "navidad"}
           />
         ))}
       </div>

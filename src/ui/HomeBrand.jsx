@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
+import { MonoRegalo } from "./Navidad";
 
 // Tarjeta de la portada. Es un enlace real: se puede abrir en otra pestaña y
 // Google lo sigue.
-function HomeBrand({ image, title, description, to, eager = false }) {
+function HomeBrand({ image, title, description, to, eager = false, navidad = false }) {
   return (
     <Link
       to={to}
@@ -20,6 +21,10 @@ function HomeBrand({ image, title, description, to, eager = false }) {
         />
       ) : (
         <div className="w-full h-96 bg-gray-300" aria-hidden="true" />
+      )}
+      {/* Navidad: listón y moño de regalo en la esquina */}
+      {navidad && (
+        <MonoRegalo className="absolute left-0 top-0 z-10 w-20 sm:w-24 pointer-events-none drop-shadow" />
       )}
       {/* Overlay degradado */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#A47E3B]/70 to-transparent" />

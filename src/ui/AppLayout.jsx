@@ -13,6 +13,8 @@ import LoadingSpinner from "./LoadingSpinner";
 import GrupoWhatsApp from "./GrupoWhatsApp";
 import { useToast } from "../context/ToastContext";
 import { guardarCupon } from "../functions/cuponBienvenida";
+import { getTemporada } from "../functions/temporada";
+import { Nieve, Guirnalda } from "./Navidad";
 
 function AppLayout() {
   const [searchResult, setSearchResult] = useState(null);
@@ -22,6 +24,9 @@ function AppLayout() {
   // Checkout sin distracciones: ocultamos banner, menú, newsletter, footer, etc.
   const { pathname } = useLocation();
   const esCheckout = pathname === "/checkout";
+  // Navidad: nieve en toda la tienda y guirnalda con foquitos bajo el menú
+  // (en el checkout no, para no distraer al pagar).
+  const navidad = getTemporada() === "navidad" && !esCheckout;
 
   // Cupón por link de correo: ?cupon=BIENVENIDAXXXX -> lo guarda para que se
   // auto-aplique en el carrito al haber decants, limpia la URL y avisa.
@@ -47,7 +52,9 @@ function AppLayout() {
       {!esCheckout && <TopBanner />}
       <div className="sticky top-0 z-30 shadow-sm">
         <Header onSearchResult={setSearchResult} sinMenu={esCheckout} />
+        {navidad && <Guirnalda />}
       </div>
+      {navidad && <Nieve />}
       {/* En la portada ya está la tarjeta grande del grupo. */}
       {!esCheckout && pathname !== "/" && <GrupoWhatsApp />}
       <main className="flex-1">

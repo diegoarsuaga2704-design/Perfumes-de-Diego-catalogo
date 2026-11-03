@@ -60,7 +60,8 @@ export default function Temporada() {
       .filter((p) => p.disponible === "Disponible")
       .sort(
         (a, b) =>
-          puntajeTemporada(b) - puntajeTemporada(a) || Number(a.stock) - Number(b.stock),
+          puntajeTemporada(b, temporada) - puntajeTemporada(a, temporada) ||
+          Number(a.stock) - Number(b.stock),
       );
     const elegidos = [];
     const agregar = (p) => {
@@ -69,6 +70,10 @@ export default function Temporada() {
       elegidos.push(p);
       return true;
     };
+    if (temporada === "navidad") {
+      disponibles.filter((p) => puntajeTemporada(p, temporada) > 0).forEach(agregar);
+      return elegidos.sort(porCasa);
+    }
     for (const casa of CASAS_COLECCION.fijas) {
       disponibles.filter((p) => esDeCasa(p, casa)).forEach(agregar);
     }
@@ -83,7 +88,7 @@ export default function Temporada() {
       }
     }
     return elegidos.sort(porCasa);
-  }, [parfums, elegidosAdmin]);
+  }, [parfums, elegidosAdmin, temporada]);
 
   return (
     <section className="bg-gray-100 py-10 min-h-screen">
