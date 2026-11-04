@@ -70,10 +70,15 @@ export default function ProductGrid({
 
   const filtradosPorFila = useMemo(() => {
     if (!allParfums || allParfums.length === 0) return [];
+    // En Botellas no salen las botellas agotadas.
+    const fuente =
+      stockFilter === true
+        ? allParfums.filter((p) => !(p.stock === true && p.disponible === "Agotado"))
+        : allParfums;
 
     // ===== BUSQUEDA DIRECTA =====
     if (searchResult && searchResult.nombre) {
-      let result = allParfums.filter(
+      let result = fuente.filter(
         (p) => normalizarTexto(p.nombre) === normalizarTexto(searchResult.nombre),
       );
 
@@ -88,7 +93,7 @@ export default function ProductGrid({
     if (searchResult && searchResult.query) {
       const lowerQuery = normalizarTexto(searchResult.query);
 
-      let result = allParfums.filter(
+      let result = fuente.filter(
         (p) =>
           normalizarTexto(p.nombre).includes(lowerQuery) ||
           normalizarTexto(p.casa).includes(lowerQuery),
@@ -118,7 +123,7 @@ export default function ProductGrid({
 
     // ===== RECIÉN LLEGADOS =====
     if (recientesFilter) {
-      const result = allParfums
+      const result = fuente
         .filter((p) => p.disponible === "Disponible" && esReciente(p))
         .sort((a, b) => {
           const casaCmp = safeString(a.casa).localeCompare(safeString(b.casa));
@@ -129,7 +134,7 @@ export default function ProductGrid({
     }
 
     // ===== FILTROS NORMALES =====
-    let result = allParfums.filter((p) => {
+    let result = fuente.filter((p) => {
       const casaMatch =
         !selectedCasa ||
         safeString(p.casa).toLowerCase() === selectedCasa.toLowerCase();

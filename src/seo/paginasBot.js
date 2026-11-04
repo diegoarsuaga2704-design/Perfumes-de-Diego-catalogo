@@ -206,7 +206,7 @@ export async function paginaBot(supabase, ruta) {
         botellas: {
           t: "Botellas completas y parciales",
           d: "Perfumes sellados y parciales disponibles para enviar a todo México.",
-          f: (p) => p.stock === true,
+          f: (p) => p.stock === true && p.disponible !== "Agotado",
         },
         "best-sellers": {
           t: "Perfumes más vendidos",
