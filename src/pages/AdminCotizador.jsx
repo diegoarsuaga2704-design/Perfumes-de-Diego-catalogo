@@ -71,6 +71,13 @@ async function copiarTexto(texto) {
   }
 }
 
+// Solo números (con un punto decimal opcional).
+const soloNumero = (v) => {
+  const limpio = String(v).replace(/,/g, ".").replace(/[^\d.]/g, "");
+  const [entero, ...resto] = limpio.split(".");
+  return resto.length ? `${entero}.${resto.join("")}` : entero;
+};
+
 const fechaCorta = (iso) =>
   new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
 
@@ -282,10 +289,10 @@ export default function AdminCotizador() {
             </Campo>
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Tamaño (ml)">
-                <input className={INPUT} inputMode="decimal" value={ml} onChange={(e) => setMl(e.target.value)} placeholder="100" />
+                <input className={INPUT} inputMode="decimal" value={ml} onChange={(e) => setMl(soloNumero(e.target.value))} placeholder="100" />
               </Campo>
               <Campo label="Te cuesta (USD)">
-                <input className={INPUT} inputMode="decimal" value={costoUsd} onChange={(e) => setCostoUsd(e.target.value)} placeholder="250" />
+                <input className={INPUT} inputMode="decimal" value={costoUsd} onChange={(e) => setCostoUsd(soloNumero(e.target.value))} placeholder="250" />
                 <p className="mt-1 text-sm text-gray-700">
                   En pesos: <span className="font-semibold">{$(r.costoMxn, 2)}</span>
                 </p>
