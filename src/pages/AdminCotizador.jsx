@@ -7,10 +7,8 @@ import {
   getCotizaciones,
   guardarCotizacion,
   borrarCotizacion,
-  getProveedoresCotizador,
-  agregarProveedorCotizador,
-  borrarProveedorCotizador,
 } from "../functions/getCotizaciones";
+import SelectorLista from "../ui/SelectorLista";
 import { normalizarTexto } from "../functions/normalizarTexto";
 
 // Ajustes que casi no cambian (impuestos, ganancia): se recuerdan en
@@ -101,47 +99,10 @@ export default function AdminCotizador() {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [proveedor, setProveedor] = useState("");
-  // Lista de proveedores con los que trabajas (se administra aquí mismo).
+  const [casa, setCasa] = useState("");
+  // Listas de proveedores y casas (se administran en el formulario).
   const [listaProveedores, setListaProveedores] = useState([]);
-  const [errorProveedores, setErrorProveedores] = useState("");
-  const [editandoProveedores, setEditandoProveedores] = useState(false);
-  const [nuevoProveedor, setNuevoProveedor] = useState("");
-  useEffect(() => {
-    getProveedoresCotizador()
-      .then(setListaProveedores)
-      .catch(() =>
-        setErrorProveedores("No se pudo cargar la lista. ¿Ya corriste el SQL de proveedores_cotizador?"),
-      );
-  }, []);
-  const agregarProveedor = async () => {
-    const limpio = nuevoProveedor.trim();
-    if (!limpio) return;
-    if (listaProveedores.some((p) => normalizarTexto(p.nombre) === normalizarTexto(limpio))) {
-      setErrorProveedores("Ese proveedor ya está en la lista.");
-      return;
-    }
-    try {
-      const nuevo = await agregarProveedorCotizador(limpio);
-      setListaProveedores((prev) =>
-        [...prev, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre, "es")),
-      );
-      setNuevoProveedor("");
-      setErrorProveedores("");
-      setProveedor(nuevo.nombre);
-    } catch {
-      setErrorProveedores("No se pudo agregar. ¿Ya corriste el SQL de proveedores_cotizador?");
-    }
-  };
-  const quitarProveedor = async (p) => {
-    if (!window.confirm(`¿Quitar a ${p.nombre} de la lista? Las cotizaciones guardadas no cambian.`)) return;
-    try {
-      await borrarProveedorCotizador(p.id);
-      setListaProveedores((prev) => prev.filter((x) => x.id !== p.id));
-      if (proveedor === p.nombre) setProveedor("");
-    } catch {
-      setErrorProveedores("No se pudo quitar.");
-    }
-  };
+  const [listaCasas, setListaCasas] = useState([]);
   const [tiempo, setTiempo] = useState("");
   const [ml, setMl] = useState("");
   const [costoUsd, setCostoUsd] = useState("");
@@ -205,6 +166,8 @@ export default function AdminCotizador() {
   const [filtroProveedor, setFiltroProveedor] = useState("");
   const [filtroMl, setFiltroMl] = useState("");
   const [filtroDias, setFiltroDias] = useState("");
+  const [filtroCasa, setFiltroCasa] = useState("");
+  const [orden, setOrden] = useState("recientes");
   const [copiadoId, setCopiadoId] = useState(null);
 
   const cargarGuardadas = () =>
@@ -230,6 +193,16 @@ export default function AdminCotizador() {
       ].sort((a, b) => a.localeCompare(b, "es")),
     [guardadas, listaProveedores],
   );
+  const casas = useMemo(
+    () =>
+      [
+        ...new Set([
+          ...listaCasas.map((c) => c.nombre),
+          ...guardadas.map((c) => (c.casa || "").trim()).filter(Boolean),
+        ]),
+      ].sort((a, b) => a.localeCompare(b, "es")),
+    [guardadas, listaCasas],
+  );
   const tamanosGuardados = useMemo(
     () => [...new Set(guardadas.map((c) => Number(c.ml)).filter(Boolean))].sort((a, b) => a - b),
     [guardadas],
@@ -238,16 +211,39 @@ export default function AdminCotizador() {
   const filtradas = useMemo(() => {
     const q = normalizarTexto(busqueda.trim());
     const desde = filtroDias ? Date.now() - Number(filtroDias) * 86400000 : null;
-    return guardadas.filter(
+    const lista = guardadas.filter(
       (c) =>
         (!q ||
           normalizarTexto(c.perfume).includes(q) ||
-          normalizarTexto(c.proveedor).includes(q)) &&
+          normalizarTexto(c.proveedor).includes(q) ||
+          normalizarTexto(c.casa).includes(q)) &&
         (!filtroProveedor || (c.proveedor || "").trim() === filtroProveedor) &&
+        (!filtroCasa || (c.casa || "").trim() === filtroCasa) &&
         (!filtroMl || Number(c.ml) === Number(filtroMl)) &&
         (!desde || new Date(c.created_at).getTime() >= desde),
     );
-  }, [guardadas, busqueda, filtroProveedor, filtroMl, filtroDias]);
+    if (orden === "costo") {
+      return [...lista].sort((a, b) => (Number(a.costo_usd) || 0) - (Number(b.costo_usd) || 0));
+    }
+    return lista;
+  }, [guardadas, busqueda, filtroProveedor, filtroCasa, filtroMl, filtroDias, orden]);
+
+  // Mejor precio: la cotización con menor costo en dólares entre las del
+  // mismo perfume y tamaño (solo si hay más de una para comparar).
+  const mejoresIds = useMemo(() => {
+    const grupos = {};
+    for (const c of guardadas) {
+      const k = `${normalizarTexto(c.perfume).replace(/[^a-z0-9]/g, "")}|${Number(c.ml) || 0}`;
+      (grupos[k] ||= []).push(c);
+    }
+    const ids = new Set();
+    for (const g of Object.values(grupos)) {
+      if (g.length < 2) continue;
+      const min = Math.min(...g.map((c) => Number(c.costo_usd) || Infinity));
+      g.filter((c) => Number(c.costo_usd) === min).forEach((c) => ids.add(c.id));
+    }
+    return ids;
+  }, [guardadas]);
 
   const guardar = async () => {
     setGuardando(true);
@@ -257,6 +253,7 @@ export default function AdminCotizador() {
         perfume: nombre.trim(),
         ml: Number(ml) || null,
         proveedor: proveedor.trim() || null,
+        casa: casa.trim() || null,
         costo_usd: Number(costoUsd) || 0,
         tipo_cambio: Number(tc) || 0,
         costo_mxn: Math.round(r.costoMxn * 100) / 100,
@@ -279,6 +276,7 @@ export default function AdminCotizador() {
     setNombre(c.perfume || "");
     setMl(c.ml ? String(Number(c.ml)) : "");
     setProveedor(c.proveedor || "");
+    setCasa(c.casa || "");
     setTiempo(c.tiempo_entrega || "");
     setCostoUsd(String(Number(c.costo_usd) || ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -319,72 +317,21 @@ export default function AdminCotizador() {
             <Campo label="Nombre del perfume">
               <input className={INPUT} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Baccarat Rouge 540 Extrait" />
             </Campo>
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Proveedor</span>
-                <button
-                  type="button"
-                  onClick={() => setEditandoProveedores((v) => !v)}
-                  className="text-xs text-[#A47E3B] hover:underline"
-                >
-                  {editandoProveedores ? "Listo" : "Editar lista"}
-                </button>
-              </div>
-              <select
-                className={`${INPUT} mt-1`}
-                value={proveedor}
-                onChange={(e) => setProveedor(e.target.value)}
-              >
-                <option value="">Elige un proveedor</option>
-                {listaProveedores.map((p) => (
-                  <option key={p.id} value={p.nombre}>
-                    {p.nombre}
-                  </option>
-                ))}
-                {/* Proveedor de una cotización vieja que ya no está en la lista */}
-                {proveedor && !listaProveedores.some((p) => p.nombre === proveedor) && (
-                  <option value={proveedor}>{proveedor}</option>
-                )}
-              </select>
-              {errorProveedores && <p className="text-xs text-red-600 mt-1">{errorProveedores}</p>}
-              {editandoProveedores && (
-                <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      className={INPUT}
-                      value={nuevoProveedor}
-                      onChange={(e) => setNuevoProveedor(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && agregarProveedor()}
-                      placeholder="Nombre del proveedor"
-                    />
-                    <button
-                      type="button"
-                      onClick={agregarProveedor}
-                      className="shrink-0 bg-[#A47E3B] text-white px-4 rounded-md text-sm font-semibold hover:bg-[#8b6d32]"
-                    >
-                      Agregar
-                    </button>
-                  </div>
-                  {listaProveedores.length > 0 && (
-                    <ul className="divide-y divide-gray-200 text-sm">
-                      {listaProveedores.map((p) => (
-                        <li key={p.id} className="flex items-center justify-between py-1.5">
-                          <span>{p.nombre}</span>
-                          <button
-                            type="button"
-                            onClick={() => quitarProveedor(p)}
-                            aria-label={`Quitar ${p.nombre}`}
-                            className="text-gray-400 hover:text-red-600"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </div>
+            <SelectorLista
+              tabla="casas_cotizador"
+              etiqueta="Casa"
+              articulo="una"
+              value={casa}
+              onChange={setCasa}
+              onItems={setListaCasas}
+            />
+            <SelectorLista
+              tabla="proveedores_cotizador"
+              etiqueta="Proveedor"
+              value={proveedor}
+              onChange={setProveedor}
+              onItems={setListaProveedores}
+            />
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Tamaño (ml)">
                 <input className={INPUT} inputMode="decimal" value={ml} onChange={(e) => setMl(soloNumero(e.target.value))} placeholder="100" />
@@ -573,9 +520,15 @@ export default function AdminCotizador() {
                 className={`${INPUT} pl-9`}
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar por perfume o proveedor"
+                placeholder="Buscar por perfume, casa o proveedor"
               />
             </div>
+            <select className={INPUT} value={filtroCasa} onChange={(e) => setFiltroCasa(e.target.value)}>
+              <option value="">Todas las casas</option>
+              {casas.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
             <select className={INPUT} value={filtroProveedor} onChange={(e) => setFiltroProveedor(e.target.value)}>
               <option value="">Todos los proveedores</option>
               {proveedores.map((p) => (
@@ -594,7 +547,11 @@ export default function AdminCotizador() {
               <option value="30">Últimos 30 días</option>
               <option value="90">Últimos 3 meses</option>
             </select>
-            {(busqueda || filtroProveedor || filtroMl || filtroDias) && (
+            <select className={INPUT} value={orden} onChange={(e) => setOrden(e.target.value)}>
+              <option value="recientes">Más recientes primero</option>
+              <option value="costo">Menor costo primero</option>
+            </select>
+            {(busqueda || filtroProveedor || filtroCasa || filtroMl || filtroDias) && (
               <button
                 type="button"
                 onClick={() => {
@@ -602,6 +559,7 @@ export default function AdminCotizador() {
                   setFiltroProveedor("");
                   setFiltroMl("");
                   setFiltroDias("");
+                  setFiltroCasa("");
                 }}
                 className="text-sm text-gray-600 hover:text-red-600 underline justify-self-start"
               >
@@ -624,9 +582,15 @@ export default function AdminCotizador() {
                     <p className="font-semibold text-gray-900 truncate">
                       {c.perfume}
                       {c.ml ? <span className="font-normal text-gray-500"> · {Number(c.ml)} ml</span> : null}
+                      {mejoresIds.has(c.id) && (
+                        <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                          Mejor precio
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-gray-500">
                       {fechaCorta(c.created_at)}
+                      {c.casa ? ` · ${c.casa}` : ""}
                       {c.proveedor ? ` · ${c.proveedor}` : ""}
                       {TIEMPOS[c.tiempo_entrega] ? ` · ${TIEMPOS[c.tiempo_entrega]}` : ""} · US${formatPrecio(c.costo_usd, 2)} × {Number(c.tipo_cambio).toFixed(2)} = {$(c.costo_mxn, 2)}
                     </p>
