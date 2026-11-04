@@ -33,9 +33,16 @@ const $ = (n, dec = 0) => `$${formatPrecio(n, dec)}`;
 
 const TAMANOS = [30, 50, 70, 75, 100, 125, 150, 200];
 
+// Tiempo de llegada: valor guardado → texto para el cliente.
+const TIEMPOS = {
+  inmediato: "Envío inmediato",
+  "2 semanas": "2 semanas",
+  "4 semanas": "4 semanas",
+};
+
 // Mensaje de WhatsApp para el cliente (mismo para la cotización actual y
 // las guardadas).
-function armarMensaje(nombre, ml, precio) {
+function armarMensaje(nombre, ml, precio, tiempo) {
   const limpio = (nombre || "").trim();
   return [
     "¡Hola! Te comparto la cotización:",
@@ -43,6 +50,7 @@ function armarMensaje(nombre, ml, precio) {
     `Perfume: ${limpio}`,
     ml ? `Tamaño: ${ml} ml` : null,
     `Precio: ${$(precio)} + envío`,
+    TIEMPOS[tiempo] ? `Tiempo de entrega: ${TIEMPOS[tiempo]}` : null,
     "",
     `¿Te aparto ${limpio}${ml ? ` ${ml} ml` : ""}?`,
   ]
@@ -84,6 +92,7 @@ export default function AdminCotizador() {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [proveedor, setProveedor] = useState("");
+  const [tiempo, setTiempo] = useState("");
   const [ml, setMl] = useState("");
   const [costoUsd, setCostoUsd] = useState("");
   const [tc, setTc] = useState("");
@@ -126,7 +135,10 @@ export default function AdminCotizador() {
   );
   const listo = Number(costoUsd) > 0 && Number(tc) > 0 && nombre.trim();
 
-  const mensaje = useMemo(() => armarMensaje(nombre, ml, r.precio), [nombre, ml, r]);
+  const mensaje = useMemo(
+    () => armarMensaje(nombre, ml, r.precio, tiempo),
+    [nombre, ml, r, tiempo],
+  );
 
   const copiar = async () => {
     await copiarTexto(mensaje);
@@ -199,6 +211,7 @@ export default function AdminCotizador() {
         iva: Number(ajustes.iva) || 0,
         isr: Number(ajustes.isr) || 0,
         precio: r.precio,
+        tiempo_entrega: tiempo || null,
       });
       setGuardadas((prev) => [nueva, ...prev]);
       setMsgGuardar("Cotización guardada.");
@@ -213,12 +226,13 @@ export default function AdminCotizador() {
     setNombre(c.perfume || "");
     setMl(c.ml ? String(Number(c.ml)) : "");
     setProveedor(c.proveedor || "");
+    setTiempo(c.tiempo_entrega || "");
     setCostoUsd(String(Number(c.costo_usd) || ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const copiarGuardada = async (c) => {
-    await copiarTexto(armarMensaje(c.perfume, c.ml ? Number(c.ml) : "", c.precio));
+    await copiarTexto(armarMensaje(c.perfume, c.ml ? Number(c.ml) : "", c.precio, c.tiempo_entrega));
     setCopiadoId(c.id);
     setTimeout(() => setCopiadoId(null), 2000);
   };
@@ -395,6 +409,25 @@ export default function AdminCotizador() {
 
           <section className={`${CARD} space-y-3`}>
             <h2 className="font-semibold text-gray-900">Mensaje para el cliente</h2>
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1">Tiempo de llegada</p>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(TIEMPOS).map(([v, t]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setTiempo(tiempo === v ? "" : v)}
+                    className={`px-3 py-1.5 rounded-md border text-sm font-medium ${
+                      tiempo === v
+                        ? "bg-[#A47E3B] border-[#A47E3B] text-white"
+                        : "border-gray-300 text-gray-700 hover:border-[#A47E3B]"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
             <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-md p-3 font-sans">
               {listo ? mensaje : "Llena nombre, costo y tipo de cambio para armar el mensaje."}
             </pre>
@@ -493,7 +526,8 @@ export default function AdminCotizador() {
                     </p>
                     <p className="text-xs text-gray-500">
                       {fechaCorta(c.created_at)}
-                      {c.proveedor ? ` · ${c.proveedor}` : ""} · US${formatPrecio(c.costo_usd, 2)} × {Number(c.tipo_cambio).toFixed(2)} = {$(c.costo_mxn, 2)}
+                      {c.proveedor ? ` · ${c.proveedor}` : ""}
+                      {TIEMPOS[c.tiempo_entrega] ? ` · ${TIEMPOS[c.tiempo_entrega]}` : ""} · US${formatPrecio(c.costo_usd, 2)} × {Number(c.tipo_cambio).toFixed(2)} = {$(c.costo_mxn, 2)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
