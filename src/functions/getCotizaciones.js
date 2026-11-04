@@ -27,3 +27,28 @@ export async function borrarCotizacion(id) {
   const { error } = await supabase.from("cotizaciones").delete().eq("id", id);
   if (error) throw error;
 }
+
+// Lista de proveedores para el cotizador (tabla proveedores_cotizador).
+export async function getProveedoresCotizador() {
+  const { data, error } = await supabase
+    .from("proveedores_cotizador")
+    .select("id, nombre")
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function agregarProveedorCotizador(nombre) {
+  const { data, error } = await supabase
+    .from("proveedores_cotizador")
+    .insert({ nombre })
+    .select("id, nombre")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function borrarProveedorCotizador(id) {
+  const { error } = await supabase.from("proveedores_cotizador").delete().eq("id", id);
+  if (error) throw error;
+}

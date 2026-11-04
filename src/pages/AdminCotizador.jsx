@@ -7,6 +7,9 @@ import {
   getCotizaciones,
   guardarCotizacion,
   borrarCotizacion,
+  getProveedoresCotizador,
+  agregarProveedorCotizador,
+  borrarProveedorCotizador,
 } from "../functions/getCotizaciones";
 import { normalizarTexto } from "../functions/normalizarTexto";
 
@@ -98,6 +101,47 @@ export default function AdminCotizador() {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [proveedor, setProveedor] = useState("");
+  // Lista de proveedores con los que trabajas (se administra aquí mismo).
+  const [listaProveedores, setListaProveedores] = useState([]);
+  const [errorProveedores, setErrorProveedores] = useState("");
+  const [editandoProveedores, setEditandoProveedores] = useState(false);
+  const [nuevoProveedor, setNuevoProveedor] = useState("");
+  useEffect(() => {
+    getProveedoresCotizador()
+      .then(setListaProveedores)
+      .catch(() =>
+        setErrorProveedores("No se pudo cargar la lista. ¿Ya corriste el SQL de proveedores_cotizador?"),
+      );
+  }, []);
+  const agregarProveedor = async () => {
+    const limpio = nuevoProveedor.trim();
+    if (!limpio) return;
+    if (listaProveedores.some((p) => normalizarTexto(p.nombre) === normalizarTexto(limpio))) {
+      setErrorProveedores("Ese proveedor ya está en la lista.");
+      return;
+    }
+    try {
+      const nuevo = await agregarProveedorCotizador(limpio);
+      setListaProveedores((prev) =>
+        [...prev, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre, "es")),
+      );
+      setNuevoProveedor("");
+      setErrorProveedores("");
+      setProveedor(nuevo.nombre);
+    } catch {
+      setErrorProveedores("No se pudo agregar. ¿Ya corriste el SQL de proveedores_cotizador?");
+    }
+  };
+  const quitarProveedor = async (p) => {
+    if (!window.confirm(`¿Quitar a ${p.nombre} de la lista? Las cotizaciones guardadas no cambian.`)) return;
+    try {
+      await borrarProveedorCotizador(p.id);
+      setListaProveedores((prev) => prev.filter((x) => x.id !== p.id));
+      if (proveedor === p.nombre) setProveedor("");
+    } catch {
+      setErrorProveedores("No se pudo quitar.");
+    }
+  };
   const [tiempo, setTiempo] = useState("");
   const [ml, setMl] = useState("");
   const [costoUsd, setCostoUsd] = useState("");
@@ -178,10 +222,13 @@ export default function AdminCotizador() {
 
   const proveedores = useMemo(
     () =>
-      [...new Set(guardadas.map((c) => (c.proveedor || "").trim()).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b, "es"),
-      ),
-    [guardadas],
+      [
+        ...new Set([
+          ...listaProveedores.map((p) => p.nombre),
+          ...guardadas.map((c) => (c.proveedor || "").trim()).filter(Boolean),
+        ]),
+      ].sort((a, b) => a.localeCompare(b, "es")),
+    [guardadas, listaProveedores],
   );
   const tamanosGuardados = useMemo(
     () => [...new Set(guardadas.map((c) => Number(c.ml)).filter(Boolean))].sort((a, b) => a - b),
@@ -272,20 +319,72 @@ export default function AdminCotizador() {
             <Campo label="Nombre del perfume">
               <input className={INPUT} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Baccarat Rouge 540 Extrait" />
             </Campo>
-            <Campo label="Proveedor">
-              <input
-                className={INPUT}
-                list="cotizador-proveedores"
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Proveedor</span>
+                <button
+                  type="button"
+                  onClick={() => setEditandoProveedores((v) => !v)}
+                  className="text-xs text-[#A47E3B] hover:underline"
+                >
+                  {editandoProveedores ? "Listo" : "Editar lista"}
+                </button>
+              </div>
+              <select
+                className={`${INPUT} mt-1`}
                 value={proveedor}
                 onChange={(e) => setProveedor(e.target.value)}
-                placeholder="¿A quién se lo compras?"
-              />
-              <datalist id="cotizador-proveedores">
-                {proveedores.map((p) => (
-                  <option key={p} value={p} />
+              >
+                <option value="">Elige un proveedor</option>
+                {listaProveedores.map((p) => (
+                  <option key={p.id} value={p.nombre}>
+                    {p.nombre}
+                  </option>
                 ))}
-              </datalist>
-            </Campo>
+                {/* Proveedor de una cotización vieja que ya no está en la lista */}
+                {proveedor && !listaProveedores.some((p) => p.nombre === proveedor) && (
+                  <option value={proveedor}>{proveedor}</option>
+                )}
+              </select>
+              {errorProveedores && <p className="text-xs text-red-600 mt-1">{errorProveedores}</p>}
+              {editandoProveedores && (
+                <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      className={INPUT}
+                      value={nuevoProveedor}
+                      onChange={(e) => setNuevoProveedor(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && agregarProveedor()}
+                      placeholder="Nombre del proveedor"
+                    />
+                    <button
+                      type="button"
+                      onClick={agregarProveedor}
+                      className="shrink-0 bg-[#A47E3B] text-white px-4 rounded-md text-sm font-semibold hover:bg-[#8b6d32]"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                  {listaProveedores.length > 0 && (
+                    <ul className="divide-y divide-gray-200 text-sm">
+                      {listaProveedores.map((p) => (
+                        <li key={p.id} className="flex items-center justify-between py-1.5">
+                          <span>{p.nombre}</span>
+                          <button
+                            type="button"
+                            onClick={() => quitarProveedor(p)}
+                            aria-label={`Quitar ${p.nombre}`}
+                            className="text-gray-400 hover:text-red-600"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Tamaño (ml)">
                 <input className={INPUT} inputMode="decimal" value={ml} onChange={(e) => setMl(soloNumero(e.target.value))} placeholder="100" />
