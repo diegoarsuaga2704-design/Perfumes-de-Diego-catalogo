@@ -19,7 +19,6 @@ const AJUSTES_BASE = {
   gananciaPct: 20,
   iva: 16,
   isr: 2.5,
-  redondeo: 10,
 };
 const leerAjustes = () => {
   try {
@@ -383,15 +382,6 @@ export default function AdminCotizador() {
               <Campo label="ISR (%)" ayuda="Sobre la venta sin IVA">
                 <input className={INPUT} inputMode="decimal" value={ajustes.isr} onChange={(e) => cambiarAjuste("isr", e.target.value)} />
               </Campo>
-              <Campo label="Redondear a" ayuda="Hacia arriba; 0 = sin redondeo">
-                <select className={INPUT} value={ajustes.redondeo} onChange={(e) => cambiarAjuste("redondeo", Number(e.target.value))}>
-                  {[0, 10, 50, 100].map((n) => (
-                    <option key={n} value={n}>
-                      {n === 0 ? "Sin redondeo" : `$${n}`}
-                    </option>
-                  ))}
-                </select>
-              </Campo>
             </div>
           </section>
         </div>
@@ -410,7 +400,12 @@ export default function AdminCotizador() {
             <div className="rounded-md bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-600 mt-2">
               Después de pagar IVA e ISR te quedan {$(r.teQueda, 2)}: tu costo de{" "}
               {$(r.costoMxn, 2)} más {$(r.gananciaReal, 2)} de ganancia
-              {r.gananciaReal - r.gananciaMxn > 0.5 ? " (el redondeo suma un poco)" : ""}.
+              {r.gananciaReal - r.gananciaMxn > 0.5
+                ? " (terminar el precio en 90 te suma un poco)"
+                : r.gananciaMxn - r.gananciaReal > 0.5
+                  ? " (terminar el precio en 90 te resta unos pesos)"
+                  : ""}
+              .
             </div>
           </section>
 

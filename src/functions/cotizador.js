@@ -44,7 +44,8 @@ export async function getTipoCambio() {
  * @param {number} p.iva          % de IVA (16)
  * @param {number} p.isr          % de ISR sobre la venta sin IVA
  * @param {number} p.envio        envío en pesos (se suma aparte)
- * @param {number} p.redondeo     redondear hacia arriba a múltiplos de esto (0 = no)
+ * El precio siempre termina en $90: se sube a la centena y se le restan
+ * $10 (de $3,501 a $3,600 queda en $3,590).
  */
 export function calcularCotizacion({
   costoUsd = 0,
@@ -55,7 +56,6 @@ export function calcularCotizacion({
   iva = 16,
   isr = 0,
   envio = 0,
-  redondeo = 10,
 }) {
   const costoMxn = (Number(costoUsd) || 0) * (Number(tipoCambio) || 0);
   const gananciaMxn =
@@ -68,10 +68,10 @@ export function calcularCotizacion({
   const neto = costoMxn + gananciaMxn;
   const baseExacta = tIsr < 1 ? neto / (1 - tIsr) : 0;
   const precioExacto = baseExacta * (1 + tIva);
-  const r = Number(redondeo) || 0;
-  const precio = r > 0 ? Math.ceil(precioExacto / r) * r : Math.round(precioExacto);
+  const precio = precioExacto > 0 ? Math.ceil(precioExacto / 100) * 100 - 10 : 0;
 
-  // Desglose con el precio ya redondeado (el redondeo suma a tu ganancia).
+  // Desglose con el precio ya terminado en 90 (puede sumar o restar unos
+  // pesos a tu ganancia: como mucho $10 menos).
   const base = precio / (1 + tIva);
   const ivaMxn = precio - base;
   const isrMxn = base * tIsr;
