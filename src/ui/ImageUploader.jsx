@@ -69,10 +69,11 @@ export default function ImageUploader({
       return;
     }
 
-    // Validación inicial: máx 10MB antes de comprimir
-    const MAX_SIZE = 10 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      setError("La imagen es muy pesada (máx 10 MB).");
+    // Fotos grandes (hasta 60 MB) se aceptan: se comprimen antes de subir y
+    // quedan en menos de 1 MB. Solo se rechazan archivos enormes.
+    const MAX_ORIGINAL = 60 * 1024 * 1024;
+    if (file.size > MAX_ORIGINAL) {
+      setError("La imagen es demasiado grande (máx 60 MB).");
       return;
     }
 
@@ -82,6 +83,12 @@ export default function ImageUploader({
     try {
       // Comprimir/convertir a JPEG antes de subir
       const compressedFile = await compressImage(file);
+      // Si no se pudo comprimir y sigue pesando más de 10 MB, no se sube.
+      if (compressedFile.size > 10 * 1024 * 1024) {
+        setError("No se pudo comprimir la imagen. Prueba con otra foto o una captura de pantalla.");
+        setUploading(false);
+        return;
+      }
 
       // El nombre y el content-type deben coincidir con el formato real de salida.
       const tipo = compressedFile.type || "image/jpeg";
@@ -211,7 +218,7 @@ export default function ImageUploader({
               Arrastra una imagen aquí o haz click
             </p>
             <p className="text-xs text-gray-500">
-              Se comprime automáticamente. Máx 10 MB.
+              Se comprime automáticamente, aunque la foto sea muy pesada.
             </p>
           </>
         )}
