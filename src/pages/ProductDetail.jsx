@@ -416,7 +416,8 @@ export default function ProductDetail() {
           {/* INFORMACIÓN */}
           <div className="flex-1 flex flex-col justify-between">
             <div>
-              <BadgesEstatus parfum={{ ...parfum, disponible: estadoGrupo }} />
+              {/* El estado se muestra hasta tener las dos versiones (decant y botella). */}
+              {comprasListas && <BadgesEstatus parfum={{ ...parfum, disponible: estadoGrupo }} />}
               <h1 className="text-2xl font-semibold mb-2">{parfum.nombre}</h1>
 
               <p className="text-gray-500 text-sm italic">
