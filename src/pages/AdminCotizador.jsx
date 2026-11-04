@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Copy, Check, RefreshCw } from "lucide-react";
+import { ArrowLeft, Copy, Check, RefreshCw, Save, Search, Trash2 } from "lucide-react";
 import { getTipoCambio, calcularCotizacion } from "../functions/cotizador";
 import { formatPrecio } from "../functions/formatPrecio";
+import {
+  getCotizaciones,
+  guardarCotizacion,
+  borrarCotizacion,
+} from "../functions/getCotizaciones";
+import { normalizarTexto } from "../functions/normalizarTexto";
 
 // Ajustes que casi no cambian (impuestos, ganancia): se recuerdan en
 // este navegador para no capturarlos cada vez.
@@ -25,6 +31,41 @@ const leerAjustes = () => {
 
 const $ = (n, dec = 0) => `$${formatPrecio(n, dec)}`;
 
+const TAMANOS = [30, 50, 70, 75, 100, 125, 150, 200];
+
+// Mensaje de WhatsApp para el cliente (mismo para la cotización actual y
+// las guardadas).
+function armarMensaje(nombre, ml, precio) {
+  const limpio = (nombre || "").trim();
+  return [
+    "¡Hola! Te comparto la cotización:",
+    "",
+    `Perfume: ${limpio}`,
+    ml ? `Tamaño: ${ml} ml` : null,
+    `Precio: ${$(precio)} + envío`,
+    "",
+    `¿Te aparto ${limpio}${ml ? ` ${ml} ml` : ""}?`,
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+}
+
+async function copiarTexto(texto) {
+  try {
+    await navigator.clipboard.writeText(texto);
+  } catch {
+    const t = document.createElement("textarea");
+    t.value = texto;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    t.remove();
+  }
+}
+
+const fechaCorta = (iso) =>
+  new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+
 function Campo({ label, children, ayuda }) {
   return (
     <label className="block">
@@ -42,6 +83,7 @@ const CARD = "bg-white rounded-xl border border-gray-200 p-4 sm:p-5";
 export default function AdminCotizador() {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
+  const [proveedor, setProveedor] = useState("");
   const [ml, setMl] = useState("");
   const [costoUsd, setCostoUsd] = useState("");
   const [tc, setTc] = useState("");
@@ -84,34 +126,111 @@ export default function AdminCotizador() {
   );
   const listo = Number(costoUsd) > 0 && Number(tc) > 0 && nombre.trim();
 
-  const mensaje = useMemo(() => {
-    const titulo = `${nombre.trim()}${ml ? ` ${ml} ml` : ""}`;
-    return [
-      "¡Hola! Te comparto la cotización:",
-      "",
-      `Perfume: ${nombre.trim()}`,
-      ml ? `Tamaño: ${ml} ml` : null,
-      `Precio: ${$(r.precio)} + envío`,
-      "",
-      `¿Te aparto ${titulo}?`,
-    ]
-      .filter((l) => l !== null)
-      .join("\n");
-  }, [nombre, ml, r]);
+  const mensaje = useMemo(() => armarMensaje(nombre, ml, r.precio), [nombre, ml, r]);
 
   const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(mensaje);
-    } catch {
-      const t = document.createElement("textarea");
-      t.value = mensaje;
-      document.body.appendChild(t);
-      t.select();
-      document.execCommand("copy");
-      t.remove();
-    }
+    await copiarTexto(mensaje);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
+  };
+
+  // ---- Cotizaciones guardadas ----
+  const [guardadas, setGuardadas] = useState([]);
+  const [errorLista, setErrorLista] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [msgGuardar, setMsgGuardar] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroProveedor, setFiltroProveedor] = useState("");
+  const [filtroMl, setFiltroMl] = useState("");
+  const [filtroDias, setFiltroDias] = useState("");
+  const [copiadoId, setCopiadoId] = useState(null);
+
+  const cargarGuardadas = () =>
+    getCotizaciones()
+      .then((d) => {
+        setGuardadas(d);
+        setErrorLista("");
+      })
+      .catch(() =>
+        setErrorLista("No se pudieron cargar las cotizaciones. ¿Ya corriste el SQL de la tabla cotizaciones?"),
+      );
+  useEffect(() => {
+    cargarGuardadas();
+  }, []);
+
+  const proveedores = useMemo(
+    () =>
+      [...new Set(guardadas.map((c) => (c.proveedor || "").trim()).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, "es"),
+      ),
+    [guardadas],
+  );
+  const tamanosGuardados = useMemo(
+    () => [...new Set(guardadas.map((c) => Number(c.ml)).filter(Boolean))].sort((a, b) => a - b),
+    [guardadas],
+  );
+
+  const filtradas = useMemo(() => {
+    const q = normalizarTexto(busqueda.trim());
+    const desde = filtroDias ? Date.now() - Number(filtroDias) * 86400000 : null;
+    return guardadas.filter(
+      (c) =>
+        (!q ||
+          normalizarTexto(c.perfume).includes(q) ||
+          normalizarTexto(c.proveedor).includes(q)) &&
+        (!filtroProveedor || (c.proveedor || "").trim() === filtroProveedor) &&
+        (!filtroMl || Number(c.ml) === Number(filtroMl)) &&
+        (!desde || new Date(c.created_at).getTime() >= desde),
+    );
+  }, [guardadas, busqueda, filtroProveedor, filtroMl, filtroDias]);
+
+  const guardar = async () => {
+    setGuardando(true);
+    setMsgGuardar("");
+    try {
+      const nueva = await guardarCotizacion({
+        perfume: nombre.trim(),
+        ml: Number(ml) || null,
+        proveedor: proveedor.trim() || null,
+        costo_usd: Number(costoUsd) || 0,
+        tipo_cambio: Number(tc) || 0,
+        costo_mxn: Math.round(r.costoMxn * 100) / 100,
+        ganancia: Math.round(r.gananciaReal * 100) / 100,
+        iva: Number(ajustes.iva) || 0,
+        isr: Number(ajustes.isr) || 0,
+        precio: r.precio,
+      });
+      setGuardadas((prev) => [nueva, ...prev]);
+      setMsgGuardar("Cotización guardada.");
+    } catch {
+      setMsgGuardar("No se pudo guardar. ¿Ya corriste el SQL de la tabla cotizaciones?");
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const usar = (c) => {
+    setNombre(c.perfume || "");
+    setMl(c.ml ? String(Number(c.ml)) : "");
+    setProveedor(c.proveedor || "");
+    setCostoUsd(String(Number(c.costo_usd) || ""));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const copiarGuardada = async (c) => {
+    await copiarTexto(armarMensaje(c.perfume, c.ml ? Number(c.ml) : "", c.precio));
+    setCopiadoId(c.id);
+    setTimeout(() => setCopiadoId(null), 2000);
+  };
+
+  const borrar = async (c) => {
+    if (!window.confirm(`¿Borrar la cotización de ${c.perfume}?`)) return;
+    try {
+      await borrarCotizacion(c.id);
+      setGuardadas((prev) => prev.filter((x) => x.id !== c.id));
+    } catch {
+      setErrorLista("No se pudo borrar.");
+    }
   };
 
   return (
@@ -133,6 +252,20 @@ export default function AdminCotizador() {
             <Campo label="Nombre del perfume">
               <input className={INPUT} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Baccarat Rouge 540 Extrait" />
             </Campo>
+            <Campo label="Proveedor">
+              <input
+                className={INPUT}
+                list="cotizador-proveedores"
+                value={proveedor}
+                onChange={(e) => setProveedor(e.target.value)}
+                placeholder="¿A quién se lo compras?"
+              />
+              <datalist id="cotizador-proveedores">
+                {proveedores.map((p) => (
+                  <option key={p} value={p} />
+                ))}
+              </datalist>
+            </Campo>
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Tamaño (ml)">
                 <input className={INPUT} inputMode="decimal" value={ml} onChange={(e) => setMl(e.target.value)} placeholder="100" />
@@ -146,7 +279,7 @@ export default function AdminCotizador() {
             </div>
             {/* Tamaños comunes: un toque llena el campo de ml */}
             <div className="flex flex-wrap gap-2">
-              {[30, 50, 70, 75, 100, 125, 150, 200].map((n) => (
+              {TAMANOS.map((n) => (
                 <button
                   key={n}
                   type="button"
@@ -276,8 +409,110 @@ export default function AdminCotizador() {
               {copiado ? <Check size={18} /> : <Copy size={18} />}
               {copiado ? "Copiado" : "Copiar mensaje"}
             </button>
+            <button
+              type="button"
+              onClick={guardar}
+              disabled={!listo || guardando}
+              className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-md font-semibold border border-[#A47E3B] text-[#A47E3B] hover:bg-[#A47E3B]/10 disabled:opacity-50"
+            >
+              <Save size={18} />
+              {guardando ? "Guardando…" : "Guardar cotización"}
+            </button>
+            {msgGuardar && <p className="text-sm text-gray-600">{msgGuardar}</p>}
           </section>
         </div>
+
+        {/* Cotizaciones guardadas */}
+        <section className={`${CARD} md:col-span-2 space-y-4`}>
+          <h2 className="font-semibold text-gray-900">
+            Cotizaciones guardadas{" "}
+            <span className="font-normal text-gray-500">
+              ({filtradas.length}
+              {filtradas.length !== guardadas.length ? ` de ${guardadas.length}` : ""})
+            </span>
+          </h2>
+
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="relative sm:col-span-4">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                className={`${INPUT} pl-9`}
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Buscar por perfume o proveedor"
+              />
+            </div>
+            <select className={INPUT} value={filtroProveedor} onChange={(e) => setFiltroProveedor(e.target.value)}>
+              <option value="">Todos los proveedores</option>
+              {proveedores.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+            <select className={INPUT} value={filtroMl} onChange={(e) => setFiltroMl(e.target.value)}>
+              <option value="">Todos los tamaños</option>
+              {tamanosGuardados.map((n) => (
+                <option key={n} value={n}>{n} ml</option>
+              ))}
+            </select>
+            <select className={INPUT} value={filtroDias} onChange={(e) => setFiltroDias(e.target.value)}>
+              <option value="">Cualquier fecha</option>
+              <option value="7">Últimos 7 días</option>
+              <option value="30">Últimos 30 días</option>
+              <option value="90">Últimos 3 meses</option>
+            </select>
+            {(busqueda || filtroProveedor || filtroMl || filtroDias) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setBusqueda("");
+                  setFiltroProveedor("");
+                  setFiltroMl("");
+                  setFiltroDias("");
+                }}
+                className="text-sm text-gray-600 hover:text-red-600 underline justify-self-start"
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+
+          {errorLista && <p className="text-sm text-red-600">{errorLista}</p>}
+
+          {filtradas.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              {guardadas.length ? "Ninguna cotización coincide con la búsqueda." : "Aún no hay cotizaciones guardadas."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-gray-100 border border-gray-200 rounded-lg">
+              {filtradas.map((c) => (
+                <li key={c.id} className="p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">
+                      {c.perfume}
+                      {c.ml ? <span className="font-normal text-gray-500"> · {Number(c.ml)} ml</span> : null}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {fechaCorta(c.created_at)}
+                      {c.proveedor ? ` · ${c.proveedor}` : ""} · US${formatPrecio(c.costo_usd, 2)} × {Number(c.tipo_cambio).toFixed(2)} = {$(c.costo_mxn, 2)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-bold text-gray-900">{$(c.precio)}</span>
+                    <button type="button" onClick={() => usar(c)} className="text-sm text-[#A47E3B] hover:underline">
+                      Usar
+                    </button>
+                    <button type="button" onClick={() => copiarGuardada(c)} className="text-sm text-[#A47E3B] hover:underline">
+                      {copiadoId === c.id ? "Copiado" : "Copiar"}
+                    </button>
+                    <button type="button" onClick={() => borrar(c)} aria-label="Borrar" className="text-gray-400 hover:text-red-600">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
     </div>
   );
