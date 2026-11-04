@@ -52,7 +52,7 @@ function armarMensaje(nombre, ml, precio, tiempo) {
     `Precio: ${$(precio)} + envío`,
     TIEMPOS[tiempo] ? `Tiempo de entrega: ${TIEMPOS[tiempo]}` : null,
     "",
-    `¿Te aparto ${limpio}${ml ? ` ${ml} ml` : ""}?`,
+    "¿Quisieras pedirlo?",
   ]
     .filter((l) => l !== null)
     .join("\n");
