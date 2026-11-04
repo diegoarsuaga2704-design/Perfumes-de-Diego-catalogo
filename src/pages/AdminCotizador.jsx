@@ -139,6 +139,9 @@ export default function AdminCotizador() {
               </Campo>
               <Campo label="Te cuesta (USD)">
                 <input className={INPUT} inputMode="decimal" value={costoUsd} onChange={(e) => setCostoUsd(e.target.value)} placeholder="250" />
+                <p className="mt-1 text-sm text-gray-700">
+                  En pesos: <span className="font-semibold">{$(r.costoMxn, 2)}</span>
+                </p>
               </Campo>
             </div>
           </section>
