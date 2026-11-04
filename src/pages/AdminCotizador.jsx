@@ -264,7 +264,14 @@ export default function AdminCotizador() {
         tiempo_entrega: tiempo || null,
       });
       setGuardadas((prev) => [nueva, ...prev]);
-      setMsgGuardar("Cotización guardada.");
+      setMsgGuardar(`Cotización de ${nueva.perfume} guardada.`);
+      // Formulario limpio para la siguiente (tipo de cambio y ajustes se quedan).
+      setNombre("");
+      setCasa("");
+      setProveedor("");
+      setMl("");
+      setCostoUsd("");
+      setTiempo("");
     } catch {
       setMsgGuardar("No se pudo guardar. ¿Ya corriste el SQL de la tabla cotizaciones?");
     } finally {
