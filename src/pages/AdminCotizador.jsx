@@ -144,6 +144,23 @@ export default function AdminCotizador() {
                 </p>
               </Campo>
             </div>
+            {/* Tamaños comunes: un toque llena el campo de ml */}
+            <div className="flex flex-wrap gap-2">
+              {[30, 50, 70, 75, 100, 125, 150, 200].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setMl(String(n))}
+                  className={`px-3 py-1.5 rounded-md border text-sm font-medium ${
+                    String(ml) === String(n)
+                      ? "bg-[#A47E3B] border-[#A47E3B] text-white"
+                      : "border-gray-300 text-gray-700 hover:border-[#A47E3B]"
+                  }`}
+                >
+                  {n} ml
+                </button>
+              ))}
+            </div>
           </section>
 
           {/* Tipo de cambio */}
