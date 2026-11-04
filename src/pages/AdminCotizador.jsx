@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Copy, Check, RefreshCw } from "lucide-react";
 import { getTipoCambio, calcularCotizacion } from "../functions/cotizador";
 import { formatPrecio } from "../functions/formatPrecio";
-import { COSTO_ENVIO_REGULAR } from "../functions/envioGratis";
 
-// Ajustes que casi no cambian (impuestos, ganancia, envío): se recuerdan en
+// Ajustes que casi no cambian (impuestos, ganancia): se recuerdan en
 // este navegador para no capturarlos cada vez.
 const KEY_AJUSTES = "admin_cotizador_ajustes";
 const AJUSTES_BASE = {
@@ -14,7 +13,6 @@ const AJUSTES_BASE = {
   gananciaPct: 20,
   iva: 16,
   isr: 2.5,
-  envio: COSTO_ENVIO_REGULAR,
   redondeo: 10,
 };
 const leerAjustes = () => {
@@ -80,7 +78,8 @@ export default function AdminCotizador() {
   };
 
   const r = useMemo(
-    () => calcularCotizacion({ costoUsd, tipoCambio: tc, ...ajustes }),
+    // El envío no se suma: el mensaje dice "+ envío".
+    () => calcularCotizacion({ costoUsd, tipoCambio: tc, ...ajustes, envio: 0 }),
     [costoUsd, tc, ajustes],
   );
   const listo = Number(costoUsd) > 0 && Number(tc) > 0 && nombre.trim();
@@ -92,9 +91,7 @@ export default function AdminCotizador() {
       "",
       `Perfume: ${nombre.trim()}`,
       ml ? `Tamaño: ${ml} ml` : null,
-      `Precio: ${$(r.precio)}`,
-      r.envio > 0 ? `Envío (DHL zona regular): ${$(r.envio)}` : "Envío: gratis",
-      `Total: ${$(r.total)}`,
+      `Precio: ${$(r.precio)} + envío`,
       "",
       `¿Te aparto ${titulo}?`,
     ]
@@ -175,7 +172,7 @@ export default function AdminCotizador() {
 
           {/* Ajustes */}
           <section className={`${CARD} space-y-3`}>
-            <h2 className="font-semibold text-gray-900">Ganancia, impuestos y envío</h2>
+            <h2 className="font-semibold text-gray-900">Ganancia e impuestos</h2>
             <p className="text-xs text-gray-500">Se guardan en este navegador.</p>
             <div className="flex gap-2 text-sm">
               {[
@@ -206,9 +203,6 @@ export default function AdminCotizador() {
                   <input className={INPUT} inputMode="decimal" value={ajustes.gananciaPct} onChange={(e) => cambiarAjuste("gananciaPct", e.target.value)} />
                 </Campo>
               )}
-              <Campo label="Envío al cliente (MXN)">
-                <input className={INPUT} inputMode="decimal" value={ajustes.envio} onChange={(e) => cambiarAjuste("envio", e.target.value)} />
-              </Campo>
               <Campo label="IVA (%)">
                 <input className={INPUT} inputMode="decimal" value={ajustes.iva} onChange={(e) => cambiarAjuste("iva", e.target.value)} />
               </Campo>
@@ -237,9 +231,7 @@ export default function AdminCotizador() {
             <Fila t="IVA que se traslada" v={$(r.ivaMxn, 2)} />
             <Fila t="ISR que se traslada" v={$(r.isrMxn, 2)} />
             <div className="border-t pt-2 mt-2">
-              <Fila t="Precio al cliente" v={$(r.precio)} fuerte />
-              <Fila t="Envío" v={r.envio > 0 ? $(r.envio) : "Gratis"} />
-              <Fila t="Total para el cliente" v={$(r.total)} fuerte grande />
+              <Fila t="Precio al cliente (+ envío)" v={$(r.precio)} fuerte grande />
             </div>
             <div className="rounded-md bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-600 mt-2">
               Después de pagar IVA e ISR te quedan {$(r.teQueda, 2)}: tu costo de{" "}
