@@ -426,7 +426,23 @@ export default function AdminCotizador() {
                 </Campo>
               ) : (
                 <Campo label="Tu ganancia (% del costo)">
-                  <input className={INPUT} inputMode="decimal" value={ajustes.gananciaPct} onChange={(e) => cambiarAjuste("gananciaPct", e.target.value)} />
+                  <input className={INPUT} inputMode="decimal" value={ajustes.gananciaPct} onChange={(e) => cambiarAjuste("gananciaPct", soloNumero(e.target.value))} />
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {[15, 20, 25, 30, 45, 50].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => cambiarAjuste("gananciaPct", String(n))}
+                        className={`px-2.5 py-1 rounded-md border text-sm font-medium ${
+                          String(ajustes.gananciaPct) === String(n)
+                            ? "bg-[#A47E3B] border-[#A47E3B] text-white"
+                            : "border-gray-300 text-gray-700 hover:border-[#A47E3B]"
+                        }`}
+                      >
+                        {n}%
+                      </button>
+                    ))}
+                  </div>
                 </Campo>
               )}
               <Campo label="IVA (%)">
