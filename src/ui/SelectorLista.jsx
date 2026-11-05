@@ -10,7 +10,8 @@ import { normalizarTexto } from "../functions/normalizarTexto";
 const INPUT =
   "w-full border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:ring-2 focus:ring-[#A47E3B] focus:outline-none";
 
-// Lista desplegable con opción "Editar lista" para agregar y quitar nombres.
+// Campo con sugerencias de la lista y opción "Editar lista" para agregar y
+// quitar nombres.
 // Se guarda en la tabla indicada (p. ej. proveedores_cotizador).
 export default function SelectorLista({ tabla, etiqueta, articulo = "un", value, onChange, onItems }) {
   const [items, setItems] = useState([]);
@@ -31,8 +32,21 @@ export default function SelectorLista({ tabla, etiqueta, articulo = "un", value,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabla]);
 
-  const agregar = async () => {
-    const limpio = nuevo.trim();
+  // Sugerencias mientras escribes (sin acentos ni mayúsculas).
+  const [abierto, setAbierto] = useState(false);
+  const q = normalizarTexto((value || "").trim());
+  const sugerencias = q
+    ? [
+        ...items.filter((p) => normalizarTexto(p.nombre).startsWith(q)),
+        ...items.filter(
+          (p) => !normalizarTexto(p.nombre).startsWith(q) && normalizarTexto(p.nombre).includes(q),
+        ),
+      ].slice(0, 8)
+    : items.slice(0, 8);
+  const puedeAgregar = Boolean(q) && !items.some((p) => normalizarTexto(p.nombre) === q);
+
+  const agregar = async (texto = nuevo) => {
+    const limpio = (texto || "").trim();
     if (!limpio) return;
     if (items.some((p) => normalizarTexto(p.nombre) === normalizarTexto(limpio))) {
       setError(`Ese nombre ya está en la lista.`);
@@ -72,18 +86,64 @@ export default function SelectorLista({ tabla, etiqueta, articulo = "un", value,
           {editando ? "Listo" : "Editar lista"}
         </button>
       </div>
-      <select className={`${INPUT} mt-1`} value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">
-          Elige {articulo} {singular}
-        </option>
-        {items.map((p) => (
-          <option key={p.id} value={p.nombre}>
-            {p.nombre}
-          </option>
-        ))}
-        {/* Nombre de una cotización vieja que ya no está en la lista */}
-        {value && !items.some((p) => p.nombre === value) && <option value={value}>{value}</option>}
-      </select>
+      {/* Se escribe y va sugiriendo de la lista: primero los que empiezan
+          con lo escrito y luego los que lo contienen. */}
+      <div className="relative mt-1">
+        <input
+          className={INPUT}
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setAbierto(true);
+          }}
+          onFocus={() => setAbierto(true)}
+          onBlur={() => setTimeout(() => setAbierto(false), 150)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && sugerencias[0]) {
+              e.preventDefault();
+              onChange(sugerencias[0].nombre);
+              setAbierto(false);
+            }
+            if (e.key === "Escape") setAbierto(false);
+          }}
+          placeholder={`Escribe ${articulo === "una" ? "la" : "el"} ${singular}`}
+          autoComplete="off"
+        />
+        {abierto && (sugerencias.length > 0 || puedeAgregar) && (
+          <ul className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+            {sugerencias.map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onChange(p.nombre);
+                    setAbierto(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                >
+                  {p.nombre}
+                </button>
+              </li>
+            ))}
+            {puedeAgregar && (
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    agregar(value);
+                    setAbierto(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm text-[#A47E3B] font-semibold hover:bg-gray-100 border-t border-gray-100"
+                >
+                  + Agregar “{value.trim()}” a la lista
+                </button>
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
       {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
       {editando && (
         <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
@@ -92,12 +152,12 @@ export default function SelectorLista({ tabla, etiqueta, articulo = "un", value,
               className={INPUT}
               value={nuevo}
               onChange={(e) => setNuevo(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && agregar()}
+              onKeyDown={(e) => e.key === "Enter" && agregar(nuevo)}
               placeholder={`Nombre de ${articulo === "una" ? "la" : "el"} ${singular}`}
             />
             <button
               type="button"
-              onClick={agregar}
+              onClick={() => agregar(nuevo)}
               className="shrink-0 bg-[#A47E3B] text-white px-4 rounded-md text-sm font-semibold hover:bg-[#8b6d32]"
             >
               Agregar

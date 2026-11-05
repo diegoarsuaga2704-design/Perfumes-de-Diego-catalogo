@@ -42,7 +42,7 @@ const TIEMPOS = {
 
 // Mensaje de WhatsApp para el cliente (mismo para la cotización actual y
 // las guardadas).
-function armarMensaje(nombre, ml, precio, tiempo) {
+function armarMensaje(nombre, ml, precio, tiempo, preguntar = true) {
   const limpio = (nombre || "").trim();
   return [
     "¡Hola! Te comparto la cotización:",
@@ -51,8 +51,7 @@ function armarMensaje(nombre, ml, precio, tiempo) {
     ml ? `Tamaño: ${ml} ml` : null,
     `Precio: ${$(precio)} + envío`,
     TIEMPOS[tiempo] ? `Tiempo de entrega: ${TIEMPOS[tiempo]}` : null,
-    "",
-    "¿Quisieras pedirlo?",
+    ...(preguntar ? ["", "¿Quisieras pedirlo?"] : []),
   ]
     .filter((l) => l !== null)
     .join("\n");
@@ -97,6 +96,10 @@ const CARD = "bg-white rounded-xl border border-gray-200 p-4 sm:p-5";
 
 export default function AdminCotizador() {
   const navigate = useNavigate();
+  // Abrir siempre desde arriba (el panel de admin deja la página bajada).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const [nombre, setNombre] = useState("");
   const [proveedor, setProveedor] = useState("");
   const [casa, setCasa] = useState("");
@@ -147,8 +150,8 @@ export default function AdminCotizador() {
   const listo = Number(costoUsd) > 0 && Number(tc) > 0 && nombre.trim();
 
   const mensaje = useMemo(
-    () => armarMensaje(nombre, ml, r.precio, tiempo),
-    [nombre, ml, r, tiempo],
+    () => armarMensaje(nombre, ml, r.precio, tiempo, ajustes.preguntar !== false),
+    [nombre, ml, r, tiempo, ajustes.preguntar],
   );
 
   const copiar = async () => {
@@ -290,7 +293,9 @@ export default function AdminCotizador() {
   };
 
   const copiarGuardada = async (c) => {
-    await copiarTexto(armarMensaje(c.perfume, c.ml ? Number(c.ml) : "", c.precio, c.tiempo_entrega));
+    await copiarTexto(
+      armarMensaje(c.perfume, c.ml ? Number(c.ml) : "", c.precio, c.tiempo_entrega, ajustes.preguntar !== false),
+    );
     setCopiadoId(c.id);
     setTimeout(() => setCopiadoId(null), 2000);
   };
@@ -499,6 +504,15 @@ export default function AdminCotizador() {
                 ))}
               </div>
             </div>
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={ajustes.preguntar !== false}
+                onChange={(e) => cambiarAjuste("preguntar", e.target.checked)}
+                className="h-4 w-4 accent-[#A47E3B]"
+              />
+              Terminar con “¿Quisieras pedirlo?”
+            </label>
             <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-md p-3 font-sans">
               {listo ? mensaje : "Llena nombre, costo y tipo de cambio para armar el mensaje."}
             </pre>
