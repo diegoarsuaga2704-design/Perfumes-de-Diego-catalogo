@@ -16,6 +16,7 @@ import {
   Images,
   LayoutGrid,
   Calculator,
+  ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -219,6 +220,19 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 De dólares a precio final con IVA, ISR, ganancia y envío, y mensaje para el cliente
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/pedidos-web")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <ShoppingBag className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Pedidos de la tienda
+              </h3>
+              <p className="text-sm text-gray-600">
+                Pedidos con número que llegaron por la página, también los que no se enviaron
               </p>
             </button>
           </div>

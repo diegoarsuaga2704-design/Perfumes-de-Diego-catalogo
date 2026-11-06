@@ -8,6 +8,13 @@ import { track } from "@vercel/analytics";
 import { CheckCircle } from "lucide-react";
 import supabase from "../services/supabase";
 import { borrarCupon } from "../functions/cuponBienvenida";
+import {
+  numeroPedidoActual,
+  olvidarNumeroActual,
+  registrarPedidoWeb,
+  marcarPedidoWeb,
+  guardarMiPedido,
+} from "../functions/pedidosWeb";
 
 const KEY_PREGUNTAR = "pedido_preguntar_enviado";
 
@@ -54,6 +61,57 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
   const safeTotalWithDiscount = Number(totalWithDiscount) || 0;
   const safeTotalCartPrice = Number(totalCartPrice) || 0;
 
+  // Número de pedido (PD-XXXXXX): el mismo mientras el cliente arma y manda
+  // este pedido; se renueva al confirmar que lo envió.
+  const [numeroPedido, setNumeroPedido] = useState(numeroPedidoActual);
+
+  // Datos del pedido para guardarlo en Supabase.
+  const datosPedido = useMemo(() => {
+    const envio = Number(costoEnvio) || 0;
+    const totalProductos = isDiscountApplied ? safeTotalWithDiscount : safeTotalCartPrice;
+    return {
+      items: cartItems.map((item) => ({
+        id: item.id,
+        nombre: item.nombre,
+        casa: item.casa || null,
+        image: item.image || null,
+        tipoVenta: item.tipoVenta,
+        mililitros: item.tipoVenta === "decant" ? item.mililitros : null,
+        cantidad: item.tipoVenta === "botella" ? item.cantidad : null,
+        mlBotella: item.mlBotella || null,
+        estado_botella: item.estado_botella || null,
+        precioUnitario: item.precioUnitario,
+        subtotal:
+          item.tipoVenta === "botella"
+            ? Number(item.precioUnitario) * Number(item.cantidad)
+            : calcularPrecioDecantCarrito(item),
+      })),
+      subtotal: isDiscountApplied ? safeSubtotal : safeTotalCartPrice,
+      descuento: isDiscountApplied ? safeSubtotal - safeTotalWithDiscount : 0,
+      codigo_descuento: isDiscountApplied ? discountCode : null,
+      envio,
+      total: totalProductos + envio,
+      codigo_postal: String(postalCode).trim().length === 5 ? String(postalCode).trim() : null,
+    };
+  }, [
+    cartItems,
+    isDiscountApplied,
+    safeSubtotal,
+    safeTotalWithDiscount,
+    safeTotalCartPrice,
+    discountCode,
+    postalCode,
+    costoEnvio,
+  ]);
+
+  // Se guarda (y actualiza) mientras el cliente está en el checkout, así ya
+  // existe cuando toca "Enviar pedido" y también quedan los que no lo envían.
+  useEffect(() => {
+    if (!cartItems.length) return;
+    const t = setTimeout(() => registrarPedidoWeb(numeroPedido, datosPedido), 800);
+    return () => clearTimeout(t);
+  }, [numeroPedido, datosPedido, cartItems.length]);
+
   const mensajePedido = useMemo(() => {
     if (!cartItems.length) return "";
 
@@ -98,14 +156,16 @@ Total a pagar: $${formatPrecio(totalProductos + envio)}`;
       ? `Mi código postal: ${postalCode}`
       : `Te paso mi código postal por aquí para revisar la zona de envío.`;
 
-    return `Hola Diego, me gustaría realizar mi pedido:
+    return `Hola Diego, me gustaría realizar mi pedido #${numeroPedido}:
 
 ${productos}
 
 ${resumenPrecio}
 
 ${lineaCP}
-Gracias!`;
+Gracias!
+
+Consulta tu pedido: https://perfumesdediego.com/mi-pedido?n=${numeroPedido}`;
   }, [
     cartItems,
     isDiscountApplied,
@@ -115,6 +175,7 @@ Gracias!`;
     discountCode,
     postalCode,
     costoEnvio,
+    numeroPedido,
   ]);
 
   const enlaceWhatsApp = `https://wa.me/5212212034647?text=${encodeURIComponent(
@@ -160,6 +221,7 @@ Gracias!`;
     const ok = await copiarTexto(mensajePedido);
     if (!ok) return;
     track("pedido_copiar", { total: safeTotalCartPrice });
+    marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
     setCopiado(true);
     setNoSeAbrio(false);
     setPreguntarEnviado(true);
@@ -191,6 +253,14 @@ Gracias!`;
     setConfirmando(true);
     track("pedido_confirmado", { total: safeTotalCartPrice });
     await marcarCuponUsado();
+    marcarPedidoWeb(numeroPedido, "confirmado", datosPedido);
+    guardarMiPedido({
+      numero: numeroPedido,
+      fecha: new Date().toISOString(),
+      total: datosPedido.total,
+    });
+    olvidarNumeroActual();
+    setNumeroPedido(numeroPedidoActual());
     setPreguntarEnviado(false);
     vaciarCarrito();
     closeCart();
@@ -203,6 +273,7 @@ Gracias!`;
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
     setNoSeAbrio(false);
     setPreguntarEnviado(true);
+    marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
     // location.href abre WhatsApp en más casos que window.open dentro de apps.
     window.location.href = enlaceWhatsApp;
   };
@@ -341,6 +412,7 @@ Gracias!`;
         onClick={() => {
           if (noListo) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
+          marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
           setNoSeAbrio(false);
           setPreguntarEnviado(true);

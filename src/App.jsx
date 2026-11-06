@@ -40,6 +40,8 @@ const AdminVincular = lazy(() => import("./pages/AdminVincular"));
 const AdminImagenes = lazy(() => import("./pages/AdminImagenes"));
 const AdminPortada = lazy(() => import("./pages/AdminPortada"));
 const AdminCotizador = lazy(() => import("./pages/AdminCotizador"));
+const AdminPedidosWeb = lazy(() => import("./pages/AdminPedidosWeb"));
+const MiPedido = lazy(() => import("./pages/MiPedido"));
 const AdminTemporada = lazy(() => import("./pages/AdminTemporada"));
 const AdminTestimoniosList = lazy(() => import("./pages/AdminTestimoniosList"));
 const AdminTestimonioCreate = lazy(() =>
@@ -66,6 +68,7 @@ const router = createBrowserRouter([
       { path: "/decants", element: <Home forcedMode="decants" /> },
       { path: "/casa/:slug", element: <Home /> },
       { path: "/faqs", element: <FAQs /> },
+      { path: "/mi-pedido", element: <MiPedido /> },
       { path: "/testimonios", element: <Testimonios /> },
       { path: "/casas", element: <Casas /> },
       { path: "/best-sellers", element: <BestSellers /> },
@@ -211,6 +214,15 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminCotizador />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/pedidos-web",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminPedidosWeb />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,
