@@ -4,7 +4,7 @@ import { normalizarTexto } from "./normalizarTexto";
 // (hora de México) y se repiten cada año:
 //   halloween: 20 al 31 de octubre
 //   muertos:   1 y 2 de noviembre
-//   navidad:   8 de noviembre al 6 de enero (Día de Reyes)
+//   navidad:   7 de noviembre al 6 de enero (Día de Reyes)
 // Para previsualizar en cualquier fecha:
 //   ?temporada=halloween | muertos | navidad | ninguna
 // (se recuerda en la pestaña).
@@ -25,7 +25,7 @@ export function getTemporada(fecha = new Date()) {
   const dia = mx.getDate();
   if (mes === 10 && dia >= 20) return "halloween";
   if (mes === 11 && dia <= 2) return "muertos";
-  if ((mes === 11 && dia >= 8) || mes === 12 || (mes === 1 && dia <= 6)) return "navidad";
+  if ((mes === 11 && dia >= 7) || mes === 12 || (mes === 1 && dia <= 6)) return "navidad";
   return null;
 }
 
