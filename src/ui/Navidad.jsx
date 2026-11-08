@@ -82,16 +82,21 @@ export function Nieve() {
         x: Math.random() * ancho,
         y: arriba ? -10 - Math.random() * alto : Math.random() * alto,
         modelo,
-        vy: 0.22 + modelo.r * 0.05 + Math.random() * 0.2,
+        // velocidades por segundo (igual en pantallas de 60 o 120 Hz)
+        vy: (0.22 + modelo.r * 0.05 + Math.random() * 0.2) * 60,
         fase: Math.random() * Math.PI * 2,
-        amp: 0.2 + Math.random() * 0.45,
+        amp: (0.2 + Math.random() * 0.45) * 60,
         giro: Math.random() * Math.PI,
-        vgiro: (Math.random() - 0.5) * 0.012,
+        vgiro: (Math.random() - 0.5) * 0.012 * 60,
         alfa: 0.6 + Math.random() * 0.4,
       };
     };
 
+    // Al cambiar el tamaño (en celular pasa varias veces al cargar, cuando se
+    // esconde la barra del navegador) solo se ajusta el lienzo: los copos se
+    // quedan donde van, no se vuelven a repartir.
     const medir = () => {
+      const anchoPrevio = ancho;
       ancho = window.innerWidth;
       alto = window.innerHeight;
       canvas.width = ancho * dpr;
@@ -100,20 +105,30 @@ export function Nieve() {
       canvas.style.height = `${alto}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const cantidad = ancho < 640 ? 35 : 80;
-      copos = Array.from({ length: cantidad }, () => nuevoCopo(false));
+      if (anchoPrevio && anchoPrevio !== ancho) {
+        for (const c of copos) c.x = (c.x / anchoPrevio) * ancho;
+      }
+      const primeraVez = copos.length === 0;
+      while (copos.length < cantidad) copos.push(nuevoCopo(!primeraVez));
+      copos.length = cantidad;
     };
 
-    const dibujar = () => {
+    let ultimo = 0;
+    const dibujar = (ahora) => {
+      // segundos desde el cuadro anterior; tope para que no "brinquen" si el
+      // navegador se atora mientras carga la página
+      const dt = ultimo ? Math.min((ahora - ultimo) / 1000, 1 / 30) : 1 / 60;
+      ultimo = ahora;
       ctx.clearRect(0, 0, ancho, alto);
       for (const c of copos) {
-        c.fase += 0.012;
-        c.y += c.vy;
-        c.x += Math.sin(c.fase) * c.amp;
+        c.fase += 0.72 * dt;
+        c.y += c.vy * dt;
+        c.x += Math.sin(c.fase) * c.amp * dt;
         if (c.y > alto + 10) Object.assign(c, nuevoCopo(true), { y: -10 });
         if (c.x > ancho + 10) c.x = -10;
         if (c.x < -10) c.x = ancho + 10;
 
-        c.giro += c.vgiro;
+        c.giro += c.vgiro * dt;
         const { canvas: img, lado } = c.modelo;
         ctx.save();
         ctx.globalAlpha = c.alfa;
@@ -127,11 +142,16 @@ export function Nieve() {
 
     const alCambiarVisibilidad = () => {
       cancelAnimationFrame(raf);
+      ultimo = 0;
       if (!document.hidden) raf = requestAnimationFrame(dibujar);
     };
 
     medir();
     raf = requestAnimationFrame(dibujar);
+    // aparece poco a poco en lugar de golpe
+    requestAnimationFrame(() => {
+      canvas.style.opacity = "1";
+    });
     window.addEventListener("resize", medir);
     document.addEventListener("visibilitychange", alCambiarVisibilidad);
     return () => {
@@ -146,6 +166,7 @@ export function Nieve() {
       ref={ref}
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-20"
+      style={{ opacity: 0, transition: "opacity 1.5s ease-out" }}
     />
   );
 }
