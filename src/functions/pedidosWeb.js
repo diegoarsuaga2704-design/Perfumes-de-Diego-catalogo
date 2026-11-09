@@ -1,8 +1,7 @@
 import supabase from "../services/supabase";
 
 // Pedidos hechos desde la tienda. Cada carrito en el checkout tiene un número
-// (PD-XXXXXX) que va en el mensaje de WhatsApp y con el que el cliente puede
-// consultar su pedido en /mi-pedido.
+// (PD-XXXXXX) que va en el mensaje de WhatsApp; solo se consulta en el admin.
 
 export const ESTADOS_PEDIDO = {
   en_checkout: { texto: "En checkout (no lo envió)", cliente: "Sin enviar", color: "bg-gray-100 text-gray-700" },
@@ -14,7 +13,6 @@ export const ESTADOS_PEDIDO = {
 };
 
 const KEY_ACTUAL = "pedido_numero_actual";
-const KEY_MIS = "perfumes-diego-mis-pedidos";
 // Sin letras que se confundan (O/0, I/1).
 const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -76,30 +74,6 @@ export function marcarPedidoWeb(numero, estado, datos) {
     }).catch(() => {});
   } catch {
     // sin red
-  }
-}
-
-export async function consultarPedidoWeb(numero) {
-  const { data, error } = await supabase.rpc("consultar_pedido_web", { p_numero: numero });
-  if (error) throw error;
-  return data || null;
-}
-
-/** Pedidos enviados desde este navegador (para mostrarlos en /mi-pedido). */
-export function leerMisPedidos() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY_MIS) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-export function guardarMiPedido(pedido) {
-  try {
-    const lista = leerMisPedidos().filter((p) => p.numero !== pedido.numero);
-    localStorage.setItem(KEY_MIS, JSON.stringify([pedido, ...lista].slice(0, 20)));
-  } catch {
-    // sin localStorage
   }
 }
 

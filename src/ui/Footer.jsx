@@ -48,14 +48,6 @@ function Footer() {
             </li>
             <li>
               <Link
-                to="/mi-pedido"
-                className="hover:text-[#A47E3B] transition-colors"
-              >
-                Mi pedido
-              </Link>
-            </li>
-            <li>
-              <Link
                 to="/testimonios"
                 className="hover:text-[#A47E3B] transition-colors"
               >

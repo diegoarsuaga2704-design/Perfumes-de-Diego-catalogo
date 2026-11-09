@@ -13,7 +13,6 @@ import {
   olvidarNumeroActual,
   registrarPedidoWeb,
   marcarPedidoWeb,
-  guardarMiPedido,
 } from "../functions/pedidosWeb";
 
 const KEY_PREGUNTAR = "pedido_preguntar_enviado";
@@ -163,9 +162,7 @@ ${productos}
 ${resumenPrecio}
 
 ${lineaCP}
-Gracias!
-
-Consulta tu pedido: https://perfumesdediego.com/mi-pedido?n=${numeroPedido}`;
+Gracias!`;
   }, [
     cartItems,
     isDiscountApplied,
@@ -254,11 +251,6 @@ Consulta tu pedido: https://perfumesdediego.com/mi-pedido?n=${numeroPedido}`;
     track("pedido_confirmado", { total: safeTotalCartPrice });
     await marcarCuponUsado();
     marcarPedidoWeb(numeroPedido, "confirmado", datosPedido);
-    guardarMiPedido({
-      numero: numeroPedido,
-      fecha: new Date().toISOString(),
-      total: datosPedido.total,
-    });
     olvidarNumeroActual();
     setNumeroPedido(numeroPedidoActual());
     setPreguntarEnviado(false);
