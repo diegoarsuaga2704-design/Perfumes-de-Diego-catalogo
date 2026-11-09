@@ -60,9 +60,17 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
   const safeTotalWithDiscount = Number(totalWithDiscount) || 0;
   const safeTotalCartPrice = Number(totalCartPrice) || 0;
 
-  // Número de pedido (PD-XXXXXX): el mismo mientras el cliente arma y manda
-  // este pedido; se renueva al confirmar que lo envió.
-  const [numeroPedido, setNumeroPedido] = useState(numeroPedidoActual);
+  // Número de pedido (1777, 1778, ...): el mismo mientras el cliente arma y
+  // manda este pedido; se renueva al confirmar que lo envió.
+  const [numeroPedido, setNumeroPedido] = useState(null);
+  useEffect(() => {
+    if (!cartItems.length || numeroPedido) return;
+    let vivo = true;
+    numeroPedidoActual().then((n) => vivo && setNumeroPedido(n));
+    return () => {
+      vivo = false;
+    };
+  }, [cartItems.length, numeroPedido]);
 
   // Datos del pedido para guardarlo en Supabase.
   const datosPedido = useMemo(() => {
@@ -106,7 +114,7 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
   // Se guarda (y actualiza) mientras el cliente está en el checkout, así ya
   // existe cuando toca "Enviar pedido" y también quedan los que no lo envían.
   useEffect(() => {
-    if (!cartItems.length) return;
+    if (!cartItems.length || !numeroPedido) return;
     const t = setTimeout(() => registrarPedidoWeb(numeroPedido, datosPedido), 800);
     return () => clearTimeout(t);
   }, [numeroPedido, datosPedido, cartItems.length]);
@@ -155,7 +163,7 @@ Total a pagar: $${formatPrecio(totalProductos + envio)}`;
       ? `Mi código postal: ${postalCode}`
       : `Te paso mi código postal por aquí para revisar la zona de envío.`;
 
-    return `Hola Diego, me gustaría realizar mi pedido #${numeroPedido}:
+    return `Hola Diego, me gustaría realizar mi pedido${numeroPedido ? ` #${numeroPedido}` : ""}:
 
 ${productos}
 
@@ -218,7 +226,7 @@ Gracias!`;
     const ok = await copiarTexto(mensajePedido);
     if (!ok) return;
     track("pedido_copiar", { total: safeTotalCartPrice });
-    marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
+    if (numeroPedido) marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
     setCopiado(true);
     setNoSeAbrio(false);
     setPreguntarEnviado(true);
@@ -250,9 +258,9 @@ Gracias!`;
     setConfirmando(true);
     track("pedido_confirmado", { total: safeTotalCartPrice });
     await marcarCuponUsado();
-    marcarPedidoWeb(numeroPedido, "confirmado", datosPedido);
+    if (numeroPedido) marcarPedidoWeb(numeroPedido, "confirmado", datosPedido);
     olvidarNumeroActual();
-    setNumeroPedido(numeroPedidoActual());
+    setNumeroPedido(null);
     setPreguntarEnviado(false);
     vaciarCarrito();
     closeCart();
@@ -265,7 +273,7 @@ Gracias!`;
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
     setNoSeAbrio(false);
     setPreguntarEnviado(true);
-    marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
+    if (numeroPedido) marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
     // location.href abre WhatsApp en más casos que window.open dentro de apps.
     window.location.href = enlaceWhatsApp;
   };
@@ -404,7 +412,7 @@ Gracias!`;
         onClick={() => {
           if (noListo) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
-          marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
+          if (numeroPedido) marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
           setNoSeAbrio(false);
           setPreguntarEnviado(true);
