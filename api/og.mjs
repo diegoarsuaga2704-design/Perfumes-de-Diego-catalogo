@@ -320,10 +320,10 @@ export default async function handler(req, res) {
 
       if (casa) {
         encontrado = true;
-        title = `${casa.nombre} | ${SITE_NAME}`;
-        description =
-          casa.descripcion ||
-          `Decants y botellas de ${casa.nombre} en México: precios, notas y disponibilidad de cada perfume. Envíos a todo México.`;
+        // Título y descripción con lo que la gente busca ("benneviento
+        // perfume", "perfumes benneviento"): perfumes + casa + México.
+        title = `Perfumes ${casa.nombre} en México: decants y botellas | ${SITE_NAME}`;
+        description = `Compra perfumes ${casa.nombre} en México: decants desde 1 ml y botellas, con precio, notas y disponibilidad de cada uno. Envíos a todo México.`;
         image = casa.imagen_hero || DEFAULT_IMAGE;
         url = `${SITE_URL}/casa/${slug}`;
         bodyHtml =
