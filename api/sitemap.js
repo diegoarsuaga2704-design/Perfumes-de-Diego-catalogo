@@ -18,6 +18,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { soloPrincipales } from "../src/seo/principal.js";
 
 // Rutas fijas e indexables (sin /admin y sin /paquetes).
 const RUTAS_FIJAS = [
@@ -67,7 +68,7 @@ async function traerParfums(supabase) {
   for (;;) {
     const { data, error } = await supabase
       .from("parfums")
-      .select("id, nombre, casa")
+      .select("id, nombre, casa, concentracion")
       .order("id", { ascending: true })
       .range(desde, desde + pageSize - 1);
     if (error) throw error;
@@ -97,8 +98,8 @@ export default async function handler(req, res) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
       const parfums = await traerParfums(supabase);
 
-      // Productos
-      for (const p of parfums) {
+      // Productos: una URL por perfume (decant y botella comparten página)
+      for (const p of soloPrincipales(parfums)) {
         const slug = slugify(p.nombre);
         if (!slug || p.id == null) continue;
         urls.push({

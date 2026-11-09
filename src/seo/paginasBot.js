@@ -7,6 +7,7 @@
  * Google descubra y rastree las páginas de producto.
  */
 import { slugify } from "../functions/slugify.js";
+import { filaPrincipal, soloPrincipales } from "./principal.js";
 import { faqs } from "../data/faqs.js";
 import { sobreMiIntro, sobreMiSecciones } from "../data/sobreMi.js";
 import {
@@ -48,19 +49,23 @@ const esc = (s) =>
 const negritas = (s) =>
   esc(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 
-const urlPerfume = (p) => `${SITE_URL}/product/${slugify(p.nombre)}/${p.id}`;
+// Decant y botella comparten página: el link va a la URL principal.
+const urlPerfume = (p, todos = []) => {
+  const pr = filaPrincipal(p, todos);
+  return `${SITE_URL}/product/${slugify(pr.nombre)}/${pr.id}`;
+};
 const urlCasa = (casa) => `${SITE_URL}/casa/${slugify(casa)}`;
 const tipo = (p) => (p.stock === true ? "botella" : "decant");
 
 /** Lista de links a perfumes: "Nombre — Casa (decant)". */
-export function listaPerfumesHtml(perfumes) {
+export function listaPerfumesHtml(perfumes, todos = perfumes) {
   if (!perfumes?.length) return "";
   return (
     "<ul>" +
     perfumes
       .map(
         (p) =>
-          `<li><a href="${esc(urlPerfume(p))}">${esc(p.nombre)}${
+          `<li><a href="${esc(urlPerfume(p, todos))}">${esc(p.nombre)}${
             p.casa ? ` — ${esc(p.casa)}` : ""
           } (${tipo(p)})</a></li>`,
       )
@@ -116,7 +121,7 @@ export const RUTAS_BOT = [
 async function traerPerfumes(supabase) {
   const { data } = await supabase
     .from("parfums")
-    .select("id, nombre, casa, stock, disponible, esBestSeller, tiktokLink, created_at");
+    .select("id, nombre, casa, stock, concentracion, disponible, esBestSeller, tiktokLink, created_at");
   return data || [];
 }
 
@@ -161,7 +166,7 @@ export async function paginaBot(supabase, ruta) {
         `<h1>${esc(SITE_NAME)}</h1>` +
         inicioParrafos.map((p) => `<p>${esc(p)}</p>`).join("") +
         garantiasHtml() +
-        (best.length ? `<h2>Más vendidos</h2>${listaPerfumesHtml(best)}` : "") +
+        (best.length ? `<h2>Más vendidos</h2>${listaPerfumesHtml(best, perfumes)}` : "") +
         (casas.length
           ? `<h2>Casas</h2><ul>${casas
               .map((c) => `<li><a href="${esc(urlCasa(c))}">${esc(c)}</a></li>`)
@@ -235,7 +240,7 @@ export async function paginaBot(supabase, ruta) {
           : lista.sort(ordenCatalogo);
       cuerpo =
         `<h1>${esc(config.t)}</h1><p>${esc(config.d)}</p>` +
-        listaPerfumesHtml(lista);
+        listaPerfumesHtml(lista, perfumes);
       break;
     }
 
@@ -385,12 +390,15 @@ export async function otrosDeLaCasaHtml(supabase, perfume, max = 12) {
   if (!perfume?.casa) return "";
   const { data } = await supabase
     .from("parfums")
-    .select("id, nombre, casa, stock")
-    .eq("casa", perfume.casa)
-    .neq("id", perfume.id)
-    .limit(max);
-  return data?.length
-    ? `<h2>Más perfumes de ${esc(perfume.casa)}</h2>${listaPerfumesHtml(data)}`
+    .select("id, nombre, casa, stock, concentracion")
+    .eq("casa", perfume.casa);
+  // Un link por perfume, sin el propio (ni su otra versión).
+  const propio = filaPrincipal(perfume, data || []).id;
+  const otros = soloPrincipales(data || [])
+    .filter((p) => p.id !== propio)
+    .slice(0, max);
+  return otros.length
+    ? `<h2>Más perfumes de ${esc(perfume.casa)}</h2>${listaPerfumesHtml(otros, data)}`
     : "";
 }
 
@@ -450,7 +458,7 @@ export async function perfumesDeCasaHtml(supabase, nombreCasa) {
       ].filter(Boolean);
       const desc = recortarTexto(p.descripcion, 220);
       return (
-        `<li><h3><a href="${esc(urlPerfume(p))}">${esc(p.nombre)} (${tipo(p)})</a></h3>` +
+        `<li><h3><a href="${esc(urlPerfume(p, data))}">${esc(p.nombre)} (${tipo(p)})</a></h3>` +
         (datos.length ? `<p>${esc(datos.join(" · "))}</p>` : "") +
         (p.notas ? `<p>Notas: ${esc(p.notas)}</p>` : "") +
         (desc ? `<p>${esc(desc)}</p>` : "") +

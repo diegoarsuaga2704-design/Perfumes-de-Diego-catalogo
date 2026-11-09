@@ -28,6 +28,7 @@ import { useCart } from "../context/CartContext";
 import { MAX_BOTELLAS } from "../functions/limitesCarrito";
 import CustomSelect from "../ui/CustomSelect";
 import SEO from "../ui/SEO";
+import { filaPrincipal } from "../seo/principal";
 import { getPostDePerfume } from "../functions/getPosts";
 import {
   tituloSeoProducto,
@@ -352,7 +353,9 @@ export default function ProductDetail() {
   const seoDescription = metaDescripcionProducto(parfum);
   const parrafos = parrafosDescripcion(parfum.descripcion);
   const seoImage = parfum.image;
-  const seoUrl = `https://perfumesdediego.com/product/${slugify(parfum.nombre)}/${parfum.id}`;
+  // Decant y botella comparten página: Google ve una sola URL (la principal).
+  const principal = filaPrincipal(parfum, catalogo);
+  const seoUrl = `https://perfumesdediego.com/product/${slugify(principal.nombre)}/${principal.id}`;
 
   // Schema.org Product: Google muestra precio y disponibilidad en resultados
   const productSchema = {

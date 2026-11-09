@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { filaPrincipal } from "../src/seo/principal.js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -180,7 +181,16 @@ export default async function handler(req, res) {
         title = tituloSeoProducto(perfume);
         description = metaDescripcionProducto(perfume);
         image = perfume.image || DEFAULT_IMAGE;
-        url = `${SITE_URL}/product/${slugify(perfume.nombre)}/${id}`;
+        // Decant y botella comparten página: la canónica es la principal.
+        let principal = perfume;
+        if (perfume.casa) {
+          const { data: hermanos } = await supabase
+            .from("parfums")
+            .select("id, nombre, casa, concentracion")
+            .ilike("casa", perfume.casa.replace(/[%_\\]/g, ""));
+          principal = filaPrincipal(perfume, hermanos || []);
+        }
+        url = `${SITE_URL}/product/${slugify(principal.nombre)}/${principal.id}`;
         const parrafos = parrafosDescripcion(perfume.descripcion);
         const { data: posts } = await supabase
           .from("posts")
