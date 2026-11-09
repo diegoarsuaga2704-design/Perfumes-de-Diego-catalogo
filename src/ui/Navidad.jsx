@@ -104,7 +104,7 @@ export function Nieve() {
       canvas.style.width = `${ancho}px`;
       canvas.style.height = `${alto}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const cantidad = ancho < 640 ? 35 : 80;
+      const cantidad = ancho < 640 ? 26 : 60;
       if (anchoPrevio && anchoPrevio !== ancho) {
         for (const c of copos) c.x = (c.x / anchoPrevio) * ancho;
       }
