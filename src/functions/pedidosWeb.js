@@ -23,11 +23,25 @@ function nuevoNumero() {
   return `PD-${[...bytes].map((b) => ALFABETO[b % ALFABETO.length]).join("")}`;
 }
 
+// Se guarda en el celular (localStorage) por 3 días: si el cliente cierra la
+// página y regresa con el mismo carrito, sigue siendo el mismo pedido y no
+// aparece repetido en el admin.
+const VIGENCIA_MS = 3 * 24 * 60 * 60 * 1000;
+
 const leerActual = () => {
   try {
-    return sessionStorage.getItem(KEY_ACTUAL);
+    const { n, t } = JSON.parse(localStorage.getItem(KEY_ACTUAL) || "{}");
+    return n && Date.now() - t < VIGENCIA_MS ? n : null;
   } catch {
     return null;
+  }
+};
+
+const guardarActual = (n) => {
+  try {
+    localStorage.setItem(KEY_ACTUAL, JSON.stringify({ n, t: Date.now() }));
+  } catch {
+    // sin localStorage
   }
 };
 
@@ -50,11 +64,7 @@ export function numeroPedidoActual() {
       // sin red o sin la función en Supabase
     }
     if (!n) n = guardado || nuevoNumero();
-    try {
-      sessionStorage.setItem(KEY_ACTUAL, n);
-    } catch {
-      // sin sessionStorage
-    }
+    guardarActual(n);
     return n;
   })().finally(() => {
     pidiendo = null;
@@ -64,9 +74,10 @@ export function numeroPedidoActual() {
 
 export function olvidarNumeroActual() {
   try {
+    localStorage.removeItem(KEY_ACTUAL);
     sessionStorage.removeItem(KEY_ACTUAL);
   } catch {
-    // sin sessionStorage
+    // sin almacenamiento
   }
 }
 
