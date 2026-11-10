@@ -91,7 +91,7 @@ export async function registrarPedidoWeb(numero, datos) {
 }
 
 /**
- * Guarda el pedido con su estado: "enviado" (tocó Enviar pedido) o
+ * Guarda el pedido con su estado: "enviado" (tocó Siguiente) o
  * "confirmado" (dijo que ya lo envió). Usa fetch con keepalive para que se
  * complete aunque el navegador salga a WhatsApp en ese momento.
  */

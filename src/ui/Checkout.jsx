@@ -112,7 +112,7 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
   ]);
 
   // Se guarda (y actualiza) mientras el cliente está en el checkout, así ya
-  // existe cuando toca "Enviar pedido" y también quedan los que no lo envían.
+  // existe cuando toca "Siguiente" y también quedan los que no lo envían.
   useEffect(() => {
     if (!cartItems.length || !numeroPedido) return;
     const t = setTimeout(() => registrarPedidoWeb(numeroPedido, datosPedido), 800);
@@ -420,7 +420,7 @@ Gracias!`;
         disabled={noListo}
         className="w-full bg-[#A47E3B] hover:bg-[#D4AF7A] active:bg-[#8B6A30] text-white py-3 rounded-md font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
       >
-        Enviar pedido
+        Siguiente
       </button>
       {preguntaEnviado}
       {noSeAbrio && (
