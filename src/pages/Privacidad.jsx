@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { PAGO_LINEA } from "../functions/pagoLinea";
 
 export default function Privacidad() {
   return (
@@ -41,12 +42,21 @@ export default function Privacidad() {
             Para procesar tus pedidos y atender tus solicitudes podemos recabar:
             tu nombre, número de teléfono o WhatsApp, código postal y domicilio
             de entrega, y el correo electrónico que nos proporciones (por ejemplo,
-            al pedir aviso de disponibilidad de un producto o al suscribirte a
-            nuestro boletín de novedades y promociones, o al pagar en línea). No
-            recabamos datos personales sensibles. Si pagas en línea, los datos de
-            tu tarjeta los recibe y procesa directamente Mercado Pago; nosotros
-            solo recibimos la confirmación del pago (monto, estado y forma de
-            pago).
+            al pedir aviso de disponibilidad de un producto o al suscribirte a{" "}
+            {PAGO_LINEA ? (
+              <>
+                nuestro boletín de novedades y promociones, o al pagar en línea). No
+                recabamos datos personales sensibles. Si pagas en línea, los datos de
+                tu tarjeta los recibe y procesa directamente Mercado Pago; nosotros
+                solo recibimos la confirmación del pago (monto, estado y forma de
+                pago).
+              </>
+            ) : (
+              <>
+                nuestro boletín de novedades y promociones). No recabamos datos
+                personales sensibles ni datos financieros a través del sitio.
+              </>
+            )}
           </p>
         </section>
 

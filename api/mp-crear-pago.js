@@ -48,13 +48,18 @@ export default async function handler(req, res) {
   const TOKEN = process.env.MP_ACCESS_TOKEN;
   const SB_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Interruptor: sin VITE_PAGO_LINEA=1 no se cobra nada aunque haya claves.
+  const ENCENDIDO = process.env.VITE_PAGO_LINEA === "1";
 
   // GET: la tienda pregunta si el pago en línea ya está configurado.
   if (req.method === "GET") {
     res.setHeader("Cache-Control", "s-maxage=300");
-    return res.status(200).json({ activo: !!(TOKEN && SB_URL && SB_KEY) });
+    return res.status(200).json({ activo: !!(ENCENDIDO && TOKEN && SB_URL && SB_KEY) });
   }
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
+  if (!ENCENDIDO) {
+    return res.status(503).json({ error: "El pago en línea todavía no está activo. Pídelo por WhatsApp." });
+  }
   if (!TOKEN || !SB_URL || !SB_KEY) {
     return res.status(503).json({ error: "El pago en línea todavía no está activo. Pídelo por WhatsApp." });
   }

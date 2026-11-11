@@ -6,6 +6,7 @@ import ShoppingCartProduct from "../ui/ShoppingCartProduct";
 import EnvioGratisProgress from "../ui/EnvioGratisProgress";
 import Checkout from "../ui/Checkout";
 import PagoEnLinea from "../ui/PagoEnLinea";
+import { PAGO_LINEA } from "../functions/pagoLinea";
 import { formatPrecio } from "../functions/formatPrecio";
 import { getEstadoEnvioGratis, COSTO_ENVIO_REGULAR } from "../functions/envioGratis";
 
@@ -44,6 +45,7 @@ export default function CheckoutPage() {
   const [pagoLineaActivo, setPagoLineaActivo] = useState(false);
   const [metodo, setMetodo] = useState("whatsapp");
   useEffect(() => {
+    if (!PAGO_LINEA) return;
     let vivo = true;
     fetch("/api/mp-crear-pago")
       .then((r) => (r.ok ? r.json() : null))
@@ -274,51 +276,83 @@ export default function CheckoutPage() {
             </p>
           </div>
 
-          {/* Cómo pagar: en línea (Mercado Pago) o por WhatsApp */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
-            <p className="text-sm font-semibold text-gray-900">¿Cómo quieres pagar?</p>
-            {pagoLineaActivo && (
-              <div className="grid grid-cols-2 gap-2" role="radiogroup">
-                {[
-                  ["linea", "Pagar en línea", "Tarjeta, OXXO o Mercado Pago"],
-                  ["whatsapp", "Por WhatsApp", "Transferencia o depósito"],
-                ].map(([k, t, d]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    role="radio"
-                    aria-checked={metodo === k}
-                    onClick={() => setMetodo(k)}
-                    className={`text-left rounded-lg border p-3 transition-colors ${
-                      metodo === k
-                        ? "border-[#A47E3B] bg-[#FBF7F0] ring-1 ring-[#A47E3B]"
-                        : "border-gray-300 bg-white hover:border-[#A47E3B]"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold text-gray-900">{t}</span>
-                    <span className="block text-xs text-gray-500 mt-0.5">{d}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          {PAGO_LINEA ? (
+            <>
+              {/* Cómo pagar: en línea (Mercado Pago) o por WhatsApp */}
+              <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+                <p className="text-sm font-semibold text-gray-900">¿Cómo quieres pagar?</p>
+                {pagoLineaActivo && (
+                  <div className="grid grid-cols-2 gap-2" role="radiogroup">
+                    {[
+                      ["linea", "Pagar en línea", "Tarjeta, OXXO o Mercado Pago"],
+                      ["whatsapp", "Por WhatsApp", "Transferencia o depósito"],
+                    ].map(([k, t, d]) => (
+                      <button
+                        key={k}
+                        type="button"
+                        role="radio"
+                        aria-checked={metodo === k}
+                        onClick={() => setMetodo(k)}
+                        className={`text-left rounded-lg border p-3 transition-colors ${
+                          metodo === k
+                            ? "border-[#A47E3B] bg-[#FBF7F0] ring-1 ring-[#A47E3B]"
+                            : "border-gray-300 bg-white hover:border-[#A47E3B]"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold text-gray-900">{t}</span>
+                        <span className="block text-xs text-gray-500 mt-0.5">{d}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-            {pagoLineaActivo && metodo === "linea" ? (
-              <PagoEnLinea postalCode={postalCode} totalMostrado={totalAPagar} />
-            ) : (
-              <>
-                <p className="text-xs text-gray-500">
-                  {pagoLineaActivo
-                    ? "Te mando tu pedido por WhatsApp y ahí te paso los datos para pagar por transferencia (SPEI) o depósito en efectivo."
-                    : "Tu pedido llega a mi WhatsApp y ahí te paso los datos para pagar: transferencia (SPEI), depósito en efectivo o tarjeta con Mercado Pago."}
+                {pagoLineaActivo && metodo === "linea" ? (
+                  <PagoEnLinea postalCode={postalCode} totalMostrado={totalAPagar} />
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-500">
+                      {pagoLineaActivo
+                        ? "Te mando tu pedido por WhatsApp y ahí te paso los datos para pagar por transferencia (SPEI) o depósito en efectivo."
+                        : "Tu pedido llega a mi WhatsApp y ahí te paso los datos para pagar: transferencia (SPEI), depósito en efectivo o tarjeta con Mercado Pago."}
+                    </p>
+                    <Checkout
+                      totalCartPrice={totalWithDiscount}
+                      postalCode={postalCode}
+                      costoEnvio={costoEnvio}
+                    />
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Formas de pago (mismas que en Términos y Condiciones), en desplegable */}
+              <details className="rounded-xl border border-gray-200 bg-white p-4 group">
+                <summary className="cursor-pointer list-none flex items-center justify-between text-sm font-semibold text-gray-900">
+                  Formas de pago
+                  <ChevronDown size={18} className="text-gray-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <ul className="text-sm text-gray-700 space-y-0.5 mt-2">
+                  <li>• Transferencia (SPEI)</li>
+                  <li>• Depósito en efectivo</li>
+                  <li>
+                    • Tarjeta de crédito o débito con Mercado Pago{" "}
+                    <span className="text-xs text-gray-500">(con comisión adicional)</span>
+                  </li>
+                </ul>
+                <p className="text-xs text-gray-500 mt-1">
+                  Te paso los datos de pago por WhatsApp al confirmar tu pedido.
                 </p>
-                <Checkout
-                  totalCartPrice={totalWithDiscount}
-                  postalCode={postalCode}
-                  costoEnvio={costoEnvio}
-                />
-              </>
-            )}
-          </div>
+              </details>
+
+              {/* Enviar por WhatsApp */}
+              <Checkout
+                totalCartPrice={totalWithDiscount}
+                postalCode={postalCode}
+                costoEnvio={costoEnvio}
+              />
+            </>
+          )}
 
           <p className="text-xs text-gray-500 text-center mt-3">
             Al realizar tu pedido, aceptas nuestros{" "}

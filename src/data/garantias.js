@@ -1,3 +1,4 @@
+import { PAGO_LINEA } from "../functions/pagoLinea.js";
 /**
  * Cómo trabajo: garantías concretas de cada pedido. Se muestran en /faqs y
  * van en la versión para buscadores y asistentes de IA de las páginas de
@@ -41,7 +42,9 @@ export const garantias = [
   {
     titulo: "Formas de pago",
     texto:
-      "Pago en línea con Mercado Pago (tarjeta, OXXO o saldo), o por WhatsApp con transferencia (SPEI) o depósito en efectivo.",
+      PAGO_LINEA
+        ? "Pago en línea con Mercado Pago (tarjeta, OXXO o saldo), o por WhatsApp con transferencia (SPEI) o depósito en efectivo."
+        : "Transferencia (SPEI), depósito en efectivo o tarjeta de crédito o débito con Mercado Pago.",
   },
   {
     titulo: "Asesoría personal",
