@@ -17,6 +17,19 @@ const fechaHora = (iso) =>
     hour: "numeric",
     minute: "2-digit",
   });
+const ESTADO_PAGO = {
+  approved: "aprobado",
+  pending: "pendiente",
+  in_process: "en revisión",
+  rejected: "rechazado",
+  cancelled: "cancelado",
+  refunded: "devuelto",
+};
+// Número a formato de wa.me (52 + 10 dígitos).
+const whatsappMx = (tel) => {
+  const d = String(tel || "").replace(/\D/g, "");
+  return d.length === 10 ? `52${d}` : d;
+};
 const lineaTexto = (it) =>
   it.tipoVenta === "botella"
     ? `${it.nombre}${it.mlBotella ? ` ${it.mlBotella} ml` : ""} × ${it.cantidad}`
@@ -62,6 +75,8 @@ export default function AdminPedidosWeb() {
         (!q ||
           normalizarTexto(p.numero).includes(q) ||
           normalizarTexto(p.codigo_postal).includes(q) ||
+          normalizarTexto(p.cliente?.nombre).includes(q) ||
+          String(p.cliente?.telefono || "").includes(q) ||
           (p.items || []).some((it) => normalizarTexto(it.nombre).includes(q))),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,7 +125,7 @@ export default function AdminPedidosWeb() {
           <input
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por número, perfume o código postal"
+            placeholder="Buscar por número, perfume, cliente o código postal"
             className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-2 text-base bg-white focus:ring-2 focus:ring-[#A47E3B] focus:outline-none"
           />
         </div>
@@ -181,6 +196,37 @@ export default function AdminPedidosWeb() {
                       <div className="flex justify-between"><span>Envío</span><span>{Number(p.envio) > 0 ? $(p.envio) : "Gratis"}</span></div>
                       <div className="flex justify-between font-bold text-gray-900"><span>Total</span><span>{$(p.total)}</span></div>
                     </div>
+                    {p.cliente && (
+                      <div className="rounded-md bg-gray-50 border border-gray-200 p-2.5 space-y-0.5 text-gray-700">
+                        <p className="font-semibold text-gray-900">{p.cliente.nombre}</p>
+                        <p>
+                          {p.cliente.calle}, {p.cliente.colonia}, CP {p.cliente.cp}
+                        </p>
+                        <p>
+                          {p.cliente.ciudad}, {p.cliente.estado}
+                        </p>
+                        {p.cliente.referencias && <p className="text-gray-500">Ref: {p.cliente.referencias}</p>}
+                        <p className="text-gray-500">{p.cliente.email}</p>
+                        {p.cliente.telefono && (
+                          <a
+                            href={`https://wa.me/${whatsappMx(p.cliente.telefono)}?text=${encodeURIComponent(
+                              `Hola ${p.cliente.nombre.split(" ")[0]}, soy Diego de Perfumes de Diego. Te escribo por tu pedido #${p.numero}.`,
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block mt-1.5 px-3 py-1.5 rounded-md bg-green-600 text-white font-semibold"
+                          >
+                            Escribirle · {p.cliente.telefono}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {p.pago && (
+                      <p className="text-xs text-gray-500">
+                        Mercado Pago #{p.pago.id} · {ESTADO_PAGO[p.pago.estado] || p.pago.estado} · {$(p.pago.monto)}
+                        {p.pago.tipo ? ` · ${p.pago.tipo.replace(/_/g, " ")}` : ""}
+                      </p>
+                    )}
                     <label className="block">
                       <span className="text-gray-600">Estado</span>
                       <select

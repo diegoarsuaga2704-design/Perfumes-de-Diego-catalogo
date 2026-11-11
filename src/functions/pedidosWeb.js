@@ -8,6 +8,7 @@ export const ESTADOS_PEDIDO = {
   en_checkout: { texto: "En checkout (no lo envió)", cliente: "Sin enviar", color: "bg-gray-100 text-gray-700" },
   enviado: { texto: "Abrió WhatsApp", cliente: "Recibido", color: "bg-blue-100 text-blue-700" },
   confirmado: { texto: "Confirmó envío", cliente: "Recibido", color: "bg-amber-100 text-amber-800" },
+  pago_pendiente: { texto: "Esperando pago (Mercado Pago)", cliente: "Pago pendiente", color: "bg-purple-100 text-purple-700" },
   pagado: { texto: "Pagado", cliente: "Pagado", color: "bg-green-100 text-green-700" },
   entregado: { texto: "Enviado / entregado", cliente: "Enviado", color: "bg-emerald-100 text-emerald-800" },
   cancelado: { texto: "Cancelado", cliente: "Cancelado", color: "bg-red-100 text-red-700" },

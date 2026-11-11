@@ -16,12 +16,12 @@ export const faqs = [
   {
     pregunta: "¿Cómo realizo mi pedido?",
     respuesta:
-      'Agrega los perfumes a tu carrito, presiona "Finalizar pedido" y luego "Siguiente": se abrirá WhatsApp con el detalle de tu compra. Por ahí te confirmo la disponibilidad y el total (el envío a zona regular de DHL cuesta $150; si tu zona es extendida te aviso el costo adicional), y coordinamos el pago.',
+      'Agrega los perfumes a tu carrito y presiona "Finalizar pedido". Ahí eliges cómo pagar: en línea con Mercado Pago (pones tu dirección y pagas con tarjeta, OXXO o saldo) o por WhatsApp (tocas "Siguiente", se abre WhatsApp con el detalle de tu compra y coordinamos el pago). El envío a zona regular de DHL cuesta $150; si tu zona es extendida te aviso el costo adicional por WhatsApp.',
   },
   {
     pregunta: "¿Qué métodos de pago aceptan?",
     respuesta:
-      "Transferencia (SPEI), depósito en efectivo y tarjeta de crédito o débito a través de Mercado Pago. El pago con tarjeta tiene una comisión adicional que se suma al total. Los datos de pago te los comparto por WhatsApp al confirmar tu pedido, y el pedido se procesa una vez confirmado el pago.",
+      "Puedes pagar en línea desde el checkout con Mercado Pago (tarjeta de crédito o débito, OXXO o saldo de Mercado Pago), o pedir por WhatsApp y pagar por transferencia (SPEI) o depósito en efectivo; en ese caso te comparto los datos de pago al confirmar tu pedido. El pedido se procesa una vez confirmado el pago.",
   },
   {
     pregunta: "¿Cuánto tarda el envío?",

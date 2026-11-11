@@ -70,11 +70,14 @@ export default function Terminos() {
         </h2>
         <section className="space-y-4 text-[15px] leading-relaxed">
           <p>
-            El catálogo del sitio permite armar tu pedido y enviarlo por
-            WhatsApp, donde se confirman la disponibilidad, el total, el costo de
-            envío y la forma de pago antes de concretar la compra. Un pedido se
-            considera confirmado únicamente cuando así se acuerda por ese medio.
-            Nos reservamos el derecho de cancelar un pedido si un producto deja de
+            El catálogo del sitio permite armar tu pedido y elegir entre dos
+            formas de concretarlo: pagarlo en línea con Mercado Pago, o enviarlo
+            por WhatsApp, donde se confirman la disponibilidad, el total, el costo
+            de envío y la forma de pago. Un pedido pagado en línea se considera
+            confirmado cuando Mercado Pago aprueba el pago; un pedido por WhatsApp,
+            cuando así se acuerda por ese medio. Si un producto pagado en línea ya
+            no está disponible, te ofrecemos un cambio o te devolvemos el importe
+            completo. Nos reservamos el derecho de cancelar un pedido si un producto deja de
             estar disponible o si detectamos un error evidente en la información.
           </p>
         </section>
@@ -101,9 +104,10 @@ export default function Terminos() {
             <li>Transferencia interbancaria (SPEI).</li>
             <li>Depósito en efectivo.</li>
             <li>
-              Tarjeta de crédito o débito a través de la plataforma Mercado
-              Pago. Este método genera una comisión adicional que será absorbida
-              por el comprador y se sumará al total de su pedido.
+              Pago en línea con Mercado Pago desde el sitio: tarjeta de crédito o
+              débito, efectivo en OXXO o saldo de Mercado Pago. El total que ves
+              antes de pagar es el que se cobra. Los datos de tu tarjeta los recibe
+              y procesa Mercado Pago; nosotros no los vemos ni los guardamos.
             </li>
           </ul>
           <p>El pedido se procesa una vez confirmado el pago correspondiente.</p>

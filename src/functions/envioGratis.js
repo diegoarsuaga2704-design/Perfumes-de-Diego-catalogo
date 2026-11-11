@@ -1,4 +1,4 @@
-import { calcularPrecioDecantCarrito } from "./pricingDecant";
+import { calcularPrecioDecantCarrito } from "./pricingDecant.js";
 
 export const UMBRAL_ENVIO_GRATIS = 1950;
 
