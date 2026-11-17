@@ -6,6 +6,7 @@ import supabase from "../services/supabase";
 
 export const ESTADOS_PEDIDO = {
   en_checkout: { texto: "En checkout (no lo envió)", cliente: "Sin enviar", color: "bg-gray-100 text-gray-700" },
+  pide_que_le_escriba: { texto: "Pide que le escriba", cliente: "Recibido", color: "bg-orange-100 text-orange-800" },
   enviado: { texto: "Abrió WhatsApp", cliente: "Recibido", color: "bg-blue-100 text-blue-700" },
   confirmado: { texto: "Confirmó envío", cliente: "Recibido", color: "bg-amber-100 text-amber-800" },
   pago_pendiente: { texto: "Esperando pago (Mercado Pago)", cliente: "Pago pendiente", color: "bg-purple-100 text-purple-700" },

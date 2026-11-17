@@ -30,7 +30,9 @@ const whatsappMx = (tel) => {
   const d = String(tel || "").replace(/\D/g, "");
   return d.length === 10 ? `52${d}` : d;
 };
-// WhatsApp del pedido: el del checkout o el de los datos de envío.
+// Pedidos que no llegaron a WhatsApp (incluye los que pidieron que les escriba).
+const NO_ENVIADOS = ["en_checkout", "pide_que_le_escriba"];
+// WhatsApp del pedido: el del rescate o el de los datos de envío.
 const telDe = (p) => p.telefono || p.cliente?.telefono || "";
 // Mensaje para escribirle: si no lo envió, para ayudarle a terminarlo.
 const mensajeCliente = (p) => {
@@ -42,6 +44,9 @@ const mensajeCliente = (p) => {
     )
     .join(", ");
   const nombre = p.cliente?.nombre ? ` ${p.cliente.nombre.split(" ")[0]}` : "";
+  if (p.estado === "pide_que_le_escriba") {
+    return `Hola${nombre}, soy Diego de Perfumes de Diego. Me dejaste tu número para tu pedido #${p.numero} (${productos}) por $${formatPrecio(p.total)}. ¿Lo confirmamos?`;
+  }
   return p.estado === "en_checkout"
     ? `Hola${nombre}, soy Diego de Perfumes de Diego. Vi que dejaste tu pedido #${p.numero} (${productos}) por $${formatPrecio(p.total)}. ¿Te ayudo a terminarlo?`
     : `Hola${nombre}, soy Diego de Perfumes de Diego. Te escribo por tu pedido #${p.numero}.`;
@@ -77,9 +82,9 @@ export default function AdminPedidosWeb() {
   }, [pedidos]);
 
   const FILTROS = [
-    ["enviados", "Enviados", (p) => p.estado !== "en_checkout"],
-    ["en_checkout", "No enviados", (p) => p.estado === "en_checkout"],
-    ["recuperar", "Para recuperar", (p) => p.estado === "en_checkout" && !!telDe(p)],
+    ["enviados", "Enviados", (p) => !NO_ENVIADOS.includes(p.estado)],
+    ["en_checkout", "No enviados", (p) => NO_ENVIADOS.includes(p.estado)],
+    ["recuperar", "Para recuperar", (p) => NO_ENVIADOS.includes(p.estado) && !!telDe(p)],
     ["todos", "Todos", () => true],
   ];
 

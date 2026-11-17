@@ -81,9 +81,9 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
     };
   }, [cartItems.length, numeroPedido]);
 
-  // WhatsApp del cliente: obligatorio para pedir. Se guarda con el pedido en
-  // cuanto está completo (aunque luego no toque "Siguiente"), así se le puede
-  // escribir si el pedido se queda atorado.
+  // Rescate: si WhatsApp no se abre (o entró desde TikTok/Instagram), el
+  // cliente puede dejar su WhatsApp y Diego le escribe. El pedido queda en el
+  // admin como "Pide que le escriba".
   const [telefono, setTelefono] = useState(() => {
     try {
       return localStorage.getItem(KEY_TEL) || "";
@@ -104,15 +104,7 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
       // sin localStorage
     }
   };
-  // Si falta el WhatsApp, lo marca y lleva al campo. Regresa true si falta.
-  const faltaTelefono = () => {
-    if (telValido) return false;
-    setErrorTel(true);
-    telRef.current?.focus();
-    telRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-    track("pedido_falta_whatsapp");
-    return true;
-  };
+  const [pidioContacto, setPidioContacto] = useState(false);
 
   // Datos del pedido para guardarlo en Supabase.
   const datosPedido = useMemo(() => {
@@ -141,10 +133,8 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
       envio,
       total: totalProductos + envio,
       codigo_postal: String(postalCode).trim().length === 5 ? String(postalCode).trim() : null,
-      telefono: telValido,
     };
   }, [
-    telValido,
     cartItems,
     isDiscountApplied,
     safeSubtotal,
@@ -267,7 +257,6 @@ Gracias!`;
   };
 
   const handleCopiar = async () => {
-    if (faltaTelefono()) return;
     const ok = await copiarTexto(mensajePedido);
     if (!ok) return;
     track("pedido_copiar", { total: safeTotalCartPrice });
@@ -315,7 +304,6 @@ Gracias!`;
   // Abrir WhatsApp NO vacía el carrito: si la app (TikTok/Instagram) o el
   // navegador lo bloquea, el cliente no pierde su pedido ni su cupón.
   const intentarAbrirWhatsApp = () => {
-    if (faltaTelefono()) return;
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
     setNoSeAbrio(false);
     setPreguntarEnviado(true);
@@ -353,9 +341,29 @@ Gracias!`;
     </div>
   );
 
-  const campoTelefono = (
-    <label className="block mb-3">
-      <span className="block text-sm font-semibold text-gray-900 mb-1">Tu WhatsApp</span>
+  const pedirQueLeEscriba = (e) => {
+    e.preventDefault();
+    if (!telValido) {
+      setErrorTel(true);
+      telRef.current?.focus();
+      return;
+    }
+    track("pedido_pide_que_le_escriba", { total: safeTotalCartPrice });
+    if (numeroPedido) {
+      marcarPedidoWeb(numeroPedido, "pide_que_le_escriba", { ...datosPedido, telefono: telValido });
+    }
+    setPidioContacto(true);
+  };
+
+  const rescate = pidioContacto ? (
+    <div className="mt-3 rounded-md border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+      Listo, te escribo en breve al <span className="font-semibold whitespace-nowrap">{telValido}</span>
+      {numeroPedido ? ` con tu pedido #${numeroPedido}` : " con tu pedido"}. Tu carrito sigue guardado.
+    </div>
+  ) : (
+    <form onSubmit={pedirQueLeEscriba} className="mt-3 rounded-md border border-[#A47E3B] bg-white p-3 text-sm">
+      <p className="font-semibold text-gray-900">¿No se abrió WhatsApp?</p>
+      <p className="text-gray-600 mb-2">Déjame tu número y yo te escribo con tu pedido.</p>
       <input
         ref={telRef}
         value={telefono}
@@ -363,18 +371,21 @@ Gracias!`;
         type="tel"
         inputMode="tel"
         autoComplete="tel"
-        placeholder="10 dígitos"
+        placeholder="Tu WhatsApp (10 dígitos)"
         aria-invalid={errorTel}
         className={`w-full border rounded-md px-3 py-2.5 text-base bg-white focus:ring-2 focus:ring-[#A47E3B] focus:outline-none ${
           errorTel ? "border-red-500" : "border-gray-300"
         }`}
       />
-      <span className={`block mt-1 text-xs ${errorTel ? "text-red-600" : "text-gray-500"}`}>
-        {errorTel
-          ? "Escribe tu WhatsApp a 10 dígitos para continuar."
-          : "Para confirmarte tu pedido. Solo lo uso para eso."}
-      </span>
-    </label>
+      {errorTel && <p className="mt-1 text-xs text-red-600">Escribe tu WhatsApp a 10 dígitos.</p>}
+      <button
+        type="submit"
+        className="mt-2 w-full py-2.5 rounded-md font-semibold bg-[#A47E3B] text-white hover:bg-[#D4AF7A] active:bg-[#8B6A30]"
+      >
+        Que me escriba Diego
+      </button>
+      <p className="mt-1.5 text-[11px] text-gray-500">Solo lo uso para tu pedido.</p>
+    </form>
   );
 
   const trustLine = (
@@ -397,7 +408,6 @@ Gracias!`;
           <p className="font-semibold text-gray-900 mb-3">
             Envía tu pedido por WhatsApp:
           </p>
-          {campoTelefono}
 
             <button
               type="button"
@@ -409,9 +419,11 @@ Gracias!`;
 
             {preguntaEnviado && <div className="mb-3">{preguntaEnviado}</div>}
 
+            <div className="mb-4">{rescate}</div>
+
             <p className="text-gray-700 mb-3">
-              ¿No se abrió? A veces {inAppInfo.source || "el navegador de la app"}{" "}
-              lo bloquea. Usa una de estas:
+              A veces {inAppInfo.source || "el navegador de la app"} bloquea
+              WhatsApp. También puedes:
             </p>
 
             <p className="font-medium text-gray-900">
@@ -478,11 +490,10 @@ Gracias!`;
 
   return (
     <div>
-      {campoTelefono}
       <button
         type="button"
         onClick={() => {
-          if (noListo || faltaTelefono()) return;
+          if (noListo) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
           if (numeroPedido) marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
@@ -495,12 +506,7 @@ Gracias!`;
         Siguiente
       </button>
       {preguntaEnviado}
-      {noSeAbrio && (
-        <p className="mt-2 text-xs text-gray-600">
-          Tu carrito sigue aquí. Toca de nuevo el botón o escríbeme al{" "}
-          <span className="font-semibold whitespace-nowrap">+52 221 203 4647</span>.
-        </p>
-      )}
+      {noSeAbrio && rescate}
       {trustLine}
     </div>
   );
