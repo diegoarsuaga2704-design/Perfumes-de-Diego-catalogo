@@ -30,6 +30,22 @@ const whatsappMx = (tel) => {
   const d = String(tel || "").replace(/\D/g, "");
   return d.length === 10 ? `52${d}` : d;
 };
+// WhatsApp del pedido: el del checkout o el de los datos de envío.
+const telDe = (p) => p.telefono || p.cliente?.telefono || "";
+// Mensaje para escribirle: si no lo envió, para ayudarle a terminarlo.
+const mensajeCliente = (p) => {
+  const productos = (p.items || [])
+    .map((it) =>
+      it.tipoVenta === "botella"
+        ? `${it.nombre}${it.mlBotella ? ` ${it.mlBotella} ml` : ""}`
+        : `${it.nombre} ${it.mililitros} ml`,
+    )
+    .join(", ");
+  const nombre = p.cliente?.nombre ? ` ${p.cliente.nombre.split(" ")[0]}` : "";
+  return p.estado === "en_checkout"
+    ? `Hola${nombre}, soy Diego de Perfumes de Diego. Vi que dejaste tu pedido #${p.numero} (${productos}) por $${formatPrecio(p.total)}. ¿Te ayudo a terminarlo?`
+    : `Hola${nombre}, soy Diego de Perfumes de Diego. Te escribo por tu pedido #${p.numero}.`;
+};
 const lineaTexto = (it) =>
   it.tipoVenta === "botella"
     ? `${it.nombre}${it.mlBotella ? ` ${it.mlBotella} ml` : ""} × ${it.cantidad}`
@@ -63,6 +79,7 @@ export default function AdminPedidosWeb() {
   const FILTROS = [
     ["enviados", "Enviados", (p) => p.estado !== "en_checkout"],
     ["en_checkout", "No enviados", (p) => p.estado === "en_checkout"],
+    ["recuperar", "Para recuperar", (p) => p.estado === "en_checkout" && !!telDe(p)],
     ["todos", "Todos", () => true],
   ];
 
@@ -76,7 +93,7 @@ export default function AdminPedidosWeb() {
           normalizarTexto(p.numero).includes(q) ||
           normalizarTexto(p.codigo_postal).includes(q) ||
           normalizarTexto(p.cliente?.nombre).includes(q) ||
-          String(p.cliente?.telefono || "").includes(q) ||
+          String(telDe(p)).includes(q) ||
           (p.items || []).some((it) => normalizarTexto(it.nombre).includes(q))),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,7 +122,7 @@ export default function AdminPedidosWeb() {
       </header>
 
       <main className="max-w-4xl mx-auto px-3 sm:px-6 py-4 space-y-3">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {FILTROS.map(([k, t, f]) => (
             <button
               key={k}
@@ -167,6 +184,7 @@ export default function AdminPedidosWeb() {
                       {fechaHora(p.created_at)} · {(p.items || []).length} producto
                       {(p.items || []).length === 1 ? "" : "s"}
                       {p.codigo_postal ? ` · CP ${p.codigo_postal}` : ""}
+                      {telDe(p) ? ` · WhatsApp ${telDe(p)}` : ""}
                     </p>
                   </div>
                   <span className="font-bold text-gray-900 shrink-0">{$(p.total)}</span>
@@ -207,19 +225,17 @@ export default function AdminPedidosWeb() {
                         </p>
                         {p.cliente.referencias && <p className="text-gray-500">Ref: {p.cliente.referencias}</p>}
                         <p className="text-gray-500">{p.cliente.email}</p>
-                        {p.cliente.telefono && (
-                          <a
-                            href={`https://wa.me/${whatsappMx(p.cliente.telefono)}?text=${encodeURIComponent(
-                              `Hola ${p.cliente.nombre.split(" ")[0]}, soy Diego de Perfumes de Diego. Te escribo por tu pedido #${p.numero}.`,
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-block mt-1.5 px-3 py-1.5 rounded-md bg-green-600 text-white font-semibold"
-                          >
-                            Escribirle · {p.cliente.telefono}
-                          </a>
-                        )}
                       </div>
+                    )}
+                    {telDe(p) && (
+                      <a
+                        href={`https://wa.me/${whatsappMx(telDe(p))}?text=${encodeURIComponent(mensajeCliente(p))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700"
+                      >
+                        Escribirle por WhatsApp · {telDe(p)}
+                      </a>
                     )}
                     {p.pago && (
                       <p className="text-xs text-gray-500">

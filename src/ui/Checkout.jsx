@@ -1,6 +1,6 @@
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { calcularPrecioDecantCarrito } from "../functions/pricingDecant";
 import { detectInAppBrowser } from "../functions/detectInAppBrowser";
 import { formatPrecio } from "../functions/formatPrecio";
@@ -16,6 +16,15 @@ import {
 } from "../functions/pedidosWeb";
 
 const KEY_PREGUNTAR = "pedido_preguntar_enviado";
+const KEY_TEL = "perfumes-diego-whatsapp";
+
+// WhatsApp a 10 dígitos (acepta que lo escriban con +52, 52 o 521 al inicio).
+function telefonoMx(v) {
+  let d = String(v || "").replace(/\D/g, "");
+  if (d.length === 13 && d.startsWith("521")) d = d.slice(3);
+  else if (d.length === 12 && d.startsWith("52")) d = d.slice(2);
+  return d.length === 10 ? d : null;
+}
 
 function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
   const {
@@ -72,6 +81,39 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
     };
   }, [cartItems.length, numeroPedido]);
 
+  // WhatsApp del cliente: obligatorio para pedir. Se guarda con el pedido en
+  // cuanto está completo (aunque luego no toque "Siguiente"), así se le puede
+  // escribir si el pedido se queda atorado.
+  const [telefono, setTelefono] = useState(() => {
+    try {
+      return localStorage.getItem(KEY_TEL) || "";
+    } catch {
+      return "";
+    }
+  });
+  const [errorTel, setErrorTel] = useState(false);
+  const telValido = telefonoMx(telefono);
+  const telRef = useRef(null);
+  const cambiarTelefono = (e) => {
+    const v = e.target.value.replace(/[^\d+\s-]/g, "").slice(0, 18);
+    setTelefono(v);
+    if (errorTel) setErrorTel(false);
+    try {
+      if (telefonoMx(v)) localStorage.setItem(KEY_TEL, v);
+    } catch {
+      // sin localStorage
+    }
+  };
+  // Si falta el WhatsApp, lo marca y lleva al campo. Regresa true si falta.
+  const faltaTelefono = () => {
+    if (telValido) return false;
+    setErrorTel(true);
+    telRef.current?.focus();
+    telRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    track("pedido_falta_whatsapp");
+    return true;
+  };
+
   // Datos del pedido para guardarlo en Supabase.
   const datosPedido = useMemo(() => {
     const envio = Number(costoEnvio) || 0;
@@ -99,8 +141,10 @@ function Checkout({ totalCartPrice = 0, postalCode = "", costoEnvio = 0 }) {
       envio,
       total: totalProductos + envio,
       codigo_postal: String(postalCode).trim().length === 5 ? String(postalCode).trim() : null,
+      telefono: telValido,
     };
   }, [
+    telValido,
     cartItems,
     isDiscountApplied,
     safeSubtotal,
@@ -223,6 +267,7 @@ Gracias!`;
   };
 
   const handleCopiar = async () => {
+    if (faltaTelefono()) return;
     const ok = await copiarTexto(mensajePedido);
     if (!ok) return;
     track("pedido_copiar", { total: safeTotalCartPrice });
@@ -270,6 +315,7 @@ Gracias!`;
   // Abrir WhatsApp NO vacía el carrito: si la app (TikTok/Instagram) o el
   // navegador lo bloquea, el cliente no pierde su pedido ni su cupón.
   const intentarAbrirWhatsApp = () => {
+    if (faltaTelefono()) return;
     track("pedido_whatsapp_intento", { total: safeTotalCartPrice });
     setNoSeAbrio(false);
     setPreguntarEnviado(true);
@@ -307,6 +353,30 @@ Gracias!`;
     </div>
   );
 
+  const campoTelefono = (
+    <label className="block mb-3">
+      <span className="block text-sm font-semibold text-gray-900 mb-1">Tu WhatsApp</span>
+      <input
+        ref={telRef}
+        value={telefono}
+        onChange={cambiarTelefono}
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel"
+        placeholder="10 dígitos"
+        aria-invalid={errorTel}
+        className={`w-full border rounded-md px-3 py-2.5 text-base bg-white focus:ring-2 focus:ring-[#A47E3B] focus:outline-none ${
+          errorTel ? "border-red-500" : "border-gray-300"
+        }`}
+      />
+      <span className={`block mt-1 text-xs ${errorTel ? "text-red-600" : "text-gray-500"}`}>
+        {errorTel
+          ? "Escribe tu WhatsApp a 10 dígitos para continuar."
+          : "Para confirmarte tu pedido. Solo lo uso para eso."}
+      </span>
+    </label>
+  );
+
   const trustLine = (
     <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-500">
       Productos 100% originales · Envío por DHL · Pago seguro
@@ -327,6 +397,7 @@ Gracias!`;
           <p className="font-semibold text-gray-900 mb-3">
             Envía tu pedido por WhatsApp:
           </p>
+          {campoTelefono}
 
             <button
               type="button"
@@ -407,10 +478,11 @@ Gracias!`;
 
   return (
     <div>
+      {campoTelefono}
       <button
         type="button"
         onClick={() => {
-          if (noListo) return;
+          if (noListo || faltaTelefono()) return;
           track("pedido_whatsapp", { total: safeTotalCartPrice });
           if (numeroPedido) marcarPedidoWeb(numeroPedido, "enviado", datosPedido);
           window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
