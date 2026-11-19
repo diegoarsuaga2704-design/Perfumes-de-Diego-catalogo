@@ -1,20 +1,30 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
+import { compararPerfumes } from "../functions/ordenarPerfumes";
 
-// 1 Creamos el contexto
+// Orden del catálogo: casa (A-Z, Z-A o juntas) + precio o nombre.
+// La comparación vive en functions/ordenarPerfumes.js.
 const OrderContext = createContext();
 
-// 2 Creamos el provider (proveedor del contexto)
 export function OrderProvider({ children }) {
-  const [order, setOrder] = useState("casa"); // valor inicial
+  const [ordenCasa, setOrdenCasa] = useState("az");
+  const [ordenDentro, setOrdenDentro] = useState("precio");
 
-  return (
-    <OrderContext.Provider value={{ order, setOrder }}>
-      {children}
-    </OrderContext.Provider>
+  const valor = useMemo(
+    () => ({
+      ordenCasa,
+      setOrdenCasa,
+      ordenDentro,
+      setOrdenDentro,
+      // Clave única del orden actual (sirve para saber cuándo cambió).
+      order: `${ordenCasa}|${ordenDentro}`,
+      comparar: (a, b) => compararPerfumes(a, b, ordenCasa, ordenDentro),
+    }),
+    [ordenCasa, ordenDentro],
   );
+
+  return <OrderContext.Provider value={valor}>{children}</OrderContext.Provider>;
 }
 
-// 3 Creamos un custom hook para usar el contexto fácilmente
 export function useOrder() {
   return useContext(OrderContext);
 }

@@ -32,7 +32,7 @@ export default function ProductGrid({
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { parfums: allParfums, loading, error } = useParfums();
-  const { order } = useOrder();
+  const { order, comparar } = useOrder();
 
   // Paginación leída desde la URL para que sobreviva navegaciones POP
   const currentPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -103,34 +103,15 @@ export default function ProductGrid({
         result = result.filter((p) => p.stock === stockFilter);
       }
 
-      // 🔒 Sort blindado: casa A-Z, precio menor a mayor, nombre A-Z como desempate
-      result = result.sort((a, b) => {
-        const casaA = safeString(a.casa);
-        const casaB = safeString(b.casa);
-
-        const casaComparison = casaA.localeCompare(casaB);
-        if (casaComparison !== 0) return casaComparison;
-
-        const precioA = Number(a.precio) || 0;
-        const precioB = Number(b.precio) || 0;
-        if (precioA !== precioB) return precioA - precioB;
-
-        return safeString(a.nombre).localeCompare(safeString(b.nombre));
-      });
-
-      return result;
+      // Mismo orden que eligió el cliente (casa + precio/nombre).
+      return result.sort(comparar);
     }
 
     // ===== RECIÉN LLEGADOS =====
     if (recientesFilter) {
-      const result = fuente
+      return fuente
         .filter((p) => p.disponible === "Disponible" && esReciente(p))
-        .sort((a, b) => {
-          const casaCmp = safeString(a.casa).localeCompare(safeString(b.casa));
-          if (casaCmp !== 0) return casaCmp;
-          return (Number(a.precio) || 0) - (Number(b.precio) || 0);
-        });
-      return result;
+        .sort(comparar);
     }
 
     // ===== FILTROS NORMALES =====
@@ -155,46 +136,14 @@ export default function ProductGrid({
       return casaMatch && ocasionMatch && categoriaMatch && stockMatch;
     });
 
-    // 🔒 Ordenamiento completamente blindado
-    result = result.sort((a, b) => {
-      const nombreA = safeString(a.nombre);
-      const nombreB = safeString(b.nombre);
-      const casaA = safeString(a.casa);
-      const casaB = safeString(b.casa);
-
-      if (order === "nombre") {
-        return nombreA.localeCompare(nombreB);
-      }
-
-      if (order === "casa") {
-        const casaComparison = casaA.localeCompare(casaB);
-        if (casaComparison !== 0) return casaComparison;
-        const precioComparison = (a.precio ?? 0) - (b.precio ?? 0);
-        if (precioComparison !== 0) return precioComparison;
-        return nombreA.localeCompare(nombreB);
-      }
-
-      if (order === "precio") {
-        const precioComparison = (a.precio ?? 0) - (b.precio ?? 0);
-        if (precioComparison !== 0) return precioComparison;
-        return nombreA.localeCompare(nombreB);
-      }
-      if (order === "precioMayor") {
-        const precioComparison = (b.precio ?? 0) - (a.precio ?? 0);
-        if (precioComparison !== 0) return precioComparison;
-        return nombreA.localeCompare(nombreB);
-      }
-
-      return 0;
-    });
-
-    return result;
+    // Orden combinado: casa (A-Z, Z-A o juntas) + precio o nombre.
+    return result.sort(comparar);
   }, [
     allParfums,
     selectedCasa,
     selectedOcasion,
     selectedCategoria,
-    order,
+    comparar,
     searchResult,
     stockFilter,
     recientesFilter,
