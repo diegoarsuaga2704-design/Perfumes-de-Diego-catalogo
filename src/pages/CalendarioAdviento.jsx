@@ -479,10 +479,10 @@ export default function CalendarioAdviento() {
               ))}
             </ul>
 
-            <div className="space-y-2">
-              <p className="font-semibold" style={{ color: DORADO }}>
-                ¿Cómo lo recibes?
-              </p>
+            <div className="space-y-3 pt-2">
+              <h3 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
+                ¿Cómo quieres recibirlo?
+              </h3>
               {[
                 ["puebla", "Entrega personal en Puebla", "Te lo entrego completamente armado. Sin costo de envío."],
                 [
@@ -495,15 +495,25 @@ export default function CalendarioAdviento() {
                   key={k}
                   type="button"
                   onClick={() => setEntrega(k)}
-                  className="w-full text-left rounded-xl p-3"
+                  role="radio"
+                  aria-checked={entrega === k}
+                  className="w-full text-left rounded-xl p-4 flex items-start gap-3 shadow-lg transition-transform active:scale-[0.99]"
                   style={{
-                    background: entrega === k ? "rgba(179,32,42,0.3)" : "rgba(255,255,255,0.05)",
-                    border: `1px solid ${entrega === k ? DORADO : "rgba(255,255,255,0.15)"}`,
+                    background: entrega === k ? ROJO_BOTON : "rgba(255,255,255,0.12)",
+                    border: `2px solid ${entrega === k ? DORADO : `${DORADO}88`}`,
                   }}
                 >
-                  <span className="block text-sm font-semibold">{t}</span>
-                  <span className="block text-xs mt-0.5" style={{ color: "#d9cfbd" }}>
-                    {d}
+                  <span
+                    className="mt-0.5 w-5 h-5 rounded-full shrink-0 flex items-center justify-center"
+                    style={{ border: `2px solid ${DORADO}`, background: entrega === k ? DORADO : "transparent" }}
+                  >
+                    {entrega === k && <span className="w-2 h-2 rounded-full" style={{ background: ROJO_BOTON }} />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-base font-semibold">{t}</span>
+                    <span className="block text-xs mt-1" style={{ color: entrega === k ? "#f3e6e6" : "#d9cfbd" }}>
+                      {d}
+                    </span>
                   </span>
                 </button>
               ))}
@@ -558,7 +568,7 @@ export default function CalendarioAdviento() {
                 className="w-full py-3.5 rounded-xl font-semibold text-base disabled:cursor-not-allowed"
                 style={boton(!!entrega && !!numero)}
               >
-                {entrega ? "Enviar mi pedido por WhatsApp" : "Elige cómo lo recibes"}
+                {entrega ? "Enviar mi pedido por WhatsApp" : "Elige cómo quieres recibirlo"}
               </button>
             )}
 
