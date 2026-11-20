@@ -525,7 +525,7 @@ export default function CalendarioAdviento() {
               ¿Cómo quieres armarlo?
             </h2>
             {[
-              ["yo", "Elegir yo", "Escoge entre todos mis decants."],
+              ["yo", "Elegir yo", "Escoger entre todo el catálogo."],
               ["diego", "Ver las recomendaciones de Diego", "Mis favoritos para esta Navidad."],
             ].map(([v, t, d]) => (
               <button
