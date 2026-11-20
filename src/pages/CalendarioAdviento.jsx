@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import FilaDeslizable from "../ui/FilaDeslizable";
+import RegaloSorpresa from "../ui/RegaloSorpresa";
 import { track } from "@vercel/analytics";
 import { useParfums } from "../context/ParfumsContext";
 import { calcularPrecioDecant } from "../functions/pricingDecant";
@@ -342,6 +343,7 @@ export default function CalendarioAdviento() {
         {/* ---------- Paso 1: elegir calendario ---------- */}
         {paso === "inicio" && (
           <section className="px-4 space-y-4">
+            <RegaloSorpresa />
             <Aviso titulo="Cómo funciona">
               Eliges tus perfumes y cuántos ml quieres de cada uno. El total es la suma de tus decants más
               el calendario.
@@ -606,6 +608,10 @@ export default function CalendarioAdviento() {
               )}
             </div>
 
+            <Aviso titulo="Regalo sorpresa">
+              Tu calendario trae adentro un código con un regalo sorpresa. Cuando lo recibas, escríbelo en esta
+              misma página para descubrir qué te tocó.
+            </Aviso>
             <Aviso titulo="Fechas">
               Debido a unos atrasos, los calendarios se empezarán a enviar aproximadamente {FECHAS_ENVIO}.
             </Aviso>

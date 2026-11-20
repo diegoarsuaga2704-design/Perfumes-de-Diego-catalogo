@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   Calculator,
   ShoppingBag,
+  Gift,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getCountAvisosNuevos } from "../functions/getAvisosStock";
@@ -233,6 +234,19 @@ export default function AdminPanel() {
               </h3>
               <p className="text-sm text-gray-600">
                 Pedidos con número que llegaron por la página, también los que no se enviaron
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/regalos-calendario")}
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#A47E3B] transition-all text-left"
+            >
+              <Gift className="text-[#A47E3B] mb-3" size={28} />
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Regalos del calendario
+              </h3>
+              <p className="text-sm text-gray-600">
+                Códigos sorpresa de los calendarios de adviento: crea, imprime y ve quién canjeó qué
               </p>
             </button>
           </div>
