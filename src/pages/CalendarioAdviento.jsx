@@ -920,14 +920,17 @@ export default function CalendarioAdviento() {
         >
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">
+              <p className="text-sm font-semibold leading-snug">
                 {cuantos} {cuantos === 1 ? "decant" : "decants"}
                 {cuantos < minimo ? (
                   <span style={{ color: "#f0b4b8" }}> · faltan {minimo - cuantos}</span>
                 ) : lleno ? (
                   <span style={{ color: DORADO }}> · llegaste al máximo</span>
                 ) : (
-                  <span style={{ color: DORADO }}> · puedes agregar {maximo - cuantos}</span>
+                  <span style={{ color: DORADO }}>
+                    {" "}
+                    · puedes agregar {maximo - cuantos} {maximo - cuantos === 1 ? "decant" : "decants"} más
+                  </span>
                 )}
               </p>
               <p className="text-xs truncate" style={{ color: "#d9cfbd" }}>
