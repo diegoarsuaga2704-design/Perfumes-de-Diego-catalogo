@@ -33,7 +33,7 @@ const CAMPO = {
   border: `2px solid ${DORADO}`,
 };
 // Foto de los calendarios (portada).
-const FOTO_CALENDARIO = "/calendario-adviento.jpg";
+const FOTO_CALENDARIO = "/calendario-adviento.jpg?v=2";
 
 const CALENDARIOS = {
   12: { dias: 12, precio: 180 },
