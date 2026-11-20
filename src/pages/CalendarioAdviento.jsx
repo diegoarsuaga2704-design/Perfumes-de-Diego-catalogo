@@ -286,8 +286,8 @@ export default function CalendarioAdviento() {
         {paso === "inicio" && (
           <section className="px-4 space-y-4">
             <Aviso titulo="Cómo funciona">
-              Eliges tus perfumes y cuántos ml quieres de cada uno (mínimo {$(MINIMO_POR_PERFUME)} por
-              perfume). El total es la suma de tus decants más el calendario.
+              Eliges tus perfumes y cuántos ml quieres de cada uno. El total es la suma de tus decants más
+              el calendario.
             </Aviso>
             <Aviso titulo="Entrega">
               El calendario completamente armado solo se entrega personalmente en Puebla. Para envíos, el
@@ -321,7 +321,7 @@ export default function CalendarioAdviento() {
                   </span>
                   <span className="block text-sm uppercase tracking-widest mt-1">días</span>
                   <span className="block text-xs mt-3" style={{ color: "#d9cfbd" }}>
-                    De {c.dias} a {c.dias * 2} decants
+                    Mínimo {c.dias} · máximo {c.dias * 2} decants
                   </span>
                   <span className="block text-sm font-semibold mt-1">Calendario +{$(c.precio)}</span>
                   <span
@@ -351,8 +351,7 @@ export default function CalendarioAdviento() {
               Elige tus decants
             </h2>
             <p className="text-center text-sm" style={{ color: "#d9cfbd" }}>
-              Mínimo {minimo} y hasta {maximo}. Toca los ml que quieres de cada perfume (solo aparecen
-              cantidades de {$(MINIMO_POR_PERFUME)} o más).
+              Mínimo {minimo} y máximo {maximo} decants. Toca los ml que quieres de cada perfume.
             </p>
             <input
               value={busq}
@@ -577,7 +576,10 @@ export default function CalendarioAdviento() {
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">
-                {cuantos < minimo ? `${cuantos} de ${minimo} decants` : `${cuantos} decants`}
+                {cuantos} decants{" "}
+                <span className="font-normal" style={{ color: "#d9cfbd" }}>
+                  (mínimo {minimo}, máximo {maximo})
+                </span>
                 {cuantos < minimo ? (
                   <span style={{ color: "#f0b4b8" }}> · faltan {minimo - cuantos}</span>
                 ) : lleno ? (
