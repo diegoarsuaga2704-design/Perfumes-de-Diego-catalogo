@@ -13,6 +13,15 @@
           "value": "noindex, nofollow"
         }
       ]
+    },
+    {
+      "source": "/calendario-adviento",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ],
   "redirects": [
@@ -61,6 +70,17 @@
         }
       ],
       "destination": "/api/og?type=post&slug=:slug"
+    },
+    {
+      "source": "/calendario-adviento",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|spider|facebookexternalhit|whatsapp|embed|slack|discord|telegram|pinterest|preview|linkedin|skype|vkshare|perplexity|claude|anthropic|chatgpt|gpt|oai-search|cohere|google-extended|google-inspectiontool|meta-external|duckassist|mistral).*"
+        }
+      ],
+      "destination": "/api/og?type=calendario"
     },
     {
       "source": "/sitemap.xml",

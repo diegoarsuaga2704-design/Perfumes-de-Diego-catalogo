@@ -151,6 +151,25 @@ export default async function handler(req, res) {
 
   const { type, id, slug } = req.query;
 
+  // Calendario de adviento: link privado. Vista previa bonita en WhatsApp,
+  // pero fuera de Google (noindex).
+  if (type === "calendario") {
+    res.setHeader("Cache-Control", "s-maxage=3600");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.status(200).send(
+      buildOgHtml({
+        title: `Calendario de adviento | ${SITE_NAME}`,
+        description:
+          "Arma tu calendario de adviento de 12 o 24 días con los decants que tú elijas.",
+        image: DEFAULT_IMAGE,
+        url: `${SITE_URL}/calendario-adviento`,
+        bodyHtml: `<h1>Calendario de adviento</h1><p>Arma tu calendario de 12 o 24 días con los decants que tú elijas.</p>`,
+        noindex: true,
+      }),
+    );
+    return;
+  }
+
   let title = SITE_NAME;
   let description = "Decants y botellas de perfumes de nicho en Mexico.";
   let image = DEFAULT_IMAGE;

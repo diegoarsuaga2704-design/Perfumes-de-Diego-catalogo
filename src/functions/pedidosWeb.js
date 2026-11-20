@@ -74,6 +74,20 @@ export function numeroPedidoActual() {
   return pidiendo;
 }
 
+/**
+ * Número nuevo e independiente (no toca el del carrito normal). Lo usa el
+ * calendario de adviento para que su pedido no se mezcle con el carrito.
+ */
+export async function pedirNumeroNuevo() {
+  try {
+    const { data, error } = await supabase.rpc("nuevo_numero_pedido");
+    if (!error && data) return String(data);
+  } catch {
+    // sin red o sin la función en Supabase
+  }
+  return nuevoNumero();
+}
+
 export function olvidarNumeroActual() {
   try {
     localStorage.removeItem(KEY_ACTUAL);

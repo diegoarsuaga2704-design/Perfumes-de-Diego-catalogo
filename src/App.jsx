@@ -12,6 +12,7 @@ const FAQs = lazy(() => import("./pages/FAQs"));
 const Testimonios = lazy(() => import("./pages/Testimonios"));
 const PedidoEspecial = lazy(() => import("./pages/PedidoEspecial"));
 const ExperienciaPrivada = lazy(() => import("./pages/ExperienciaPrivada"));
+const CalendarioAdviento = lazy(() => import("./pages/CalendarioAdviento"));
 const BestSellers = lazy(() => import("./pages/BestSellers"));
 const Temporada = lazy(() => import("./pages/Temporada"));
 const VistoEnTikTok = lazy(() => import("./pages/VistoEnTikTok"));
@@ -90,6 +91,12 @@ const router = createBrowserRouter([
   {
     path: "/experiencia-privada",
     element: <ExperienciaPrivada />,
+  },
+
+  // Calendario de adviento — link privado, sin AppLayout
+  {
+    path: "/calendario-adviento",
+    element: <CalendarioAdviento />,
   },
 
   // Rutas de admin (sin AppLayout)

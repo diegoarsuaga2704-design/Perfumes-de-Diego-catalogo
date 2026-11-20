@@ -38,7 +38,9 @@ const telDe = (p) => p.telefono || p.cliente?.telefono || "";
 const mensajeCliente = (p) => {
   const productos = (p.items || [])
     .map((it) =>
-      it.tipoVenta === "botella"
+      it.tipoVenta === "calendario"
+        ? it.nombre
+        : it.tipoVenta === "botella"
         ? `${it.nombre}${it.mlBotella ? ` ${it.mlBotella} ml` : ""}`
         : `${it.nombre} ${it.mililitros} ml`,
     )
@@ -52,7 +54,9 @@ const mensajeCliente = (p) => {
     : `Hola${nombre}, soy Diego de Perfumes de Diego. Te escribo por tu pedido #${p.numero}.`;
 };
 const lineaTexto = (it) =>
-  it.tipoVenta === "botella"
+  it.tipoVenta === "calendario"
+    ? it.nombre
+    : it.tipoVenta === "botella"
     ? `${it.nombre}${it.mlBotella ? ` ${it.mlBotella} ml` : ""} × ${it.cantidad}`
     : `${it.mililitros} ml de ${it.nombre}`;
 
