@@ -379,7 +379,7 @@ export default function CalendarioAdviento() {
                   <span className="block text-xs mt-3" style={{ color: "#d9cfbd" }}>
                     Mínimo {c.dias} · máximo {c.dias * 2} decants
                   </span>
-                  <span className="block text-sm font-semibold mt-1">Calendario +{$(c.precio)}</span>
+                  <span className="block text-sm font-semibold mt-1">Decants + {$(c.precio)}</span>
                   <span
                     className="block mt-3 py-2.5 rounded-lg text-sm font-semibold"
                     style={{ background: ROJO_BOTON, color: "#fff", border: `1px solid ${DORADO}` }}
