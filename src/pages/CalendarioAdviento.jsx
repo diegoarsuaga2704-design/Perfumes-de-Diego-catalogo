@@ -432,6 +432,26 @@ export default function CalendarioAdviento() {
             </p>
             {/* Buscador y casas: se quedan arriba al bajar */}
             <div className="sticky top-0 z-40 -mx-4 px-4 pt-2 pb-2 space-y-2" style={{ background: VERDE_OSCURO }}>
+              {cuantos > 0 && (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold" style={{ color: DORADO }}>
+                    {cuantos} {cuantos === 1 ? "decant elegido" : "decants elegidos"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`¿Quitar los ${cuantos} decants que elegiste?`)) {
+                        setSel({});
+                        track("calendario_quitar_todos", { cuantos });
+                      }
+                    }}
+                    className="shrink-0 px-4 py-2 rounded-full text-sm font-bold"
+                    style={{ background: "#FBF7EE", color: "#8A1820", border: "2px solid #f0b4b8" }}
+                  >
+                    ✕ Quitar todos
+                  </button>
+                </div>
+              )}
               <input
                 value={busq}
                 onChange={(e) => setBusq(e.target.value)}
