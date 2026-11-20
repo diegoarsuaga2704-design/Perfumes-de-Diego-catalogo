@@ -137,10 +137,21 @@ export default function CalendarioAdviento() {
   const elegidos = useMemo(
     () =>
       catalogo
-        .filter((p) => sel[p.id])
+        .filter((p) => p.opciones.includes(sel[p.id]))
         .map((p) => ({ ...p, ml: sel[p.id], monto: calcularPrecioDecant(p, sel[p.id]) })),
     [catalogo, sel],
   );
+
+  // Selecciones guardadas que ya no son válidas (perfume agotado o un tamaño
+  // que se quitó, como 30 ml) se descartan al cargar el catálogo.
+  useEffect(() => {
+    if (!catalogo.length) return;
+    setSel((prev) => {
+      const limpio = {};
+      for (const p of catalogo) if (p.opciones.includes(prev[p.id])) limpio[p.id] = prev[p.id];
+      return Object.keys(limpio).length === Object.keys(prev).length ? prev : limpio;
+    });
+  }, [catalogo]);
 
   const cal = dias ? CALENDARIOS[dias] : null;
   const minimo = cal?.dias || 0;
@@ -148,6 +159,11 @@ export default function CalendarioAdviento() {
   const cuantos = elegidos.length;
   const lleno = cuantos >= maximo;
   const totalDecants = elegidos.reduce((s, x) => s + x.monto, 0);
+
+  // Si ya no alcanza el mínimo (p. ej. se descartó algo), regresa al catálogo.
+  useEffect(() => {
+    if (paso === "resumen" && catalogo.length && cuantos < minimo && !listo) setPaso("catalogo");
+  }, [paso, catalogo.length, cuantos, minimo, listo]);
   const envioGratis = totalDecants >= UMBRAL_ENVIO_GRATIS;
   const costoEnvio = entrega === "envio" && !envioGratis ? ENVIO_REGULAR : 0;
   const total = totalDecants + (cal?.precio || 0) + costoEnvio;
@@ -443,6 +459,14 @@ export default function CalendarioAdviento() {
             <h2 className="text-2xl text-center" style={{ fontFamily: SERIF }}>
               Tu calendario de {dias} días
             </h2>
+            <p className="text-center -mt-2">
+              <span
+                className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold"
+                style={{ background: "rgba(0,0,0,0.25)", border: `1px solid ${DORADO}`, color: DORADO }}
+              >
+                {cuantos} {cuantos === 1 ? "decant elegido" : "decants elegidos"} · mínimo {minimo}, máximo {maximo}
+              </span>
+            </p>
 
             <ul className="rounded-xl divide-y" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${DORADO}40` }}>
               {elegidos.map((x) => (
