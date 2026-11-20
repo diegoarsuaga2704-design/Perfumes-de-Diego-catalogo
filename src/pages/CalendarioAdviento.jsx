@@ -408,7 +408,7 @@ export default function CalendarioAdviento() {
                 className="w-full rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-[#C9A24B] placeholder:text-gray-500"
                 style={CAMPO}
               />
-              <FilaDeslizable rueda className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1">
+              <FilaDeslizable rueda className="flex gap-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-1">
                 {["", ...casas].map((c) => {
                   const activa = casaFiltro === c;
                   return (
@@ -472,7 +472,7 @@ export default function CalendarioAdviento() {
                         )}
                       </div>
                     </div>
-                      <FilaDeslizable className="flex gap-2 mt-2.5 overflow-x-auto -mx-2.5 px-2.5 pb-0.5">
+                      <FilaDeslizable className="flex gap-2 mt-2.5 overflow-x-auto -mx-2.5 px-2.5 md:mx-0 md:px-0 pb-0.5">
                         {p.opciones.map((ml) => {
                           const activo = elegido === ml;
                           return (

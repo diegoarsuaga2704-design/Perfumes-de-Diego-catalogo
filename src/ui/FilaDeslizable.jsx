@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Fila que se desliza de lado. En celular se desliza con el dedo; en
-// computadora (md+) aparecen flechas ‹ › y, si `rueda` es true, la rueda del
-// mouse la mueve de lado cuando el cursor está encima.
+// computadora (md+) aparecen flechas ‹ › a los lados (fuera de la fila, para
+// no tapar nada) y, si `rueda` es true, la rueda del mouse la mueve de lado.
 export default function FilaDeslizable({ children, className = "", rueda = false, colorFlecha = "#C9A24B", colorTexto = "#123B29" }) {
   const ref = useRef(null);
   const [izq, setIzq] = useState(false);
@@ -43,25 +43,31 @@ export default function FilaDeslizable({ children, className = "", rueda = false
     if (el) el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: "smooth" });
   };
 
-  const flecha = (dir, visible) =>
-    visible && (
-      <button
-        type="button"
-        aria-label={dir < 0 ? "Ver anteriores" : "Ver más"}
-        onClick={() => mover(dir)}
-        className={`hidden md:flex absolute top-1/2 -translate-y-1/2 ${dir < 0 ? "left-1" : "right-1"} w-8 h-8 rounded-full items-center justify-center text-lg font-bold shadow-lg z-10`}
-        style={{ background: colorFlecha, color: colorTexto }}
-      >
-        {dir < 0 ? "‹" : "›"}
-      </button>
-    );
+  // Sin fila desbordada no hay flechas; si sí, ocupan su lugar (aunque una
+  // esté apagada) para que la fila no brinque.
+  const hayFlechas = izq || der;
+  const flecha = (dir, activa) => (
+    <button
+      type="button"
+      aria-label={dir < 0 ? "Ver anteriores" : "Ver más"}
+      onClick={() => mover(dir)}
+      disabled={!activa}
+      tabIndex={activa ? 0 : -1}
+      className={`${hayFlechas ? "hidden md:flex" : "hidden"} shrink-0 w-8 h-8 rounded-full items-center justify-center text-lg font-bold shadow-lg ${
+        activa ? "" : "invisible"
+      }`}
+      style={{ background: colorFlecha, color: colorTexto }}
+    >
+      {dir < 0 ? "‹" : "›"}
+    </button>
+  );
 
   return (
-    <div className="relative">
-      <div ref={ref} onScroll={medir} className={className} style={{ scrollbarWidth: "none" }}>
+    <div className="md:flex md:items-center md:gap-2">
+      {flecha(-1, izq)}
+      <div ref={ref} onScroll={medir} className={`min-w-0 md:flex-1 ${className}`} style={{ scrollbarWidth: "none" }}>
         {children}
       </div>
-      {flecha(-1, izq)}
       {flecha(1, der)}
     </div>
   );
