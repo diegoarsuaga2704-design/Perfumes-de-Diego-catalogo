@@ -23,6 +23,12 @@ const ROJO_BOTON = "#8A1820";
 const FONDO_TARJETA = "#1B4631";
 const FONDO_ELEGIDO = "#5A1C23";
 const FONDO_CAMPO = "#143826";
+// Campos para escribir: claros, para distinguirlos de la información.
+const CAMPO = {
+  background: "#FBF7EE",
+  color: "#1F2A24",
+  border: `2px solid ${DORADO}`,
+};
 // Foto de los calendarios (portada).
 const FOTO_CALENDARIO = "/calendario-adviento.jpg";
 
@@ -104,9 +110,9 @@ function Encabezado({ compacto = false, dias, onCambiar }) {
 
 function Aviso({ titulo, children }) {
   return (
-    <div className="rounded-xl p-4 text-sm leading-relaxed" style={{ background: FONDO_TARJETA, border: `1px solid ${DORADO}40`, color: "#e8dfcf" }}>
-      <p className="font-semibold mb-1" style={{ color: DORADO }}>
-        {titulo}
+    <div className="pl-3 py-1 text-sm leading-relaxed" style={{ borderLeft: `3px solid ${DORADO}`, color: "#e8dfcf" }}>
+      <p className="font-semibold mb-0.5 text-xs uppercase tracking-wider" style={{ color: DORADO }}>
+        ℹ {titulo}
       </p>
       {children}
     </div>
@@ -197,6 +203,8 @@ export default function CalendarioAdviento() {
   const envioGratis = totalDecants >= UMBRAL_ENVIO_GRATIS;
   const costoEnvio = entrega === "envio" && !envioGratis ? ENVIO_REGULAR : 0;
   const total = totalDecants + (cal?.precio || 0) + costoEnvio;
+  const faltaCp = entrega === "envio" && cp.length !== 5;
+  const listoParaEnviar = !!entrega && !faltaCp && !!numero;
 
   const elegirMl = (p, ml) => {
     setSel((prev) => {
@@ -248,7 +256,7 @@ export default function CalendarioAdviento() {
         ? "Entrega: personal en Puebla (calendario armado)"
         : `Envío (calendario desarmado y decants por separado): ${envioGratis ? "Gratis" : $(ENVIO_REGULAR)}`,
       ...(entrega === "envio"
-        ? [cp.length === 5 ? `Mi código postal: ${cp}` : "Te paso mi código postal por aquí para revisar la zona de envío."]
+        ? [`Mi código postal: ${cp}`]
         : []),
       `Total: ${$(total)}`,
       "",
@@ -272,7 +280,7 @@ export default function CalendarioAdviento() {
   }, [paso, entrega, cp, numero]);
 
   const enviar = () => {
-    if (!entrega || !numero) return;
+    if (!listoParaEnviar) return;
     track("calendario_whatsapp", { dias, total });
     marcarPedidoWeb(numero, "enviado", datosPedido());
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensaje(numero))}`, "_blank", "noopener,noreferrer");
@@ -395,9 +403,9 @@ export default function CalendarioAdviento() {
               <input
                 value={busq}
                 onChange={(e) => setBusq(e.target.value)}
-                placeholder="Buscar perfume o casa"
-                className="w-full rounded-lg px-4 py-2.5 text-base focus:outline-none"
-                style={{ background: FONDO_CAMPO, border: `1px solid ${DORADO}55`, color: CREMA }}
+                placeholder="🔍 Buscar perfume o casa"
+                className="w-full rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-[#C9A24B] placeholder:text-gray-500"
+                style={CAMPO}
               />
               <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1" style={{ scrollbarWidth: "none" }}>
                 {["", ...casas].map((c) => {
@@ -580,19 +588,22 @@ export default function CalendarioAdviento() {
                 </button>
               ))}
               {entrega === "envio" && (
-                <label className="block">
-                  <span className="block text-xs mb-1" style={{ color: "#d9cfbd" }}>
-                    Tu código postal (opcional): si es zona extendida de DHL, te aviso el costo adicional por
-                    WhatsApp.
+                <label className="block pt-1">
+                  <span className="block text-sm font-semibold mb-1.5" style={{ color: CREMA }}>
+                    Escribe tu código postal
                   </span>
                   <input
                     value={cp}
                     onChange={(e) => setCp(e.target.value.replace(/\D/g, "").slice(0, 5))}
                     inputMode="numeric"
+                    autoComplete="postal-code"
                     placeholder="Ej. 72000"
-                    className="w-full rounded-lg px-4 py-2.5 text-base focus:outline-none"
-                    style={{ background: FONDO_CAMPO, border: `1px solid ${DORADO}55`, color: CREMA }}
+                    className="w-full rounded-lg px-4 py-3 text-lg font-semibold tracking-wider focus:outline-none focus:ring-2 focus:ring-[#C9A24B] placeholder:text-gray-400 placeholder:font-normal"
+                    style={CAMPO}
                   />
+                  <span className="block text-xs mt-1.5" style={{ color: "#d9cfbd" }}>
+                    Si es zona extendida de DHL, te aviso el costo adicional por WhatsApp.
+                  </span>
                 </label>
               )}
             </div>
@@ -626,11 +637,15 @@ export default function CalendarioAdviento() {
               <button
                 type="button"
                 onClick={enviar}
-                disabled={!entrega || !numero}
+                disabled={!listoParaEnviar}
                 className="w-full py-3.5 rounded-xl font-semibold text-base disabled:cursor-not-allowed"
-                style={boton(!!entrega && !!numero)}
+                style={boton(listoParaEnviar)}
               >
-                {entrega ? "Enviar mi pedido por WhatsApp" : "Elige cómo quieres recibirlo"}
+                {!entrega
+                  ? "Elige cómo quieres recibirlo"
+                  : faltaCp
+                    ? "Escribe tu código postal"
+                    : "Enviar mi pedido por WhatsApp"}
               </button>
             )}
 
