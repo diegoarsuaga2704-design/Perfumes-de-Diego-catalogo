@@ -17,6 +17,8 @@ import { Nieve, RamaPino, MonoRegalo, ROJO, VERDE, VERDE_OSCURO, DORADO } from "
 const WHATSAPP = "5212212034647";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const CREMA = "#F6EFE2";
+// Rojo más oscuro para los botones (pedido de Diego).
+const ROJO_BOTON = "#8A1820";
 // Foto de los calendarios (portada).
 const FOTO_CALENDARIO = "/calendario-adviento.jpg";
 
@@ -260,7 +262,7 @@ export default function CalendarioAdviento() {
   };
 
   const boton = (activo = true) => ({
-    background: activo ? ROJO : "rgba(255,255,255,0.12)",
+    background: activo ? ROJO_BOTON : "rgba(255,255,255,0.12)",
     color: activo ? "#fff" : "#a99f8f",
     border: `1px solid ${activo ? DORADO : "transparent"}`,
   });
@@ -326,7 +328,7 @@ export default function CalendarioAdviento() {
                   <span className="block text-sm font-semibold mt-1">Calendario +{$(c.precio)}</span>
                   <span
                     className="block mt-3 py-2.5 rounded-lg text-sm font-semibold"
-                    style={{ background: ROJO, color: "#fff", border: `1px solid ${DORADO}` }}
+                    style={{ background: ROJO_BOTON, color: "#fff", border: `1px solid ${DORADO}` }}
                   >
                     Elegir {c.dias} días
                   </span>
