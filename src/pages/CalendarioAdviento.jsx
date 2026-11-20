@@ -28,7 +28,7 @@ const MINIMO_POR_PERFUME = 200;
 const ENVIO_REGULAR = 180;
 const FECHAS_ENVIO = "entre el 30 de noviembre y, a más tardar, el 4 de diciembre";
 
-const ML_TIENDA = [1, 2, 3, 5, 10, 30];
+const ML_TIENDA = [1, 2, 3, 5, 10];
 const ML_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 const LS_BORRADOR = "calendario_adviento_borrador";
 
