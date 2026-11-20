@@ -44,6 +44,7 @@ const AdminPortada = lazy(() => import("./pages/AdminPortada"));
 const AdminCotizador = lazy(() => import("./pages/AdminCotizador"));
 const AdminPedidosWeb = lazy(() => import("./pages/AdminPedidosWeb"));
 const AdminRegalosCalendario = lazy(() => import("./pages/AdminRegalosCalendario"));
+const AdminCalendarioRecomendados = lazy(() => import("./pages/AdminCalendarioRecomendados"));
 const AdminTemporada = lazy(() => import("./pages/AdminTemporada"));
 const AdminTestimoniosList = lazy(() => import("./pages/AdminTestimoniosList"));
 const AdminTestimonioCreate = lazy(() =>
@@ -231,6 +232,15 @@ const router = createBrowserRouter([
     element: (
       <ProtectedAdminRoute>
         <AdminPedidosWeb />
+      </ProtectedAdminRoute>
+    ),
+    errorElement: <RouterErrorElement />,
+  },
+  {
+    path: "/admin/calendario-recomendados",
+    element: (
+      <ProtectedAdminRoute>
+        <AdminCalendarioRecomendados />
       </ProtectedAdminRoute>
     ),
     errorElement: <RouterErrorElement />,

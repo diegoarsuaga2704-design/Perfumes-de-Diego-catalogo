@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import supabase from "../services/supabase";
 import { Helmet } from "react-helmet-async";
 import FilaDeslizable from "../ui/FilaDeslizable";
 import RegaloSorpresa from "../ui/RegaloSorpresa";
@@ -134,18 +135,28 @@ export default function CalendarioAdviento() {
   const location = useLocation();
   const [params] = useSearchParams();
   const paso = PASOS.includes(params.get("paso")) ? params.get("paso") : "inicio";
-  const urlDe = (p) => ({ search: p === "inicio" ? "" : `?paso=${p}` });
+  // "ver" en el catálogo: "yo" (todos los perfumes) o "diego" (recomendados).
+  const ver = ["yo", "diego"].includes(params.get("ver")) ? params.get("ver") : null;
+  const urlDe = (p, v = null) => ({
+    search: p === "inicio" ? "" : `?paso=${p}${p === "catalogo" && v ? `&ver=${v}` : ""}`,
+  });
+  // Camino recorrido dentro del calendario (para que "atrás" y los botones
+  // de regresar lleven exactamente al mismo lugar).
+  const pila = location.state?.calendarioPila || [paso];
   // Avanzar: agrega una página al historial.
-  const irA = (p) =>
-    navigate(urlDe(p), { state: { calendarioPasos: (location.state?.calendarioPasos || 0) + 1 } });
-  // Regresar: usa el historial si los pasos los abrimos nosotros (así "atrás"
-  // y este botón hacen lo mismo); si no, reemplaza la página actual.
+  const irA = (p, v = null) =>
+    navigate(urlDe(p, v ?? (p === "catalogo" ? ver : null)), { state: { calendarioPila: [...pila, p] } });
+  // Regresar: usa el historial si esa página la abrimos nosotros; si no,
+  // reemplaza la página actual.
   const regresarA = (p) => {
-    const d = PASOS.indexOf(paso) - PASOS.indexOf(p);
-    if (d > 0 && (location.state?.calendarioPasos || 0) >= d) navigate(-d);
-    else navigate(urlDe(p), { replace: true, state: { calendarioPasos: 0 } });
+    const i = pila.lastIndexOf(p);
+    const d = pila.length - 1 - i;
+    if (i >= 0 && d > 0) navigate(-d);
+    else navigate(urlDe(p, p === "catalogo" ? ver : null), { replace: true, state: { calendarioPila: [p] } });
   };
   const setPaso = (p) => (PASOS.indexOf(p) > PASOS.indexOf(paso) ? irA(p) : regresarA(p));
+  // Cambiar entre "elegir yo" y "recomendaciones" sin llenar el historial.
+  const cambiarVer = (v) => navigate(urlDe("catalogo", v), { replace: true, state: location.state });
   const [entrega, setEntrega] = useState(borrador.entrega || null); // "puebla" | "envio"
   const [cp, setCp] = useState(borrador.cp || "");
   const [busq, setBusq] = useState("");
@@ -182,14 +193,46 @@ export default function CalendarioAdviento() {
     [parfums],
   );
 
+  // Recomendados de Diego (lista aparte: parfums.recomendado_calendario).
+  const [recomendados, setRecomendados] = useState(null); // Set de ids (null = cargando)
+  useEffect(() => {
+    let vivo = true;
+    supabase
+      .from("parfums")
+      .select("id")
+      .eq("recomendado_calendario", true)
+      .then(({ data, error }) => {
+        if (vivo) setRecomendados(new Set(error ? [] : (data || []).map((r) => r.id)));
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+  const esRecomendado = (p) => !!recomendados?.has(p.id);
+  const hayRecomendados = catalogo.some(esRecomendado);
+  const modoDiego = ver === "diego" && hayRecomendados;
+  // Antes de elegir decants: "Elegir yo" o "Recomendaciones de Diego".
+  const mostrarEleccion = paso === "catalogo" && !ver && hayRecomendados;
+  const elegirVer = (v) => {
+    setCasaFiltro("");
+    setBusq("");
+    track("calendario_ver", { ver: v });
+    navigate(urlDe("catalogo", v), { state: { calendarioPila: [...pila, "catalogo"] } });
+  };
+
+  const base = useMemo(
+    () => (modoDiego ? catalogo.filter((p) => recomendados.has(p.id)) : catalogo),
+    [catalogo, modoDiego, recomendados],
+  );
+
   const visibles = useMemo(() => {
     const q = normalizarTexto(busq.trim());
-    return catalogo.filter(
+    return base.filter(
       (p) => (!casaFiltro || p.casa === casaFiltro) && (!q || normalizarTexto(`${p.nombre} ${p.casa}`).includes(q)),
     );
-  }, [catalogo, busq, casaFiltro]);
+  }, [base, busq, casaFiltro]);
 
-  const casas = useMemo(() => [...new Set(catalogo.map((p) => p.casa).filter(Boolean))], [catalogo]);
+  const casas = useMemo(() => [...new Set(base.map((p) => p.casa).filter(Boolean))], [base]);
 
   const elegidos = useMemo(
     () =>
@@ -428,11 +471,82 @@ export default function CalendarioAdviento() {
         )}
 
         {/* ---------- Paso 2: catálogo ---------- */}
-        {paso === "catalogo" && cal && (
+        {paso === "catalogo" && cal && !ver && recomendados === null && (
+          <p className="px-4 text-center text-sm" style={{ color: "#d9cfbd" }}>
+            Cargando…
+          </p>
+        )}
+
+        {mostrarEleccion && cal && (
+          <section className="px-4 space-y-4 pt-2">
+            <h2 className="text-center text-2xl" style={{ fontFamily: SERIF }}>
+              ¿Cómo quieres armarlo?
+            </h2>
+            {[
+              ["yo", "Elegir yo", "Escoge entre todos mis decants."],
+              ["diego", "Ver las recomendaciones de Diego", "Mis favoritos para esta Navidad."],
+            ].map(([v, t, d]) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => elegirVer(v)}
+                className="w-full text-left rounded-2xl p-5 shadow-lg flex items-center gap-4 transition-transform active:scale-[0.99]"
+                style={{ background: v === "diego" ? ROJO_BOTON : FONDO_TARJETA, border: `2px solid ${DORADO}` }}
+              >
+                <span
+                  className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-2xl"
+                  style={{ background: DORADO, color: VERDE_OSCURO }}
+                  aria-hidden="true"
+                >
+                  {v === "diego" ? "★" : "✎"}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-lg font-semibold">{t}</span>
+                  <span className="block text-sm mt-0.5" style={{ color: "#e8dfcf" }}>
+                    {d}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </section>
+        )}
+
+        {paso === "catalogo" && cal && !mostrarEleccion && !(!ver && recomendados === null) && (
           <section className="px-4 space-y-4">
-            <p className="text-sm" style={{ color: "#d9cfbd" }}>
-              Elige de {minimo} a {maximo} decants. Toca los ml que quieres de cada perfume.
-            </p>
+            {modoDiego ? (
+              <div className="rounded-xl p-4" style={{ background: ROJO_BOTON, border: `2px solid ${DORADO}` }}>
+                <p className="text-xl" style={{ fontFamily: SERIF }}>
+                  ★ Mis recomendados para Navidad
+                </p>
+                <p className="text-sm mt-1" style={{ color: "#f3e6e6" }}>
+                  Elige de {minimo} a {maximo} decants. Toca los ml que quieres de cada perfume.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => cambiarVer("yo")}
+                  className="mt-3 px-4 py-2 rounded-full text-sm font-semibold"
+                  style={{ background: "#FBF7EE", color: VERDE_OSCURO }}
+                >
+                  Ver todos los perfumes
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-sm" style={{ color: "#d9cfbd" }}>
+                  Elige de {minimo} a {maximo} decants. Toca los ml que quieres de cada perfume.
+                </p>
+                {hayRecomendados && (
+                  <button
+                    type="button"
+                    onClick={() => cambiarVer("diego")}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                    style={{ border: `1px solid ${DORADO}`, color: DORADO }}
+                  >
+                    ★ Ver recomendaciones de Diego
+                  </button>
+                )}
+              </div>
+            )}
             {/* Buscador y casas: se quedan arriba al bajar */}
             <div className="sticky top-0 z-40 -mx-4 px-4 pt-2 pb-2 space-y-2" style={{ background: VERDE_OSCURO }}>
               {cuantos > 0 && (
@@ -509,7 +623,14 @@ export default function CalendarioAdviento() {
                       />
                       <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate">{p.nombre}</p>
+                          <p className="text-sm font-semibold truncate">
+                            {!modoDiego && esRecomendado(p) && (
+                              <span style={{ color: DORADO }} title="Recomendado por Diego">
+                                ★{" "}
+                              </span>
+                            )}
+                            {p.nombre}
+                          </p>
                           <p className="text-xs truncate" style={{ color: "#bfb5a3" }}>
                             {p.casa} · {$(p.precio)}/ml
                           </p>
@@ -750,7 +871,7 @@ export default function CalendarioAdviento() {
       </div>
 
       {/* Barra fija con el avance (en el catálogo) */}
-      {paso === "catalogo" && cal && (
+      {paso === "catalogo" && cal && !mostrarEleccion && (
         <div
           className="fixed bottom-0 inset-x-0 z-40 px-4 py-3"
           style={{ background: "rgba(11,36,25,0.96)", borderTop: `1px solid ${DORADO}`, backdropFilter: "blur(6px)" }}
