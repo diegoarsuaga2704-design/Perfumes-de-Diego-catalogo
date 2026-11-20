@@ -409,6 +409,16 @@ export default function CalendarioAdviento() {
                           );
                         })}
                       </div>
+                      {elegido && (
+                        <button
+                          type="button"
+                          onClick={() => elegirMl(p, elegido)}
+                          className="mt-2 px-3 py-1 rounded-full text-xs font-semibold"
+                          style={{ background: "rgba(0,0,0,0.25)", color: "#f0b4b8", border: "1px solid #f0b4b8" }}
+                        >
+                          ✕ Quitar selección
+                        </button>
+                      )}
                     </div>
                   </li>
                 );
@@ -576,7 +586,7 @@ export default function CalendarioAdviento() {
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">
-                {cuantos} decants{" "}
+                {cuantos} {cuantos === 1 ? "decant" : "decants"}{" "}
                 <span className="font-normal" style={{ color: "#d9cfbd" }}>
                   (mínimo {minimo}, máximo {maximo})
                 </span>
