@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import FilaDeslizable from "../ui/FilaDeslizable";
 import RegaloSorpresa from "../ui/RegaloSorpresa";
@@ -45,6 +46,7 @@ const FECHAS_ENVIO = "entre el 30 de noviembre y, a más tardar, el 4 de diciemb
 const ML_TIENDA = [1, 2, 3, 5, 10];
 const ML_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 const LS_BORRADOR = "calendario_adviento_borrador";
+const PASOS = ["inicio", "catalogo", "resumen"];
 
 const $ = (n) => `$${formatPrecio(n)}`;
 
@@ -126,7 +128,24 @@ export default function CalendarioAdviento() {
   const borrador = useMemo(leerBorrador, []);
   const [dias, setDias] = useState(borrador.dias || null);
   const [sel, setSel] = useState(borrador.sel || {}); // { idPerfume: ml }
-  const [paso, setPaso] = useState(borrador.dias ? "catalogo" : "inicio");
+  // Cada paso es una "página" del historial (?paso=catalogo / resumen), así el
+  // botón atrás del celular regresa al paso anterior en vez de salir del sitio.
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [params] = useSearchParams();
+  const paso = PASOS.includes(params.get("paso")) ? params.get("paso") : "inicio";
+  const urlDe = (p) => ({ search: p === "inicio" ? "" : `?paso=${p}` });
+  // Avanzar: agrega una página al historial.
+  const irA = (p) =>
+    navigate(urlDe(p), { state: { calendarioPasos: (location.state?.calendarioPasos || 0) + 1 } });
+  // Regresar: usa el historial si los pasos los abrimos nosotros (así "atrás"
+  // y este botón hacen lo mismo); si no, reemplaza la página actual.
+  const regresarA = (p) => {
+    const d = PASOS.indexOf(paso) - PASOS.indexOf(p);
+    if (d > 0 && (location.state?.calendarioPasos || 0) >= d) navigate(-d);
+    else navigate(urlDe(p), { replace: true, state: { calendarioPasos: 0 } });
+  };
+  const setPaso = (p) => (PASOS.indexOf(p) > PASOS.indexOf(paso) ? irA(p) : regresarA(p));
   const [entrega, setEntrega] = useState(borrador.entrega || null); // "puebla" | "envio"
   const [cp, setCp] = useState(borrador.cp || "");
   const [busq, setBusq] = useState("");
@@ -192,6 +211,12 @@ export default function CalendarioAdviento() {
   }, [catalogo]);
 
   const cal = dias ? CALENDARIOS[dias] : null;
+
+  // Sin calendario elegido no hay catálogo ni resumen: regresa al inicio.
+  useEffect(() => {
+    if (paso !== "inicio" && !cal) navigate(urlDe("inicio"), { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paso, cal]);
   const minimo = cal?.dias || 0;
   const maximo = minimo * 2;
   const cuantos = elegidos.length;
@@ -200,7 +225,8 @@ export default function CalendarioAdviento() {
 
   // Si ya no alcanza el mínimo (p. ej. se descartó algo), regresa al catálogo.
   useEffect(() => {
-    if (paso === "resumen" && catalogo.length && cuantos < minimo && !listo) setPaso("catalogo");
+    if (paso === "resumen" && catalogo.length && cuantos < minimo && !listo) regresarA("catalogo");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paso, catalogo.length, cuantos, minimo, listo]);
   const envioGratis = totalDecants >= UMBRAL_ENVIO_GRATIS;
   const costoEnvio = entrega === "envio" && !envioGratis ? ENVIO_REGULAR : 0;
