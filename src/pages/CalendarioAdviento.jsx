@@ -271,23 +271,26 @@ export default function CalendarioAdviento() {
     };
   };
 
+  // Mismo formato que el pedido normal de la tienda.
   const mensaje = (n) =>
     [
-      `Hola Diego, quiero mi calendario de adviento de ${dias} días${n ? ` (pedido #${n})` : ""}:`,
+      `Hola Diego, me gustaría realizar mi pedido${n ? ` #${n}` : ""}:`,
       "",
-      `${cuantos} decants:`,
-      ...elegidos.map((x) => `• ${x.nombre} (${x.casa}) · ${x.ml} ml — ${$(x.monto)}`),
+      `Calendario de adviento de ${dias} días (${cuantos} decants)`,
+      entrega === "puebla"
+        ? "Entrega personal en Puebla (calendario armado)"
+        : "Envío a domicilio (calendario desarmado y decants por separado)",
+      "",
+      ...elegidos.map((x) => `${x.ml} ml de ${x.nombre} (${$(x.monto)})`),
       "",
       `Decants: ${$(totalDecants)}`,
       `Calendario ${dias} días: ${$(cal.precio)}`,
-      entrega === "puebla"
-        ? "Entrega: personal en Puebla (calendario armado)"
-        : `Envío (calendario desarmado y decants por separado): ${envioGratis ? "Gratis" : $(ENVIO_REGULAR)}`,
       ...(entrega === "envio"
-        ? [`Mi código postal: ${cp}`]
+        ? [envioGratis ? "Envío: Gratis" : `Envío (DHL zona regular): ${$(ENVIO_REGULAR)}`]
         : []),
-      `Total: ${$(total)}`,
+      `Total a pagar: ${$(total)}`,
       "",
+      ...(entrega === "envio" ? [`Mi código postal: ${cp}`] : []),
       "Gracias!",
     ].join("\n");
 
