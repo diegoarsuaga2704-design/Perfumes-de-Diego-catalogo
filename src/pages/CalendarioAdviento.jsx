@@ -65,11 +65,31 @@ function leerBorrador() {
   }
 }
 
-function Encabezado({ compacto = false, dias, onCambiar }) {
+function BotonRegresar({ onClick, etiqueta = "Regresar" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={etiqueta}
+      title={etiqueta}
+      className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold shadow-lg"
+      style={{ background: DORADO, color: VERDE_OSCURO }}
+    >
+      ←
+    </button>
+  );
+}
+
+function Encabezado({ compacto = false, dias, onCambiar, onRegresar }) {
   if (compacto) {
+    // Barra fija arriba: regresar, título y cambiar calendario.
     return (
-      <header className="relative overflow-hidden px-4 pt-4 pb-3 flex items-center justify-between gap-3">
-        <div className="min-w-0">
+      <header
+        className="sticky top-0 z-50 h-16 px-3 flex items-center gap-3"
+        style={{ background: VERDE_OSCURO, borderBottom: `1px solid ${DORADO}33` }}
+      >
+        <BotonRegresar onClick={onRegresar} etiqueta="Paso anterior" />
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: DORADO }}>
             Perfumes de Diego
           </p>
@@ -218,6 +238,18 @@ export default function CalendarioAdviento() {
     setBusq("");
     track("calendario_ver", { ver: v });
     navigate(urlDe("catalogo", v), { state: { calendarioPila: [...pila, "catalogo"] } });
+  };
+
+  // Botón ← : siempre al paso anterior.
+  const regresar = () => {
+    if (paso === "resumen") return regresarA("catalogo");
+    if (paso === "catalogo" && ver && hayRecomendados) {
+      // Del catálogo a "¿Cómo quieres armarlo?"
+      if (pila.length >= 2 && pila[pila.length - 2] === "catalogo") return navigate(-1);
+      return navigate(urlDe("catalogo"), { replace: true, state: { calendarioPila: ["inicio", "catalogo"] } });
+    }
+    if (paso === "catalogo") return regresarA("inicio");
+    return navigate("/home");
   };
 
   const base = useMemo(
@@ -410,7 +442,17 @@ export default function CalendarioAdviento() {
       <Nieve />
 
       <div className="relative z-30 max-w-2xl mx-auto pb-36">
-        <Encabezado compacto={paso !== "inicio" && !!cal} dias={dias} onCambiar={() => setPaso("inicio")} />
+        {!(paso !== "inicio" && !!cal) && (
+          <div className="fixed top-3 left-3 z-50">
+            <BotonRegresar onClick={regresar} etiqueta="Regresar a la tienda" />
+          </div>
+        )}
+        <Encabezado
+          compacto={paso !== "inicio" && !!cal}
+          dias={dias}
+          onCambiar={() => setPaso("inicio")}
+          onRegresar={regresar}
+        />
 
         {/* ---------- Paso 1: elegir calendario ---------- */}
         {paso === "inicio" && (
@@ -548,7 +590,7 @@ export default function CalendarioAdviento() {
               </div>
             )}
             {/* Buscador y casas: se quedan arriba al bajar */}
-            <div className="sticky top-0 z-40 -mx-4 px-4 pt-2 pb-2 space-y-2" style={{ background: VERDE_OSCURO }}>
+            <div className="sticky top-16 z-40 -mx-4 px-4 pt-2 pb-2 space-y-2" style={{ background: VERDE_OSCURO }}>
               {cuantos > 0 && (
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-semibold" style={{ color: DORADO }}>
