@@ -274,8 +274,15 @@ export default function AdminRegalosCalendario() {
                 {r.canjeado_en && (
                   <div className="rounded-md bg-gray-50 border border-gray-200 p-2.5 space-y-1.5">
                     <p className="text-gray-700">
-                      <span className="font-semibold">{r.nombre}</span> · {fechaHora(r.canjeado_en)}
+                      Canjeado el {fechaHora(r.canjeado_en)}
+                      {r.nombre ? (
+                        <>
+                          {" "}
+                          por <span className="font-semibold">{r.nombre}</span>
+                        </>
+                      ) : null}
                     </p>
+                    {r.telefono && (
                     <a
                       href={`https://wa.me/52${r.telefono}?text=${encodeURIComponent(
                         `Hola ${String(r.nombre || "").split(" ")[0]}, soy Diego de Perfumes de Diego. ¡Felicidades por tu regalo del calendario: ${r.premio}! Te escribo para entregártelo.`,
@@ -286,6 +293,7 @@ export default function AdminRegalosCalendario() {
                     >
                       Escribirle · {r.telefono}
                     </a>
+                    )}
                     <label className="flex items-center gap-2 text-gray-700">
                       <input
                         type="checkbox"

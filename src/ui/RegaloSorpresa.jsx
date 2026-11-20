@@ -4,20 +4,19 @@ import { canjearRegalo } from "../functions/regalosCalendario";
 import { DORADO, VERDE_OSCURO } from "./Navidad";
 
 // Regalo sorpresa del calendario de adviento: aviso muy visible y, al abrirlo,
-// el cliente escribe el código que trae su calendario y se abre la caja con su
-// premio.
+// el cliente escribe el código que trae su calendario, se abre la caja con su
+// premio y le avisa a Diego por WhatsApp (como los pedidos).
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const CREMA = "#F6EFE2";
 const ROJO_BOTON = "#8A1820";
 const CAMPO = { background: "#FBF7EE", color: "#1F2A24", border: `2px solid ${DORADO}` };
 const LS_REGALO = "calendario_regalo_canjeado";
+const WHATSAPP = "5212212034647";
 
 const MOTIVOS = {
   no_existe: "Ese código no existe. Revisa que esté bien escrito (por ejemplo NAV-7K2QM).",
   usado: "Ese código ya se canjeó. Si crees que es un error, escríbeme por WhatsApp.",
-  telefono: "Escribe tu WhatsApp a 10 dígitos.",
-  nombre: "Escribe tu nombre.",
   error: "No se pudo revisar ahora. Intenta de nuevo en un momento.",
 };
 
@@ -57,8 +56,6 @@ export default function RegaloSorpresa() {
   const guardado = leerGuardado();
   const [abierto, setAbierto] = useState(false);
   const [codigo, setCodigo] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [tel, setTel] = useState("");
   const [error, setError] = useState("");
   const [fase, setFase] = useState(guardado ? "abierta" : "cerrada"); // cerrada | sacude | abierta
   const [premio, setPremio] = useState(guardado);
@@ -72,7 +69,7 @@ export default function RegaloSorpresa() {
     let res;
     try {
       [res] = await Promise.all([
-        canjearRegalo(codigo, nombre, tel),
+        canjearRegalo(codigo, null, null),
         new Promise((r) => setTimeout(r, 1300)), // la caja se sacude un momento
       ]);
     } catch {
@@ -124,9 +121,21 @@ export default function RegaloSorpresa() {
               </p>
             )}
             <p className="mt-3 text-sm" style={{ color: "#f3e6e6" }}>
-              ¡Felicidades! Te escribo por WhatsApp para entregártelo.
+              ¡Felicidades! Avísame por WhatsApp para entregártelo.
             </p>
           </div>
+          <a
+            href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+              `Hola Diego, mi código del calendario es ${premio.codigo} y me tocó: ${premio.premio}`,
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("regalo_calendario_whatsapp")}
+            className="mt-4 block w-full py-3.5 rounded-xl font-semibold text-base"
+            style={{ background: DORADO, color: VERDE_OSCURO }}
+          >
+            Avisarle a Diego por WhatsApp
+          </a>
         </>
       ) : (
         <>
@@ -164,37 +173,8 @@ export default function RegaloSorpresa() {
                   style={CAMPO}
                 />
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="block text-sm font-semibold mb-1" style={{ color: CREMA }}>
-                    Tu nombre
-                  </span>
-                  <input
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value.slice(0, 80))}
-                    autoComplete="name"
-                    className="w-full rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-[#C9A24B]"
-                    style={CAMPO}
-                  />
-                </label>
-                <label className="block">
-                  <span className="block text-sm font-semibold mb-1" style={{ color: CREMA }}>
-                    Tu WhatsApp
-                  </span>
-                  <input
-                    value={tel}
-                    onChange={(e) => setTel(e.target.value.replace(/[^\d+\s-]/g, "").slice(0, 18))}
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    placeholder="10 dígitos"
-                    className="w-full rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-[#C9A24B] placeholder:text-gray-400"
-                    style={CAMPO}
-                  />
-                </label>
-              </div>
               <p className="text-xs" style={{ color: "#f3e6e6" }}>
-                Tu WhatsApp es para entregarte el regalo. Cada código se puede canjear una sola vez.
+                Cada código se puede canjear una sola vez.
               </p>
               {error && (
                 <p className="text-sm font-semibold rounded-lg px-3 py-2" style={{ background: "#FBF7EE", color: "#8A1820" }}>
