@@ -381,6 +381,9 @@ export default function CalendarioAdviento() {
             <Aviso titulo="Fechas">
               Debido a unos atrasos, los calendarios se empezarán a enviar aproximadamente {FECHAS_ENVIO}.
             </Aviso>
+            <Aviso titulo="Cupones">
+              Los cupones y códigos de descuento de la tienda no se pueden usar en los calendarios de adviento.
+            </Aviso>
             <h2 className="text-center text-2xl pt-4" style={{ fontFamily: SERIF }}>
               Selecciona tu calendario:
             </h2>
@@ -662,6 +665,9 @@ export default function CalendarioAdviento() {
                 <span>{$(total)}</span>
               </div>
             </div>
+            <p className="text-xs text-center -mt-2" style={{ color: "#d9cfbd" }}>
+              Los cupones de descuento no aplican en calendarios.
+            </p>
 
             {!listo && !preguntar && (
               <button
