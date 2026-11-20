@@ -17,8 +17,8 @@ import { Nieve, RamaPino, MonoRegalo, ROJO, VERDE, VERDE_OSCURO, DORADO } from "
 const WHATSAPP = "5212212034647";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const CREMA = "#F6EFE2";
-// Foto de los calendarios (portada). Cuando Diego la mande, va aquí.
-const FOTO_CALENDARIO = null;
+// Foto de los calendarios (portada).
+const FOTO_CALENDARIO = "/calendario-adviento.jpg";
 
 const CALENDARIOS = {
   12: { dias: 12, precio: 180 },
@@ -62,15 +62,13 @@ function Encabezado() {
       <p className="relative mt-3 text-sm sm:text-base max-w-md mx-auto" style={{ color: "#d9cfbd" }}>
         Un decant para abrir cada día hasta Navidad, armado con los perfumes que tú elijas.
       </p>
-      {FOTO_CALENDARIO ? (
+      {FOTO_CALENDARIO && (
         <img
           src={FOTO_CALENDARIO}
           alt="Calendario de adviento de Perfumes de Diego"
           className="relative mt-6 mx-auto w-full max-w-md rounded-xl shadow-2xl"
           style={{ border: `1px solid ${DORADO}55` }}
         />
-      ) : (
-        <MonoRegalo className="relative mt-6 mx-auto w-20 h-20" />
       )}
     </header>
   );
@@ -287,8 +285,19 @@ export default function CalendarioAdviento() {
         {/* ---------- Paso 1: elegir calendario ---------- */}
         {paso === "inicio" && (
           <section className="px-4 space-y-4">
-            <h2 className="text-center text-2xl" style={{ fontFamily: SERIF }}>
-              ¿De cuántos días lo quieres?
+            <Aviso titulo="Cómo funciona">
+              Eliges tus perfumes y cuántos ml quieres de cada uno (mínimo {$(MINIMO_POR_PERFUME)} por
+              perfume). El total es la suma de tus decants más el calendario.
+            </Aviso>
+            <Aviso titulo="Entrega">
+              El calendario completamente armado solo se entrega personalmente en Puebla. Para envíos, el
+              calendario va desarmado y los decants por separado, para que no se dañe en el camino.
+            </Aviso>
+            <Aviso titulo="Fechas">
+              Debido a unos atrasos, los calendarios se empezarán a enviar aproximadamente {FECHAS_ENVIO}.
+            </Aviso>
+            <h2 className="text-center text-2xl pt-4" style={{ fontFamily: SERIF }}>
+              Selecciona tu calendario:
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {Object.values(CALENDARIOS).map((c) => (
@@ -301,10 +310,10 @@ export default function CalendarioAdviento() {
                     setPaso("catalogo");
                     track("calendario_elegido", { dias: c.dias });
                   }}
-                  className="rounded-2xl p-5 text-center transition-transform active:scale-[0.98]"
+                  className="rounded-2xl p-4 pb-3 text-center shadow-lg transition-transform hover:-translate-y-0.5 active:scale-[0.98] flex flex-col"
                   style={{
-                    background: dias === c.dias ? "rgba(179,32,42,0.35)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${DORADO}`,
+                    background: "rgba(255,255,255,0.10)",
+                    border: `2px solid ${dias === c.dias ? DORADO : `${DORADO}88`}`,
                   }}
                 >
                   <span className="block text-5xl" style={{ fontFamily: SERIF, color: DORADO }}>
@@ -315,20 +324,15 @@ export default function CalendarioAdviento() {
                     De {c.dias} a {c.dias * 2} decants
                   </span>
                   <span className="block text-sm font-semibold mt-1">Calendario +{$(c.precio)}</span>
+                  <span
+                    className="block mt-3 py-2.5 rounded-lg text-sm font-semibold"
+                    style={{ background: ROJO, color: "#fff", border: `1px solid ${DORADO}` }}
+                  >
+                    Elegir {c.dias} días
+                  </span>
                 </button>
               ))}
             </div>
-            <Aviso titulo="Cómo funciona">
-              Eliges tus perfumes y cuántos ml quieres de cada uno (mínimo {$(MINIMO_POR_PERFUME)} por
-              perfume). El total es la suma de tus decants más el calendario.
-            </Aviso>
-            <Aviso titulo="Entrega">
-              El calendario completamente armado solo se entrega personalmente en Puebla. Para envíos, el
-              calendario va desarmado y los decants por separado, para que no se dañe en el camino.
-            </Aviso>
-            <Aviso titulo="Fechas">
-              Debido a unos atrasos, los calendarios se empezarán a enviar aproximadamente {FECHAS_ENVIO}.
-            </Aviso>
           </section>
         )}
 
