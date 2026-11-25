@@ -59,13 +59,15 @@ const FECHAS_ENVIO = "entre el 30 de noviembre y, a más tardar, el 4 de diciemb
 const ML_TIENDA = [1, 2, 3, 5, 10];
 const ML_ENSAR_OUD = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 const LS_BORRADOR = "calendario_adviento_borrador";
-const PASOS = ["inicio", "catalogo", "entrega", "resumen"];
+const PASOS = ["inicio", "dias", "catalogo", "entrega", "resumen"];
 // Pasos numerados que ve el cliente en la barra de arriba.
 const NOMBRE_PASO = {
-  catalogo: [1, "Elige tus decants"],
-  entrega: [2, "Modelo y entrega"],
-  resumen: [3, "Revisa y envía"],
+  dias: [1, "Elige tu calendario"],
+  catalogo: [2, "Elige tus decants"],
+  entrega: [3, "Modelo y entrega"],
+  resumen: [4, "Revisa y envía"],
 };
+const TOTAL_PASOS = Object.keys(NOMBRE_PASO).length;
 
 const $ = (n) => `$${formatPrecio(n)}`;
 
@@ -109,7 +111,7 @@ function Encabezado({ compacto = false, paso, onRegresar }) {
         <BotonRegresar onClick={onRegresar} etiqueta="Paso anterior" />
         <div className="min-w-0 flex-1">
           <p className="text-[11px] uppercase tracking-[0.2em] font-semibold" style={{ color: DORADO }}>
-            {n ? `Paso ${n} de 3` : "Perfumes de Diego"}
+            {n ? `Paso ${n} de ${TOTAL_PASOS}` : "Perfumes de Diego"}
           </p>
           <p className="text-2xl leading-tight truncate" style={{ fontFamily: SERIF, color: CREMA }}>
             {nombre || "Calendario de adviento"}
@@ -258,9 +260,10 @@ export default function CalendarioAdviento() {
     if (paso === "catalogo" && ver && hayRecomendados) {
       // Del catálogo a "¿Cómo quieres armarlo?"
       if (pila.length >= 2 && pila[pila.length - 2] === "catalogo") return navigate(-1);
-      return navigate(urlDe("catalogo"), { replace: true, state: { calendarioPila: ["inicio", "catalogo"] } });
+      return navigate(urlDe("catalogo"), { replace: true, state: { calendarioPila: ["inicio", "dias", "catalogo"] } });
     }
-    if (paso === "catalogo") return regresarA("inicio");
+    if (paso === "catalogo") return regresarA("dias");
+    if (paso === "dias") return regresarA("inicio");
     return navigate("/home");
   };
 
@@ -312,7 +315,8 @@ export default function CalendarioAdviento() {
 
   // Sin calendario elegido no hay catálogo ni pasos siguientes: regresa al inicio.
   useEffect(() => {
-    if (paso !== "inicio" && !cal && !listo) navigate(urlDe("inicio"), { replace: true });
+    if (paso !== "inicio" && paso !== "dias" && !cal && !listo)
+      navigate(urlDe("dias"), { replace: true, state: { calendarioPila: ["inicio", "dias"] } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paso, cal]);
 
@@ -516,9 +520,29 @@ export default function CalendarioAdviento() {
             <p className="text-xs text-center -mt-1" style={{ color: "#d9cfbd" }}>
               Los dos modelos vienen en 12 y 24 días y cuestan lo mismo. El modelo lo eliges al final.
             </p>
-            <h2 className="text-center text-2xl pt-4" style={{ fontFamily: SERIF }}>
-              Selecciona tu calendario:
+            <button
+              type="button"
+              onClick={() => {
+                setPaso("dias");
+                track("calendario_empezar", {});
+              }}
+              className="w-full py-4 rounded-xl font-semibold text-lg shadow-lg active:scale-[0.99]"
+              style={boton(true)}
+            >
+              Empezar
+            </button>
+          </section>
+        )}
+
+        {/* ---------- Paso 1: días ---------- */}
+        {paso === "dias" && (
+          <section className="px-4 pt-4 space-y-4">
+            <h2 className="text-center text-2xl" style={{ fontFamily: SERIF }}>
+              ¿De cuántos días lo quieres?
             </h2>
+            <p className="text-sm text-center -mt-2" style={{ color: "#d9cfbd" }}>
+              Un decant por día como mínimo y hasta el doble. El modelo lo eliges al final.
+            </p>
             <div className="grid grid-cols-2 gap-3">
               {Object.values(CALENDARIOS).map((c) => (
                 <button
