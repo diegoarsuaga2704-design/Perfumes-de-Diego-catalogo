@@ -18,7 +18,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { soloPrincipales } from "../src/seo/principal.js";
+import { soloPrincipales, filaPrincipal } from "../src/seo/principal.js";
 
 // Rutas fijas e indexables (sin /admin y sin /paquetes).
 const RUTAS_FIJAS = [
@@ -50,11 +50,25 @@ function slugify(text) {
     .replace(/^-|-$/g, "");
 }
 
-function nodoUrl(base, { path, loc, changefreq, priority }) {
+// Fecha de último cambio (AAAA-MM-DD) o null si no hay una válida.
+function fecha(valor) {
+  const d = valor ? new Date(valor) : null;
+  return d && !isNaN(d) ? d.toISOString().slice(0, 10) : null;
+}
+// La más reciente de varias fechas.
+function masReciente(fechas) {
+  return fechas.filter(Boolean).sort().at(-1) || null;
+}
+// Último cambio de un perfume: updated_at si existe (SQL de diciembre), si no
+// la fecha en que se dio de alta.
+const cambioPerfume = (p) => fecha(p.updated_at) || fecha(p.created_at);
+
+function nodoUrl(base, { path, loc, changefreq, priority, lastmod }) {
   const url = loc || `${base}${path}`;
   return (
     "  <url>\n" +
     `    <loc>${url}</loc>\n` +
+    (lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : "") +
     `    <changefreq>${changefreq}</changefreq>\n` +
     `    <priority>${priority}</priority>\n` +
     "  </url>"
@@ -68,7 +82,8 @@ async function traerParfums(supabase) {
   for (;;) {
     const { data, error } = await supabase
       .from("parfums")
-      .select("id, nombre, casa, concentracion")
+      // "*" para no fallar si la columna updated_at todavía no existe.
+      .select("*")
       .order("id", { ascending: true })
       .range(desde, desde + pageSize - 1);
     if (error) throw error;
@@ -98,6 +113,14 @@ export default async function handler(req, res) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
       const parfums = await traerParfums(supabase);
 
+      // Último cambio de cada página de producto: el más reciente entre
+      // su decant y su botella (comparten página).
+      const cambioGrupo = {};
+      for (const p of parfums) {
+        const id = filaPrincipal(p, parfums).id;
+        cambioGrupo[id] = masReciente([cambioGrupo[id], cambioPerfume(p)]);
+      }
+
       // Productos: una URL por perfume (decant y botella comparten página)
       for (const p of soloPrincipales(parfums)) {
         const slug = slugify(p.nombre);
@@ -106,27 +129,30 @@ export default async function handler(req, res) {
           loc: `${BASE_URL}/product/${slug}/${p.id}`,
           changefreq: "weekly",
           priority: "0.8",
+          lastmod: cambioGrupo[p.id],
         });
       }
 
       // Casas (valores únicos reales de parfums.casa)
-      const slugsCasa = new Set();
+      // Último cambio de una casa: el de su perfume más reciente.
+      const cambioCasa = {};
       for (const p of parfums) {
         const slug = slugify(p.casa);
-        if (slug) slugsCasa.add(slug);
+        if (slug) cambioCasa[slug] = masReciente([cambioCasa[slug], cambioPerfume(p)]);
       }
-      for (const slug of [...slugsCasa].sort()) {
+      for (const slug of Object.keys(cambioCasa).sort()) {
         urls.push({
           loc: `${BASE_URL}/casa/${slug}`,
           changefreq: "weekly",
           priority: "0.7",
+          lastmod: cambioCasa[slug],
         });
       }
 
       // Posts del blog (publicados)
       const { data: posts } = await supabase
         .from("posts")
-        .select("slug")
+        .select("slug, creado_en, actualizado_en")
         .eq("publicado", true);
       for (const post of posts || []) {
         if (!post.slug) continue;
@@ -134,6 +160,7 @@ export default async function handler(req, res) {
           loc: `${BASE_URL}/blog/${post.slug}`,
           changefreq: "monthly",
           priority: "0.6",
+          lastmod: fecha(post.actualizado_en) || fecha(post.creado_en),
         });
       }
     }
