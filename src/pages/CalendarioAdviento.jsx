@@ -44,7 +44,8 @@ const CALENDARIOS = {
 const MIN_DECANTS = Math.min(...Object.values(CALENDARIOS).map((c) => c.dias));
 const MAX_DECANTS = Math.max(...Object.values(CALENDARIOS).map((c) => c.dias * 2));
 const cabeEn = (c, n) => n >= c.dias && n <= c.dias * 2;
-const MINIMO_POR_PERFUME = 200;
+// Mínimo 1 ml por perfume en todas las casas.
+const ML_MINIMO = 1;
 const ENVIO_REGULAR = 180;
 const FECHAS_ENVIO = "entre el 30 de noviembre y, a más tardar, el 4 de diciembre";
 
@@ -55,10 +56,10 @@ const PASOS = ["inicio", "catalogo", "resumen"];
 
 const $ = (n) => `$${formatPrecio(n)}`;
 
-// Tamaños que llegan al mínimo de $200 por perfume.
+// Tamaños de cada perfume, desde 1 ml.
 function opcionesMl(p) {
   const lista = p.casa === "Ensar Oud" ? ML_ENSAR_OUD : ML_TIENDA;
-  return lista.filter((ml) => calcularPrecioDecant(p, ml) >= MINIMO_POR_PERFUME);
+  return lista.filter((ml) => ml >= ML_MINIMO);
 }
 
 function leerBorrador() {
@@ -194,7 +195,7 @@ export default function CalendarioAdviento() {
     }
   }, [dias, sel, entrega, cp, numero]);
 
-  // Catálogo: decants disponibles con al menos un tamaño de $200 o más.
+  // Catálogo: decants disponibles.
   const catalogo = useMemo(
     () =>
       parfums
@@ -484,7 +485,6 @@ export default function CalendarioAdviento() {
                   <span className="block text-xs mt-3" style={{ color: "#d9cfbd" }}>
                     De {c.dias} a {c.dias * 2} decants
                   </span>
-                  <span className="block text-sm font-semibold mt-1">Decants + {$(c.precio)}</span>
                 </div>
               ))}
             </div>
