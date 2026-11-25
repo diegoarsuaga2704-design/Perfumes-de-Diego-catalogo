@@ -38,7 +38,7 @@ const FOTO_CALENDARIO = "/calendario-adviento.jpg?v=2";
 // Modelos del calendario (mismo precio; se elige en el paso 2).
 const MODELOS = {
   pastel: { nombre: "Pastel", foto: FOTO_CALENDARIO },
-  cajas: { nombre: "Cajas navideñas", foto: "/calendario-cajitas.jpg" },
+  cajas: { nombre: "Cajas navideñas", foto: "/calendario-cajitas.jpg?v=2" },
 };
 
 const CALENDARIOS = {
