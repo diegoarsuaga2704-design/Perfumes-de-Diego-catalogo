@@ -269,12 +269,15 @@ export default function CalendarioAdviento() {
     [catalogo, modoDiego, recomendados],
   );
 
+  // Al buscar, siempre se busca en todo el catálogo (aunque esté viendo los
+  // recomendados de Diego).
+  const buscando = busq.trim() !== "";
   const visibles = useMemo(() => {
     const q = normalizarTexto(busq.trim());
-    return base.filter(
+    return (q ? catalogo : base).filter(
       (p) => (!casaFiltro || p.casa === casaFiltro) && (!q || normalizarTexto(`${p.nombre} ${p.casa}`).includes(q)),
     );
-  }, [base, busq, casaFiltro]);
+  }, [base, catalogo, busq, casaFiltro]);
 
   const casas = useMemo(() => [...new Set(base.map((p) => p.casa).filter(Boolean))], [base]);
 
@@ -702,7 +705,7 @@ export default function CalendarioAdviento() {
                       <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold truncate">
-                            {!modoDiego && esRecomendado(p) && (
+                            {(!modoDiego || buscando) && esRecomendado(p) && (
                               <span style={{ color: DORADO }} title="Recomendado por Diego">
                                 ★{" "}
                               </span>
