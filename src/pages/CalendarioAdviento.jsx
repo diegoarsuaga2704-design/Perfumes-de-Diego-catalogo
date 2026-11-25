@@ -63,7 +63,7 @@ const PASOS = ["inicio", "catalogo", "entrega", "resumen"];
 // Pasos numerados que ve el cliente en la barra de arriba.
 const NOMBRE_PASO = {
   catalogo: [1, "Elige tus decants"],
-  entrega: [2, "Calendario y entrega"],
+  entrega: [2, "Modelo y entrega"],
   resumen: [3, "Revisa y envía"],
 };
 
@@ -300,23 +300,22 @@ export default function CalendarioAdviento() {
   const cal = dias ? CALENDARIOS[dias] : null;
 
   const cuantos = elegidos.length;
-  const lleno = cuantos >= MAX_DECANTS;
+  // El calendario (12 o 24 días) se elige al inicio: de N a 2N decants.
+  const minimo = cal?.dias || MIN_DECANTS;
+  const maximo = cal ? cal.dias * 2 : MAX_DECANTS;
+  const lleno = cuantos >= maximo;
+  const decantsListos = !!cal && cabeEn(cal, cuantos);
   const totalDecants = elegidos.reduce((s, x) => s + x.monto, 0);
-  // Calendarios en los que caben los decants elegidos.
-  const calendariosValidos = Object.values(CALENDARIOS).filter((c) => cabeEn(c, cuantos));
 
-  // El calendario se elige al final: si el que estaba elegido ya no cabe con
-  // los decants actuales, se borra; si solo uno cabe, se elige solo.
+  // Sin calendario elegido no hay catálogo ni pasos siguientes: regresa al inicio.
   useEffect(() => {
-    if (listo || !catalogo.length) return;
-    if (cal && !cabeEn(cal, cuantos)) setDias(calendariosValidos.length === 1 ? calendariosValidos[0].dias : null);
-    else if (!cal && calendariosValidos.length === 1 && paso !== "inicio") setDias(calendariosValidos[0].dias);
+    if (paso !== "inicio" && !cal && !listo) navigate(urlDe("inicio"), { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cuantos, paso, catalogo.length, listo]);
+  }, [paso, cal]);
 
-  // Si ya no alcanza el mínimo (p. ej. se descartó algo), regresa al catálogo.
+  // Si ya no alcanza (o se pasa) de decants, regresa al catálogo.
   useEffect(() => {
-    if ((paso === "resumen" || paso === "entrega") && catalogo.length && cuantos < MIN_DECANTS && !listo)
+    if ((paso === "resumen" || paso === "entrega") && cal && catalogo.length && !decantsListos && !listo)
       regresarA("catalogo");
     // Sin entrega elegida no se puede revisar: regresa a elegirla.
     else if (paso === "resumen" && catalogo.length && (!modelo || !entrega || (entrega === "envio" && cp.length !== 5)) && !listo)
@@ -334,7 +333,7 @@ export default function CalendarioAdviento() {
     setSel((prev) => {
       const nuevo = { ...prev };
       if (prev[p.id] === ml) delete nuevo[p.id];
-      else if (prev[p.id] || Object.keys(prev).length < MAX_DECANTS) nuevo[p.id] = ml;
+      else if (prev[p.id] || Object.keys(prev).length < maximo) nuevo[p.id] = ml;
       return nuevo;
     });
   };
@@ -490,26 +489,6 @@ export default function CalendarioAdviento() {
               Los cupones y códigos de descuento de la tienda no se pueden usar en los calendarios de adviento.
             </Aviso>
             <h2 className="text-center text-2xl pt-4" style={{ fontFamily: SERIF }}>
-              {Object.keys(CALENDARIOS).length > 1 ? "Calendarios" : "Tu calendario"}
-            </h2>
-            <div className={`grid gap-3 ${Object.keys(CALENDARIOS).length > 1 ? "grid-cols-2" : "grid-cols-1 max-w-xs mx-auto"}`}>
-              {Object.values(CALENDARIOS).map((c) => (
-                <div
-                  key={c.dias}
-                  className="rounded-2xl p-4 text-center"
-                  style={{ background: FONDO_TARJETA, border: `1px solid ${DORADO}88` }}
-                >
-                  <span className="block text-5xl font-light tabular-nums leading-none pt-1" style={{ color: DORADO }}>
-                    {c.dias}
-                  </span>
-                  <span className="block text-sm uppercase tracking-widest mt-1">días</span>
-                  <span className="block text-xs mt-3" style={{ color: "#d9cfbd" }}>
-                    De {c.dias} a {c.dias * 2} decants
-                  </span>
-                </div>
-              ))}
-            </div>
-            <h2 className="text-center text-2xl pt-2" style={{ fontFamily: SERIF }}>
               Modelos
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -532,19 +511,40 @@ export default function CalendarioAdviento() {
               ))}
             </div>
             <p className="text-xs text-center -mt-1" style={{ color: "#d9cfbd" }}>
-              Los dos modelos vienen en 12 y 24 días. El modelo lo eliges al final.
+              Los dos modelos vienen en 12 y 24 días y cuestan lo mismo. El modelo lo eliges al final.
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setPaso("catalogo");
-                track("calendario_empezar", {});
-              }}
-              className="w-full py-4 rounded-xl font-semibold text-base shadow-lg active:scale-[0.99]"
-              style={boton(true)}
-            >
-              Empezar a elegir mis decants
-            </button>
+            <h2 className="text-center text-2xl pt-4" style={{ fontFamily: SERIF }}>
+              Selecciona tu calendario:
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.values(CALENDARIOS).map((c) => (
+                <button
+                  key={c.dias}
+                  type="button"
+                  onClick={() => {
+                    setDias(c.dias);
+                    setPaso("catalogo");
+                    track("calendario_elegido", { dias: c.dias });
+                  }}
+                  className="rounded-2xl p-4 pb-3 text-center shadow-lg transition-transform hover:-translate-y-0.5 active:scale-[0.98] flex flex-col"
+                  style={{ background: FONDO_TARJETA, border: `2px solid ${DORADO}` }}
+                >
+                  <span className="block text-5xl font-light tabular-nums leading-none pt-1" style={{ color: DORADO }}>
+                    {c.dias}
+                  </span>
+                  <span className="block text-sm uppercase tracking-widest mt-1">días</span>
+                  <span className="block text-xs mt-3" style={{ color: "#d9cfbd" }}>
+                    De {c.dias} a {c.dias * 2} decants
+                  </span>
+                  <span
+                    className="block mt-3 py-2.5 rounded-lg text-sm font-semibold"
+                    style={{ background: ROJO_BOTON, color: "#fff", border: `1px solid ${DORADO}` }}
+                  >
+                    Elegir {c.dias} días
+                  </span>
+                </button>
+              ))}
+            </div>
           </section>
         )}
 
@@ -589,7 +589,7 @@ export default function CalendarioAdviento() {
           </section>
         )}
 
-        {paso === "catalogo" && !mostrarEleccion && !(!ver && recomendados === null) && (
+        {paso === "catalogo" && cal && !mostrarEleccion && !(!ver && recomendados === null) && (
           <section className="px-4 space-y-4">
             {modoDiego ? (
               <div className="rounded-xl p-4" style={{ background: ROJO_BOTON, border: `2px solid ${DORADO}` }}>
@@ -597,7 +597,7 @@ export default function CalendarioAdviento() {
                   ★ Mis recomendados para Navidad
                 </p>
                 <p className="text-sm mt-1" style={{ color: "#f3e6e6" }}>
-                  Elige de {MIN_DECANTS} a {MAX_DECANTS} decants. Toca los ml que quieres de cada perfume.
+                  Calendario de {dias} días: elige de {minimo} a {maximo} decants. Toca los ml que quieres de cada perfume.
                 </p>
                 <button
                   type="button"
@@ -611,7 +611,7 @@ export default function CalendarioAdviento() {
             ) : (
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-sm" style={{ color: "#d9cfbd" }}>
-                  Elige de {MIN_DECANTS} a {MAX_DECANTS} decants. Toca los ml que quieres de cada perfume.
+                  Calendario de {dias} días: elige de {minimo} a {maximo} decants. Toca los ml que quieres de cada perfume.
                 </p>
                 {hayRecomendados && (
                   <button
@@ -759,61 +759,8 @@ export default function CalendarioAdviento() {
         )}
 
         {/* ---------- Paso 2: cómo lo recibe ---------- */}
-        {paso === "entrega" && cuantos >= MIN_DECANTS && (
+        {paso === "entrega" && decantsListos && (
           <section className="px-4 space-y-4 pt-2">
-            {Object.keys(CALENDARIOS).length > 1 && (
-              <div className="space-y-3">
-                <h2 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
-                  Elige tu calendario
-                </h2>
-              {Object.values(CALENDARIOS).map((c) => {
-                const cabe = cabeEn(c, cuantos);
-                const activo = dias === c.dias;
-                const motivo =
-                  cuantos < c.dias
-                    ? `Te ${c.dias - cuantos === 1 ? "falta 1 decant" : `faltan ${c.dias - cuantos} decants`} para este calendario.`
-                    : `Lleva de ${c.dias} a ${c.dias * 2} decants; tienes ${cuantos}. Quita ${cuantos - c.dias * 2} para elegirlo.`;
-                return (
-                  <button
-                    key={c.dias}
-                    type="button"
-                    disabled={!cabe}
-                    onClick={() => {
-                      setDias(c.dias);
-                      track("calendario_elegido", { dias: c.dias, decants: cuantos });
-                    }}
-                    role="radio"
-                    aria-checked={activo}
-                    className={`w-full text-left rounded-xl p-4 flex items-start gap-3 shadow-lg transition-transform active:scale-[0.99] disabled:cursor-not-allowed ${cabe ? "" : "opacity-50"}`}
-                    style={{
-                      background: activo ? ROJO_BOTON : FONDO_TARJETA,
-                      border: `2px solid ${activo ? DORADO : `${DORADO}88`}`,
-                    }}
-                  >
-                    <span
-                      className="mt-0.5 w-5 h-5 rounded-full shrink-0 flex items-center justify-center"
-                      style={{ border: `2px solid ${DORADO}`, background: activo ? DORADO : "transparent" }}
-                    >
-                      {activo && <span className="w-2 h-2 rounded-full" style={{ background: ROJO_BOTON }} />}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex justify-between gap-3">
-                        <span className="text-base font-semibold">Calendario de {c.dias} días</span>
-                        <span className="text-base font-semibold whitespace-nowrap">
-                          {cabe ? $(totalDecants + c.precio) : ""}
-                        </span>
-                      </span>
-                      <span className="block text-xs mt-1" style={{ color: activo ? "#f3e6e6" : "#d9cfbd" }}>
-                        {cabe
-                          ? `Tus decants ${$(totalDecants)} + calendario ${$(c.precio)}. De ${c.dias} a ${c.dias * 2} decants.`
-                          : motivo}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-              </div>
-            )}
             <div className="space-y-3">
               <h2 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
                 Elige el modelo
@@ -931,7 +878,7 @@ export default function CalendarioAdviento() {
         )}
 
         {/* ---------- Paso 3: revisa y envía ---------- */}
-        {paso === "resumen" && cuantos >= MIN_DECANTS && cal && modelo && entrega && (
+        {paso === "resumen" && decantsListos && modelo && entrega && (
           <section className="px-4 space-y-4 pt-2">
             <div className="rounded-xl text-sm" style={{ background: FONDO_TARJETA, border: `1px solid ${DORADO}40` }}>
               <div className="px-4 py-3 flex justify-between gap-3">
@@ -1080,7 +1027,7 @@ export default function CalendarioAdviento() {
       </div>
 
       {/* Barra fija con el avance (en el catálogo) */}
-      {paso === "catalogo" && !mostrarEleccion && (
+      {paso === "catalogo" && cal && !mostrarEleccion && (
         <div
           className="fixed bottom-0 inset-x-0 z-40 px-4 py-3"
           style={{ background: "rgba(11,36,25,0.96)", borderTop: `1px solid ${DORADO}`, backdropFilter: "blur(6px)" }}
@@ -1089,43 +1036,38 @@ export default function CalendarioAdviento() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold leading-snug">
                 {cuantos} {cuantos === 1 ? "decant" : "decants"}
-                {cuantos < MIN_DECANTS ? (
-                  <span style={{ color: "#f0b4b8" }}> · faltan {MIN_DECANTS - cuantos} para el de {MIN_DECANTS} días</span>
+                {cuantos < minimo ? (
+                  <span style={{ color: "#f0b4b8" }}> · faltan {minimo - cuantos}</span>
+                ) : cuantos > maximo ? (
+                  <span style={{ color: "#f0b4b8" }}> · quita {cuantos - maximo}</span>
                 ) : lleno ? (
                   <span style={{ color: DORADO }}> · llegaste al máximo</span>
                 ) : (
                   <span style={{ color: DORADO }}>
                     {" "}
-                    · alcanza para {calendariosValidos.map((c) => c.dias).join(" o ")} días
+                    · puedes agregar {maximo - cuantos} {maximo - cuantos === 1 ? "decant" : "decants"} más
                   </span>
                 )}
               </p>
               <p className="text-xs truncate" style={{ color: "#d9cfbd" }}>
-                {(() => {
-                  // Siguiente calendario que todavía no alcanza (p. ej. con 20: "Con 4 más… 24 días").
-                  const siguiente = Object.values(CALENDARIOS).find((c) => cuantos >= MIN_DECANTS && cuantos < c.dias);
-                  if (siguiente) return `Con ${siguiente.dias - cuantos} más alcanza para el de ${siguiente.dias} días · `;
-                  if (cuantos >= MIN_DECANTS && !lleno) return `Puedes agregar ${MAX_DECANTS - cuantos} más · `;
-                  return Object.values(CALENDARIOS).map((c) => `${c.dias} días: ${c.dias} a ${c.dias * 2}`).join(" · ") + " · ";
-                })()}
-                Decants {$(totalDecants)}
+                Calendario de {dias} días · mín {minimo} · máx {maximo} · Decants {$(totalDecants)}
               </p>
               <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
-                    width: `${Math.min(100, (cuantos / MIN_DECANTS) * 100)}%`,
-                    background: cuantos >= MIN_DECANTS ? DORADO : ROJO,
+                    width: `${Math.min(100, (cuantos / minimo) * 100)}%`,
+                    background: decantsListos ? DORADO : ROJO,
                   }}
                 />
               </div>
             </div>
             <button
               type="button"
-              disabled={cuantos < MIN_DECANTS}
+              disabled={!decantsListos}
               onClick={() => setPaso("entrega")}
               className="shrink-0 px-5 py-3 rounded-xl font-semibold text-sm disabled:cursor-not-allowed"
-              style={boton(cuantos >= MIN_DECANTS)}
+              style={boton(decantsListos)}
             >
               Continuar
             </button>
