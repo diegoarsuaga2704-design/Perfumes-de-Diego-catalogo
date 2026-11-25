@@ -593,7 +593,7 @@ export default function CalendarioAdviento() {
         )}
 
         {paso === "catalogo" && cal && !mostrarEleccion && !(!ver && recomendados === null) && (
-          <section className="px-4 space-y-4">
+          <section className="px-4 pt-4 space-y-4">
             {modoDiego ? (
               <div className="rounded-xl p-4" style={{ background: ROJO_BOTON, border: `2px solid ${DORADO}` }}>
                 <p className="text-xl" style={{ fontFamily: SERIF }}>
