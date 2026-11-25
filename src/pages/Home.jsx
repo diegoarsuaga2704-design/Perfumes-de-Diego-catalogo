@@ -6,6 +6,8 @@ import ProductGrid from "../ui/ProductGrid";
 import { useParfums } from "../context/ParfumsContext";
 import { slugify } from "../functions/slugify";
 import SEO from "../ui/SEO";
+import DecantsInfo from "../ui/DecantsInfo";
+import { decantsTitulo, decantsDescripcion } from "../data/decantsInfo";
 
 function Home({ forcedMode }) {
   const location = useLocation();
@@ -119,7 +121,7 @@ function Home({ forcedMode }) {
   const seoTitle = forcedMode === "stock"
     ? "Botellas completas y parciales"
     : forcedMode === "decants"
-      ? "Decants de perfumes"
+      ? decantsTitulo
       : forcedMode === "recientes"
         ? "Recién Llegados"
         : slug
@@ -129,7 +131,7 @@ function Home({ forcedMode }) {
   const seoDescription = forcedMode === "stock"
     ? "Perfumes sellados y parciales disponibles para enviar a todo México."
     : forcedMode === "decants"
-      ? "Decants para que pruebes tus perfumes favoritos antes de comprar el frasco completo."
+      ? decantsDescripcion
       : forcedMode === "recientes"
         ? "Los últimos perfumes que llegaron al catálogo. Novedades de la semana."
         : slug
@@ -164,6 +166,7 @@ function Home({ forcedMode }) {
         stockFilter={stockFilter}
         recientesFilter={recientesFilter}
       />
+      {forcedMode === "decants" && !q && <DecantsInfo />}
     </div>
   );
 }

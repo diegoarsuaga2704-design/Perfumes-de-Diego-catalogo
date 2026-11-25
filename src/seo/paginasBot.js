@@ -16,6 +16,12 @@ import {
   inicioParrafos,
 } from "../data/inicio.js";
 import { garantias } from "../data/garantias.js";
+import {
+  decantsTitulo,
+  decantsDescripcion,
+  decantsPreguntas,
+  slugGuiaDecants,
+} from "../data/decantsInfo.js";
 
 const SITE_URL = "https://perfumesdediego.com";
 const SITE_NAME = "Perfumes de Diego";
@@ -204,8 +210,8 @@ export async function paginaBot(supabase, ruta) {
           f: () => true,
         },
         decants: {
-          t: "Decants de perfumes",
-          d: "Decants para que pruebes tus perfumes favoritos antes de comprar el frasco completo.",
+          t: decantsTitulo,
+          d: decantsDescripcion,
           f: (p) => p.stock !== true,
         },
         botellas: {
@@ -241,6 +247,23 @@ export async function paginaBot(supabase, ruta) {
       cuerpo =
         `<h1>${esc(config.t)}</h1><p>${esc(config.d)}</p>` +
         listaPerfumesHtml(lista, perfumes);
+      if (ruta === "decants") {
+        const slugGuia = await slugGuiaDecants(supabase);
+        cuerpo +=
+          decantsPreguntas
+            .map((f) => `<h2>${esc(f.pregunta)}</h2><p>${esc(f.respuesta)}</p>`)
+            .join("") +
+          `<p><a href="${SITE_URL}/blog${slugGuia ? `/${esc(slugGuia)}` : ""}">Guía de decants</a></p>`;
+        jsonLd.push({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: decantsPreguntas.map((f) => ({
+            "@type": "Question",
+            name: f.pregunta,
+            acceptedAnswer: { "@type": "Answer", text: f.respuesta },
+          })),
+        });
+      }
       break;
     }
 
