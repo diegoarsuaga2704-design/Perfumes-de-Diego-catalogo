@@ -35,6 +35,11 @@ const CAMPO = {
 };
 // Foto de los calendarios (portada).
 const FOTO_CALENDARIO = "/calendario-adviento.jpg?v=2";
+// Modelos del calendario (mismo precio; se elige en el paso 2).
+const MODELOS = {
+  pastel: { nombre: "Pastel", foto: FOTO_CALENDARIO },
+  cajas: { nombre: "Cajas navideñas", foto: "/calendario-cajitas.jpg" },
+};
 
 const CALENDARIOS = {
   12: { dias: 12, precio: 180 },
@@ -179,6 +184,7 @@ export default function CalendarioAdviento() {
   // Cambiar entre "elegir yo" y "recomendaciones" sin llenar el historial.
   const cambiarVer = (v) => navigate(urlDe("catalogo", v), { replace: true, state: location.state });
   const [entrega, setEntrega] = useState(borrador.entrega || null); // "puebla" | "envio"
+  const [modelo, setModelo] = useState(MODELOS[borrador.modelo] ? borrador.modelo : null);
   const [cp, setCp] = useState(borrador.cp || "");
   const [busq, setBusq] = useState("");
   const [casaFiltro, setCasaFiltro] = useState("");
@@ -193,11 +199,11 @@ export default function CalendarioAdviento() {
   // Guarda lo que va armando (por si cierra la página).
   useEffect(() => {
     try {
-      localStorage.setItem(LS_BORRADOR, JSON.stringify({ dias, sel, entrega, cp, numero }));
+      localStorage.setItem(LS_BORRADOR, JSON.stringify({ dias, sel, entrega, cp, numero, modelo }));
     } catch {
       // sin localStorage
     }
-  }, [dias, sel, entrega, cp, numero]);
+  }, [dias, sel, entrega, cp, numero, modelo]);
 
   // Catálogo: decants disponibles.
   const catalogo = useMemo(
@@ -309,7 +315,7 @@ export default function CalendarioAdviento() {
     if ((paso === "resumen" || paso === "entrega") && catalogo.length && cuantos < MIN_DECANTS && !listo)
       regresarA("catalogo");
     // Sin entrega elegida no se puede revisar: regresa a elegirla.
-    else if (paso === "resumen" && catalogo.length && (!entrega || (entrega === "envio" && cp.length !== 5)) && !listo)
+    else if (paso === "resumen" && catalogo.length && (!modelo || !entrega || (entrega === "envio" && cp.length !== 5)) && !listo)
       regresarA("entrega");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paso, catalogo.length, cuantos, listo, entrega, cp]);
@@ -317,7 +323,8 @@ export default function CalendarioAdviento() {
   const costoEnvio = entrega === "envio" && !envioGratis ? ENVIO_REGULAR : 0;
   const total = totalDecants + (cal?.precio || 0) + costoEnvio;
   const faltaCp = entrega === "envio" && cp.length !== 5;
-  const listoParaEnviar = !!cal && !!entrega && !faltaCp && !!numero;
+  const listoParaEnviar = !!cal && !!modelo && !!entrega && !faltaCp && !!numero;
+  const nombreModelo = MODELOS[modelo]?.nombre || "";
 
   const elegirMl = (p, ml) => {
     setSel((prev) => {
@@ -329,7 +336,7 @@ export default function CalendarioAdviento() {
   };
 
   const datosPedido = () => {
-    const nombreCal = `Calendario de adviento ${dias} días · ${
+    const nombreCal = `Calendario de adviento ${dias} días · ${nombreModelo} · ${
       entrega === "puebla" ? "Entrega personal en Puebla (armado)" : "Envío (desarmado, decants por separado)"
     }`;
     return {
@@ -361,7 +368,7 @@ export default function CalendarioAdviento() {
     [
       `Hola Diego, me gustaría realizar mi pedido${n ? ` #${n}` : ""}:`,
       "",
-      `Calendario de adviento de ${dias} días (${cuantos} decants)`,
+      `Calendario de adviento de ${dias} días · Modelo ${nombreModelo} (${cuantos} decants)`,
       entrega === "puebla"
         ? "Entrega personal en Puebla (calendario armado)"
         : "Envío a domicilio (calendario desarmado y decants por separado)",
@@ -418,6 +425,7 @@ export default function CalendarioAdviento() {
     setDias(null);
     setSel({});
     setEntrega(null);
+    setModelo(null);
     setCp("");
     setNumero(null);
     setPreguntar(false);
@@ -497,6 +505,24 @@ export default function CalendarioAdviento() {
                 </div>
               ))}
             </div>
+            <h2 className="text-center text-2xl pt-2" style={{ fontFamily: SERIF }}>
+              Modelos
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.values(MODELOS).map((m) => (
+                <figure
+                  key={m.nombre}
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: FONDO_TARJETA, border: `1px solid ${DORADO}88` }}
+                >
+                  <img src={m.foto} alt={`Calendario modelo ${m.nombre}`} loading="lazy" className="w-full aspect-[4/3] object-cover" />
+                  <figcaption className="text-center text-sm font-semibold py-2">{m.nombre}</figcaption>
+                </figure>
+              ))}
+            </div>
+            <p className="text-xs text-center -mt-1" style={{ color: "#d9cfbd" }}>
+              Los dos modelos vienen en 12 y 24 días. El modelo lo eliges al final.
+            </p>
             <button
               type="button"
               onClick={() => {
@@ -779,6 +805,44 @@ export default function CalendarioAdviento() {
             )}
             <div className="space-y-3">
               <h2 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
+                Elige el modelo
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(MODELOS).map(([k, m]) => {
+                  const activo = modelo === k;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      role="radio"
+                      aria-checked={activo}
+                      onClick={() => {
+                        setModelo(k);
+                        track("calendario_modelo", { modelo: k });
+                      }}
+                      className="rounded-xl overflow-hidden text-left shadow-lg transition-transform active:scale-[0.99]"
+                      style={{
+                        background: activo ? ROJO_BOTON : FONDO_TARJETA,
+                        border: `2px solid ${activo ? DORADO : `${DORADO}88`}`,
+                      }}
+                    >
+                      <img src={m.foto} alt={`Calendario modelo ${m.nombre}`} className="w-full aspect-[4/3] object-cover" />
+                      <span className="flex items-center gap-2 px-3 py-2.5">
+                        <span
+                          className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center"
+                          style={{ border: `2px solid ${DORADO}`, background: activo ? DORADO : "transparent" }}
+                        >
+                          {activo && <span className="w-2 h-2 rounded-full" style={{ background: ROJO_BOTON }} />}
+                        </span>
+                        <span className="text-sm font-semibold">{m.nombre}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
                 ¿Cómo quieres recibirlo?
               </h2>
               {[
@@ -837,18 +901,18 @@ export default function CalendarioAdviento() {
             </div>
             <button
               type="button"
-              disabled={!cal || !entrega || faltaCp}
+              disabled={!cal || !modelo || !entrega || faltaCp}
               onClick={() => setPaso("resumen")}
               className="w-full py-3.5 rounded-xl font-semibold text-base disabled:cursor-not-allowed"
-              style={boton(!!cal && !!entrega && !faltaCp)}
+              style={boton(!!cal && !!modelo && !!entrega && !faltaCp)}
             >
-              {!cal ? "Elige tu calendario" : !entrega ? "Elige una opción" : faltaCp ? "Escribe tu código postal" : "Siguiente"}
+              {!cal ? "Elige tu calendario" : !modelo ? "Elige el modelo" : !entrega ? "Elige una opción" : faltaCp ? "Escribe tu código postal" : "Siguiente"}
             </button>
           </section>
         )}
 
         {/* ---------- Paso 3: revisa y envía ---------- */}
-        {paso === "resumen" && cuantos >= MIN_DECANTS && cal && entrega && (
+        {paso === "resumen" && cuantos >= MIN_DECANTS && cal && modelo && entrega && (
           <section className="px-4 space-y-4 pt-2">
             <div className="rounded-xl text-sm" style={{ background: FONDO_TARJETA, border: `1px solid ${DORADO}40` }}>
               <div className="px-4 py-3 flex justify-between gap-3">
@@ -856,7 +920,9 @@ export default function CalendarioAdviento() {
                   <span className="block text-xs uppercase tracking-wider" style={{ color: DORADO }}>
                     Calendario
                   </span>
-                  <span className="font-semibold">Calendario de adviento de {dias} días</span>
+                  <span className="font-semibold">
+                    Calendario de adviento de {dias} días · {nombreModelo}
+                  </span>
                 </span>
               </div>
               <div className="px-4 py-3 flex justify-between items-center gap-3" style={{ borderTop: `1px solid ${DORADO}40` }}>
