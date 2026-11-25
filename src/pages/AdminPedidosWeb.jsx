@@ -34,6 +34,8 @@ const whatsappMx = (tel) => {
 const NO_ENVIADOS = ["en_checkout", "pide_que_le_escriba"];
 // WhatsApp del pedido: el del rescate o el de los datos de envío.
 const telDe = (p) => p.telefono || p.cliente?.telefono || "";
+// Correo: el del boletín guardado con el carrito, o el de los datos de envío.
+const emailDe = (p) => p.email || p.cliente?.email || "";
 // Mensaje para escribirle: si no lo envió, para ayudarle a terminarlo.
 const mensajeCliente = (p) => {
   const productos = (p.items || [])
@@ -88,7 +90,7 @@ export default function AdminPedidosWeb() {
   const FILTROS = [
     ["enviados", "Enviados", (p) => !NO_ENVIADOS.includes(p.estado)],
     ["en_checkout", "No enviados", (p) => NO_ENVIADOS.includes(p.estado)],
-    ["recuperar", "Para recuperar", (p) => NO_ENVIADOS.includes(p.estado) && !!telDe(p)],
+    ["recuperar", "Para recuperar", (p) => NO_ENVIADOS.includes(p.estado) && !!(telDe(p) || emailDe(p))],
     ["todos", "Todos", () => true],
   ];
 
@@ -194,6 +196,7 @@ export default function AdminPedidosWeb() {
                       {(p.items || []).length === 1 ? "" : "s"}
                       {p.codigo_postal ? ` · CP ${p.codigo_postal}` : ""}
                       {telDe(p) ? ` · WhatsApp ${telDe(p)}` : ""}
+                      {emailDe(p) ? ` · ${emailDe(p)}` : ""}
                     </p>
                   </div>
                   <span className="font-bold text-gray-900 shrink-0">{$(p.total)}</span>
@@ -244,6 +247,14 @@ export default function AdminPedidosWeb() {
                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700"
                       >
                         Escribirle por WhatsApp · {telDe(p)}
+                      </a>
+                    )}
+                    {emailDe(p) && (
+                      <a
+                        href={`mailto:${emailDe(p)}?subject=${encodeURIComponent(`Tu pedido #${p.numero} en Perfumes de Diego`)}&body=${encodeURIComponent(mensajeCliente(p))}`}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md border border-gray-300 text-gray-800 font-semibold hover:bg-gray-50"
+                      >
+                        Mandarle correo · {emailDe(p)}
                       </a>
                     )}
                     {p.pago && (

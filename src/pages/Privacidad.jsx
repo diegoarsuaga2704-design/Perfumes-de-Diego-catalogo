@@ -70,6 +70,10 @@ export default function Privacidad() {
             <li>Calcular y coordinar el envío de tus productos.</li>
             <li>Comunicarnos contigo para aclarar dudas sobre tu compra.</li>
             <li>
+              Si nos dejaste tu correo y armaste un carrito sin terminar tu
+              pedido, recordártelo una sola vez.
+            </li>
+            <li>
               Notificarte cuando un producto que solicitaste vuelva a estar
               disponible.
             </li>

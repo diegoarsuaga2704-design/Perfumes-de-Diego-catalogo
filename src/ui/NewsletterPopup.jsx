@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { guardarCorreoCliente } from "../functions/pedidosWeb";
 import { Link, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 
@@ -60,6 +61,7 @@ export default function NewsletterPopup() {
         body: JSON.stringify({ email, hp }),
       });
       if (r.ok) {
+        guardarCorreoCliente(email);
         setEstado("ok");
         setEmail("");
         try {

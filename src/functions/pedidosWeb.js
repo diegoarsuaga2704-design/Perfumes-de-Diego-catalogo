@@ -98,9 +98,30 @@ export function olvidarNumeroActual() {
 }
 
 /** Guarda o actualiza el pedido en Supabase (no truena si falla). */
+// Correo que el cliente dejó en el boletín (popup o pie de página). Se guarda
+// en su navegador para ligarlo a su carrito y poder recordárselo si lo deja.
+const KEY_CORREO = "perfumes-diego-correo";
+export function guardarCorreoCliente(email) {
+  try {
+    const limpio = String(email || "").trim().toLowerCase();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(limpio)) localStorage.setItem(KEY_CORREO, limpio);
+  } catch {
+    // sin almacenamiento
+  }
+}
+function conCorreo(datos) {
+  if (datos?.email) return datos;
+  try {
+    const email = localStorage.getItem(KEY_CORREO);
+    return email ? { ...datos, email } : datos;
+  } catch {
+    return datos;
+  }
+}
+
 export async function registrarPedidoWeb(numero, datos) {
   try {
-    await supabase.rpc("registrar_pedido_web", { p_numero: numero, p_datos: datos });
+    await supabase.rpc("registrar_pedido_web", { p_numero: numero, p_datos: conCorreo(datos) });
   } catch (e) {
     console.error("No se pudo registrar el pedido:", e);
   }
@@ -123,7 +144,7 @@ export function marcarPedidoWeb(numero, estado, datos) {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ p_numero: numero, p_datos: { ...datos, estado } }),
+      body: JSON.stringify({ p_numero: numero, p_datos: conCorreo({ ...datos, estado }) }),
     }).catch(() => {});
   } catch {
     // sin red

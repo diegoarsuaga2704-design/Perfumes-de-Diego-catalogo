@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { guardarCorreoCliente } from "../functions/pedidosWeb";
 import { Link } from "react-router-dom";
 
 export default function NewsletterSignup() {
@@ -17,6 +18,7 @@ export default function NewsletterSignup() {
         body: JSON.stringify({ email, hp }),
       });
       if (r.ok) {
+        guardarCorreoCliente(email);
         setEstado("ok");
         setEmail("");
       } else {
