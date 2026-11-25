@@ -123,7 +123,7 @@ function Home({ forcedMode }) {
       : forcedMode === "recientes"
         ? "Recién Llegados"
         : slug
-          ? `Perfumes de ${selectedCasa || slug}`
+          ? `Perfumes ${selectedCasa || slug} en México: decants y botellas`
           : "Catálogo de perfumes";
 
   const seoDescription = forcedMode === "stock"
@@ -133,7 +133,7 @@ function Home({ forcedMode }) {
       : forcedMode === "recientes"
         ? "Los últimos perfumes que llegaron al catálogo. Novedades de la semana."
         : slug
-          ? `Catálogo de perfumes de la casa ${selectedCasa || slug}. Decants y botellas disponibles.`
+          ? `Compra perfumes ${selectedCasa || slug} en México: decants desde 1 ml y botellas, con precio, notas y disponibilidad de cada uno. Envíos a todo México.`
           : "Explora nuestro catálogo completo de decants y botellas de perfumes de nicho y de diseñador.";
 
   const currentUrl = `${window.location.origin}${location.pathname}`;

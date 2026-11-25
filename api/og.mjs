@@ -224,6 +224,11 @@ export default async function handler(req, res) {
           (perfume.concentracion
             ? `<p>Concentración: ${esc(perfume.concentracion)}</p>`
             : "") +
+          (Number(perfume.precio) > 0
+            ? perfume.stock === true
+              ? `<p>Precio de la botella: $${esc(Number(perfume.precio).toLocaleString("es-MX"))} MXN${perfume.disponible && perfume.disponible !== "Disponible" ? ` (${esc(perfume.disponible.toLowerCase())})` : ""}</p>`
+              : `<p>Precio del decant: $${esc(Number(perfume.precio).toLocaleString("es-MX"))} MXN por ml${perfume.disponible && perfume.disponible !== "Disponible" ? ` (${esc(perfume.disponible.toLowerCase())})` : ""}</p>`
+            : "") +
           (parrafos.length
             ? `<h2>Reseña de ${esc(perfume.nombre)}</h2>` +
               parrafos.map((p) => `<p>${esc(p)}</p>`).join("")
@@ -378,7 +383,7 @@ export default async function handler(req, res) {
       const { data: post, error: errPost } = await supabase
         .from("posts")
         .select(
-          "slug, titulo, extracto, contenido, imagen, creado_en, actualizado_en",
+          "slug, titulo, extracto, contenido, imagen, creado_en, actualizado_en, perfume:perfume_id(id, nombre, casa)",
         )
         .eq("slug", slug)
         .eq("publicado", true)
@@ -394,7 +399,12 @@ export default async function handler(req, res) {
         image = post.imagen || DEFAULT_IMAGE;
         url = `${SITE_URL}/blog/${post.slug}`;
         bodyHtml =
-          `<h1>${esc(post.titulo)}</h1>` + mdToHtml(post.contenido);
+          `<h1>${esc(post.titulo)}</h1>` + mdToHtml(post.contenido) +
+          // La reseña apunta a la página del producto como la principal
+          // de ese perfume (para que no compitan entre sí en Google).
+          (post.perfume?.id
+            ? `<p><a href="${SITE_URL}/product/${slugify(post.perfume.nombre)}/${post.perfume.id}">Comprar ${esc(post.perfume.nombre)}${post.perfume.casa ? ` de ${esc(post.perfume.casa)}` : ""} en decant o botella</a></p>`
+            : "");
 
         jsonLd.push({
           "@context": "https://schema.org",

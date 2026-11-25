@@ -466,6 +466,12 @@ export default function ProductDetail() {
                     <span className="text-lg font-semibold text-gray-500">Desde </span>$
                     {formatPrecio(precioDesde)}
                   </span>
+                ) : Number(decantFila?.precio) > 0 ? (
+                  // Nada disponible: igual se muestra el precio por ml del decant.
+                  <span className="text-3xl font-bold text-gray-900">
+                    ${formatPrecio(decantFila.precio)}
+                    <span className="text-lg font-semibold text-gray-500">/ml</span>
+                  </span>
                 ) : null}
               </div>
 
@@ -541,7 +547,7 @@ export default function ProductDetail() {
                       {" - "}
                       {decantDisponible
                         ? `$${formatPrecio(decantFila.precio)}/ml`
-                        : (decantFila.disponible || "Agotado").toLowerCase()}
+                        : `${Number(decantFila.precio) > 0 ? `$${formatPrecio(decantFila.precio)}/ml · ` : ""}${(decantFila.disponible || "Agotado").toLowerCase()}`}
                     </span>
                   </p>
                   <div className="flex flex-wrap gap-2">
