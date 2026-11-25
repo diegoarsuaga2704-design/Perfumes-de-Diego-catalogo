@@ -147,6 +147,8 @@ function Home({ forcedMode }) {
         onSelectCasa={handleSelectCasa}
         onSelectOcasion={handleSelectOcasion}
         onSelectCategoria={handleSelectCategoria}
+        onSelectLimpiar={handleSelectLimpiar}
+        hayFiltros={!!(selectedCasa || selectedOcasion || selectedCategoria)}
       />
 
       {q && (
@@ -161,7 +163,6 @@ function Home({ forcedMode }) {
         selectedCasa={selectedCasa}
         selectedOcasion={selectedOcasion}
         selectedCategoria={selectedCategoria}
-        onSelectLimpiar={handleSelectLimpiar}
         searchResult={searchResult}
         stockFilter={stockFilter}
         recientesFilter={recientesFilter}
