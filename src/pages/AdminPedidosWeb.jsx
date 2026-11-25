@@ -60,7 +60,7 @@ const lineaTexto = (it) =>
     ? it.nombre
     : it.tipoVenta === "botella"
     ? `${it.nombre}${it.mlBotella ? ` ${it.mlBotella} ml` : ""} × ${it.cantidad}`
-    : `${it.mililitros} ml de ${it.nombre}`;
+    : `${it.mililitros} ml de ${it.nombre}${it.aparte ? " (aparte del calendario)" : ""}`;
 
 // Pedidos que llegaron por la tienda, incluidos los que se quedaron en el
 // checkout sin enviarse por WhatsApp.
