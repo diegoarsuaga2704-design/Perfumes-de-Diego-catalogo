@@ -482,8 +482,8 @@ export default function CalendarioAdviento() {
           <section className="px-4 space-y-4">
             <RegaloSorpresa />
             <Aviso titulo="Cómo funciona">
-              Primero eliges tus perfumes y cuántos ml quieres de cada uno. Al final escoges tu calendario
-              según cuántos decants elegiste. El total es la suma de tus decants más el calendario.
+              Eliges si tu calendario es de 12 o 24 días, después tus perfumes y cuántos ml quieres de cada
+              uno, y al final el modelo. El precio final es la suma de tus decants más el calendario.
             </Aviso>
             <Aviso titulo="Entrega">
               El calendario completamente armado solo se entrega personalmente en Puebla. Para envíos, el
