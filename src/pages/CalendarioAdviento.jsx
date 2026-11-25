@@ -37,7 +37,11 @@ const CAMPO = {
 const FOTO_CALENDARIO = "/calendario-adviento.jpg?v=2";
 // Modelos del calendario (mismo precio; se elige en el paso 2).
 const MODELOS = {
-  pastel: { nombre: "Pastel", foto: FOTO_CALENDARIO },
+  pastel: {
+    nombre: "Pastel",
+    foto: FOTO_CALENDARIO,
+    aviso: "Llega entre el 30 de noviembre y el 4 de diciembre.",
+  },
   cajas: { nombre: "Cajas navideñas", foto: "/calendario-cajitas.jpg?v=2" },
 };
 
@@ -516,7 +520,14 @@ export default function CalendarioAdviento() {
                   style={{ background: FONDO_TARJETA, border: `1px solid ${DORADO}88` }}
                 >
                   <img src={m.foto} alt={`Calendario modelo ${m.nombre}`} loading="lazy" className="w-full aspect-[4/3] object-cover" />
-                  <figcaption className="text-center text-sm font-semibold py-2">{m.nombre}</figcaption>
+                  <figcaption className="text-center text-sm font-semibold py-2 px-2">
+                    {m.nombre}
+                    {m.aviso && (
+                      <span className="block text-[11px] font-semibold mt-1 leading-snug" style={{ color: "#f0b4b8" }}>
+                        ⚠ {m.aviso}
+                      </span>
+                    )}
+                  </figcaption>
                 </figure>
               ))}
             </div>
@@ -820,7 +831,7 @@ export default function CalendarioAdviento() {
                         setModelo(k);
                         track("calendario_modelo", { modelo: k });
                       }}
-                      className="rounded-xl overflow-hidden text-left shadow-lg transition-transform active:scale-[0.99]"
+                      className="rounded-xl overflow-hidden text-left shadow-lg transition-transform active:scale-[0.99] flex flex-col justify-start"
                       style={{
                         background: activo ? ROJO_BOTON : FONDO_TARJETA,
                         border: `2px solid ${activo ? DORADO : `${DORADO}88`}`,
@@ -836,6 +847,14 @@ export default function CalendarioAdviento() {
                         </span>
                         <span className="text-sm font-semibold">{m.nombre}</span>
                       </span>
+                      {m.aviso && (
+                        <span
+                          className="block px-3 pb-2.5 -mt-1 text-[11px] font-semibold leading-snug"
+                          style={{ color: activo ? "#ffe3e5" : "#f0b4b8" }}
+                        >
+                          ⚠ {m.aviso}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
