@@ -15,7 +15,7 @@ import { pedirNumeroNuevo, registrarPedidoWeb, marcarPedidoWeb } from "../functi
 import { Nieve, RamaPino, MonoRegalo, ROJO, VERDE, VERDE_OSCURO, DORADO } from "../ui/Navidad";
 
 // Calendario de adviento. Link privado (no está en el menú, el sitemap ni en
-// Google): /calendario-adviento. El cliente elige 12 o 24 días, arma sus
+// Google): /calendario-adviento. El calendario es de 24 días; el cliente arma sus
 // decants (mínimo uno por día, máximo el doble) y manda el pedido por WhatsApp.
 
 const WHATSAPP = "5212212034647";
@@ -36,13 +36,13 @@ const CAMPO = {
 // Foto de los calendarios (portada).
 const FOTO_CALENDARIO = "/calendario-adviento.jpg?v=2";
 
+// Todos los calendarios son de 24 días.
 const CALENDARIOS = {
-  12: { dias: 12, precio: 180 },
   24: { dias: 24, precio: 360 },
 };
-// Decants que caben: de N a 2N según el calendario. En total, de 12 a 48.
-const MIN_DECANTS = 12;
-const MAX_DECANTS = 48;
+// Decants que caben: de N a 2N (calendario de 24 días: de 24 a 48).
+const MIN_DECANTS = Math.min(...Object.values(CALENDARIOS).map((c) => c.dias));
+const MAX_DECANTS = Math.max(...Object.values(CALENDARIOS).map((c) => c.dias * 2));
 const cabeEn = (c, n) => n >= c.dias && n <= c.dias * 2;
 const MINIMO_POR_PERFUME = 200;
 const ENVIO_REGULAR = 180;
@@ -468,9 +468,9 @@ export default function CalendarioAdviento() {
               Los cupones y códigos de descuento de la tienda no se pueden usar en los calendarios de adviento.
             </Aviso>
             <h2 className="text-center text-2xl pt-4" style={{ fontFamily: SERIF }}>
-              Calendarios
+              {Object.keys(CALENDARIOS).length > 1 ? "Calendarios" : "Tu calendario"}
             </h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`grid gap-3 ${Object.keys(CALENDARIOS).length > 1 ? "grid-cols-2" : "grid-cols-1 max-w-xs mx-auto"}`}>
               {Object.values(CALENDARIOS).map((c) => (
                 <div
                   key={c.dias}
@@ -756,7 +756,7 @@ export default function CalendarioAdviento() {
 
             <div className="space-y-3 pt-2">
               <h3 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
-                Elige tu calendario
+                {Object.keys(CALENDARIOS).length > 1 ? "Elige tu calendario" : "Tu calendario"}
               </h3>
               {Object.values(CALENDARIOS).map((c) => {
                 const cabe = cabeEn(c, cuantos);
@@ -969,23 +969,18 @@ export default function CalendarioAdviento() {
               <p className="text-sm font-semibold leading-snug">
                 {cuantos} {cuantos === 1 ? "decant" : "decants"}
                 {cuantos < MIN_DECANTS ? (
-                  <span style={{ color: "#f0b4b8" }}> · faltan {MIN_DECANTS - cuantos} para el de 12 días</span>
+                  <span style={{ color: "#f0b4b8" }}> · faltan {MIN_DECANTS - cuantos}</span>
                 ) : lleno ? (
                   <span style={{ color: DORADO }}> · llegaste al máximo</span>
                 ) : (
                   <span style={{ color: DORADO }}>
                     {" "}
-                    · alcanza para {calendariosValidos.map((c) => c.dias).join(" o ")} días
+                    · puedes agregar {MAX_DECANTS - cuantos} más
                   </span>
                 )}
               </p>
               <p className="text-xs truncate" style={{ color: "#d9cfbd" }}>
-                {cuantos >= 12 && cuantos < 24
-                  ? `Con ${24 - cuantos} más alcanza para el de 24 días · `
-                  : cuantos > 24 && !lleno
-                    ? `Puedes agregar ${MAX_DECANTS - cuantos} más · `
-                    : `12 días: 12 a 24 · 24 días: 24 a 48 · `}
-                Decants {$(totalDecants)}
+                De {MIN_DECANTS} a {MAX_DECANTS} decants · Decants {$(totalDecants)}
               </p>
               <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
                 <div
