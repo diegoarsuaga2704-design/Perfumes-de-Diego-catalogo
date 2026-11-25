@@ -44,8 +44,6 @@ const CALENDARIOS = {
 const MIN_DECANTS = Math.min(...Object.values(CALENDARIOS).map((c) => c.dias));
 const MAX_DECANTS = Math.max(...Object.values(CALENDARIOS).map((c) => c.dias * 2));
 const cabeEn = (c, n) => n >= c.dias && n <= c.dias * 2;
-// Mínimo 1 ml por perfume en todas las casas.
-const ML_MINIMO = 1;
 const ENVIO_REGULAR = 180;
 const FECHAS_ENVIO = "entre el 30 de noviembre y, a más tardar, el 4 de diciembre";
 
@@ -56,10 +54,9 @@ const PASOS = ["inicio", "catalogo", "resumen"];
 
 const $ = (n) => `$${formatPrecio(n)}`;
 
-// Tamaños de cada perfume, desde 1 ml.
+// Tamaños de cada perfume: desde 1 ml (Ensar Oud desde 0.5 ml).
 function opcionesMl(p) {
-  const lista = p.casa === "Ensar Oud" ? ML_ENSAR_OUD : ML_TIENDA;
-  return lista.filter((ml) => ml >= ML_MINIMO);
+  return p.casa === "Ensar Oud" ? ML_ENSAR_OUD : ML_TIENDA;
 }
 
 function leerBorrador() {
