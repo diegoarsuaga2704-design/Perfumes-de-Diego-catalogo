@@ -15,8 +15,8 @@ import { pedirNumeroNuevo, registrarPedidoWeb, marcarPedidoWeb } from "../functi
 import { Nieve, RamaPino, MonoRegalo, ROJO, VERDE, VERDE_OSCURO, DORADO } from "../ui/Navidad";
 
 // Calendario de adviento. Link privado (no está en el menú, el sitemap ni en
-// Google): /calendario-adviento. El calendario es de 24 días; el cliente arma sus
-// decants (mínimo uno por día, máximo el doble) y manda el pedido por WhatsApp.
+// Google): /calendario-adviento. El cliente arma sus decants, al final elige
+// calendario de 12 o 24 días (de N a 2N decants) y manda el pedido por WhatsApp.
 
 const WHATSAPP = "5212212034647";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
@@ -36,11 +36,11 @@ const CAMPO = {
 // Foto de los calendarios (portada).
 const FOTO_CALENDARIO = "/calendario-adviento.jpg?v=2";
 
-// Todos los calendarios son de 24 días.
 const CALENDARIOS = {
+  12: { dias: 12, precio: 180 },
   24: { dias: 24, precio: 360 },
 };
-// Decants que caben: de N a 2N (calendario de 24 días: de 24 a 48).
+// Decants que caben: de N a 2N según el calendario. En total, de 12 a 48.
 const MIN_DECANTS = Math.min(...Object.values(CALENDARIOS).map((c) => c.dias));
 const MAX_DECANTS = Math.max(...Object.values(CALENDARIOS).map((c) => c.dias * 2));
 const cabeEn = (c, n) => n >= c.dias && n <= c.dias * 2;
@@ -54,7 +54,7 @@ const PASOS = ["inicio", "catalogo", "entrega", "resumen"];
 // Pasos numerados que ve el cliente en la barra de arriba.
 const NOMBRE_PASO = {
   catalogo: [1, "Elige tus decants"],
-  entrega: [2, "Cómo lo recibes"],
+  entrega: [2, "Calendario y entrega"],
   resumen: [3, "Revisa y envía"],
 };
 
@@ -1005,18 +1005,25 @@ export default function CalendarioAdviento() {
               <p className="text-sm font-semibold leading-snug">
                 {cuantos} {cuantos === 1 ? "decant" : "decants"}
                 {cuantos < MIN_DECANTS ? (
-                  <span style={{ color: "#f0b4b8" }}> · faltan {MIN_DECANTS - cuantos}</span>
+                  <span style={{ color: "#f0b4b8" }}> · faltan {MIN_DECANTS - cuantos} para el de {MIN_DECANTS} días</span>
                 ) : lleno ? (
                   <span style={{ color: DORADO }}> · llegaste al máximo</span>
                 ) : (
                   <span style={{ color: DORADO }}>
                     {" "}
-                    · puedes agregar {MAX_DECANTS - cuantos} más
+                    · alcanza para {calendariosValidos.map((c) => c.dias).join(" o ")} días
                   </span>
                 )}
               </p>
               <p className="text-xs truncate" style={{ color: "#d9cfbd" }}>
-                De {MIN_DECANTS} a {MAX_DECANTS} decants · Decants {$(totalDecants)}
+                {(() => {
+                  // Siguiente calendario que todavía no alcanza (p. ej. con 20: "Con 4 más… 24 días").
+                  const siguiente = Object.values(CALENDARIOS).find((c) => cuantos >= MIN_DECANTS && cuantos < c.dias);
+                  if (siguiente) return `Con ${siguiente.dias - cuantos} más alcanza para el de ${siguiente.dias} días · `;
+                  if (cuantos >= MIN_DECANTS && !lleno) return `Puedes agregar ${MAX_DECANTS - cuantos} más · `;
+                  return Object.values(CALENDARIOS).map((c) => `${c.dias} días: ${c.dias} a ${c.dias * 2}`).join(" · ") + " · ";
+                })()}
+                Decants {$(totalDecants)}
               </p>
               <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
                 <div

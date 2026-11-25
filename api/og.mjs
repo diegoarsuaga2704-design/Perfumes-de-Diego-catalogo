@@ -160,10 +160,10 @@ export default async function handler(req, res) {
       buildOgHtml({
         title: `Calendario de adviento | ${SITE_NAME}`,
         description:
-          "Arma tu calendario de adviento de 24 días con los decants que tú elijas.",
+          "Arma tu calendario de adviento de 12 o 24 días con los decants que tú elijas.",
         image: `${SITE_URL}/calendario-adviento.jpg?v=2`,
         url: `${SITE_URL}/calendario-adviento`,
-        bodyHtml: `<h1>Calendario de adviento</h1><p>Arma tu calendario de 24 días con los decants que tú elijas.</p>`,
+        bodyHtml: `<h1>Calendario de adviento</h1><p>Arma tu calendario de 12 o 24 días con los decants que tú elijas.</p>`,
         noindex: true,
       }),
     );
