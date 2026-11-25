@@ -819,7 +819,10 @@ export default function CalendarioAdviento() {
                         >
                           {activo && <span className="w-2 h-2 rounded-full" style={{ background: ROJO_BOTON }} />}
                         </span>
-                        <span className="text-sm font-semibold">{m.nombre}</span>
+                        <span className="text-sm font-semibold flex-1 min-w-0">{m.nombre}</span>
+                        <span className="text-sm font-bold whitespace-nowrap" style={{ color: activo ? "#fff" : DORADO }}>
+                          {$(cal.precio)}
+                        </span>
                       </span>
                       {m.aviso && (
                         <span
