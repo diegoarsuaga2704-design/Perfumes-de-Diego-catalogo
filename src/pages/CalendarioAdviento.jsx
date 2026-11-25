@@ -40,6 +40,10 @@ const CALENDARIOS = {
   12: { dias: 12, precio: 180 },
   24: { dias: 24, precio: 360 },
 };
+// Decants que caben: de N a 2N según el calendario. En total, de 12 a 48.
+const MIN_DECANTS = 12;
+const MAX_DECANTS = 48;
+const cabeEn = (c, n) => n >= c.dias && n <= c.dias * 2;
 const MINIMO_POR_PERFUME = 200;
 const ENVIO_REGULAR = 180;
 const FECHAS_ENVIO = "entre el 30 de noviembre y, a más tardar, el 4 de diciembre";
@@ -80,7 +84,7 @@ function BotonRegresar({ onClick, etiqueta = "Regresar" }) {
   );
 }
 
-function Encabezado({ compacto = false, dias, onCambiar, onRegresar }) {
+function Encabezado({ compacto = false, onRegresar }) {
   if (compacto) {
     // Barra fija arriba: regresar, título y cambiar calendario.
     return (
@@ -94,17 +98,9 @@ function Encabezado({ compacto = false, dias, onCambiar, onRegresar }) {
             Perfumes de Diego
           </p>
           <p className="text-2xl leading-tight truncate" style={{ fontFamily: SERIF, color: CREMA }}>
-            Calendario de {dias} días
+            Calendario de adviento
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onCambiar}
-          className="shrink-0 text-xs font-semibold px-3 py-2 rounded-full"
-          style={{ border: `1px solid ${DORADO}`, color: DORADO, background: FONDO_CAMPO }}
-        >
-          Cambiar
-        </button>
       </header>
     );
   }
@@ -287,33 +283,37 @@ export default function CalendarioAdviento() {
 
   const cal = dias ? CALENDARIOS[dias] : null;
 
-  // Sin calendario elegido no hay catálogo ni resumen: regresa al inicio.
-  useEffect(() => {
-    if (paso !== "inicio" && !cal) navigate(urlDe("inicio"), { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paso, cal]);
-  const minimo = cal?.dias || 0;
-  const maximo = minimo * 2;
   const cuantos = elegidos.length;
-  const lleno = cuantos >= maximo;
+  const lleno = cuantos >= MAX_DECANTS;
   const totalDecants = elegidos.reduce((s, x) => s + x.monto, 0);
+  // Calendarios en los que caben los decants elegidos.
+  const calendariosValidos = Object.values(CALENDARIOS).filter((c) => cabeEn(c, cuantos));
+
+  // El calendario se elige al final: si el que estaba elegido ya no cabe con
+  // los decants actuales, se borra; si solo uno cabe, se elige solo.
+  useEffect(() => {
+    if (listo || !catalogo.length) return;
+    if (cal && !cabeEn(cal, cuantos)) setDias(calendariosValidos.length === 1 ? calendariosValidos[0].dias : null);
+    else if (!cal && calendariosValidos.length === 1 && paso === "resumen") setDias(calendariosValidos[0].dias);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cuantos, paso, catalogo.length, listo]);
 
   // Si ya no alcanza el mínimo (p. ej. se descartó algo), regresa al catálogo.
   useEffect(() => {
-    if (paso === "resumen" && catalogo.length && cuantos < minimo && !listo) regresarA("catalogo");
+    if (paso === "resumen" && catalogo.length && cuantos < MIN_DECANTS && !listo) regresarA("catalogo");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paso, catalogo.length, cuantos, minimo, listo]);
+  }, [paso, catalogo.length, cuantos, listo]);
   const envioGratis = totalDecants >= UMBRAL_ENVIO_GRATIS;
   const costoEnvio = entrega === "envio" && !envioGratis ? ENVIO_REGULAR : 0;
   const total = totalDecants + (cal?.precio || 0) + costoEnvio;
   const faltaCp = entrega === "envio" && cp.length !== 5;
-  const listoParaEnviar = !!entrega && !faltaCp && !!numero;
+  const listoParaEnviar = !!cal && !!entrega && !faltaCp && !!numero;
 
   const elegirMl = (p, ml) => {
     setSel((prev) => {
       const nuevo = { ...prev };
       if (prev[p.id] === ml) delete nuevo[p.id];
-      else if (prev[p.id] || Object.keys(prev).length < maximo) nuevo[p.id] = ml;
+      else if (prev[p.id] || Object.keys(prev).length < MAX_DECANTS) nuevo[p.id] = ml;
       return nuevo;
     });
   };
@@ -371,7 +371,7 @@ export default function CalendarioAdviento() {
 
   // Pide número en cuanto llega al resumen y guarda el pedido (aunque no lo envíe).
   useEffect(() => {
-    if (paso !== "resumen" || !cal || cuantos < minimo) return;
+    if (paso !== "resumen" || !cal || !cabeEn(cal, cuantos)) return;
     let vivo = true;
     (async () => {
       const n = numero || (await pedirNumeroNuevo());
@@ -383,7 +383,7 @@ export default function CalendarioAdviento() {
       vivo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paso, entrega, cp, numero]);
+  }, [paso, entrega, cp, numero, dias]);
 
   const enviar = () => {
     if (!listoParaEnviar) return;
@@ -442,25 +442,20 @@ export default function CalendarioAdviento() {
       <Nieve />
 
       <div className="relative z-30 max-w-2xl mx-auto pb-36">
-        {!(paso !== "inicio" && !!cal) && (
+        {paso === "inicio" && (
           <div className="fixed top-3 left-3 z-50">
             <BotonRegresar onClick={regresar} etiqueta="Regresar a la tienda" />
           </div>
         )}
-        <Encabezado
-          compacto={paso !== "inicio" && !!cal}
-          dias={dias}
-          onCambiar={() => setPaso("inicio")}
-          onRegresar={regresar}
-        />
+        <Encabezado compacto={paso !== "inicio"} onRegresar={regresar} />
 
-        {/* ---------- Paso 1: elegir calendario ---------- */}
+        {/* ---------- Paso 1: cómo funciona ---------- */}
         {paso === "inicio" && (
           <section className="px-4 space-y-4">
             <RegaloSorpresa />
             <Aviso titulo="Cómo funciona">
-              Eliges tus perfumes y cuántos ml quieres de cada uno. El total es la suma de tus decants más
-              el calendario.
+              Primero eliges tus perfumes y cuántos ml quieres de cada uno. Al final escoges tu calendario
+              según cuántos decants elegiste. El total es la suma de tus decants más el calendario.
             </Aviso>
             <Aviso titulo="Entrega">
               El calendario completamente armado solo se entrega personalmente en Puebla. Para envíos, el
@@ -473,53 +468,48 @@ export default function CalendarioAdviento() {
               Los cupones y códigos de descuento de la tienda no se pueden usar en los calendarios de adviento.
             </Aviso>
             <h2 className="text-center text-2xl pt-4" style={{ fontFamily: SERIF }}>
-              Selecciona tu calendario:
+              Calendarios
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {Object.values(CALENDARIOS).map((c) => (
-                <button
+                <div
                   key={c.dias}
-                  type="button"
-                  onClick={() => {
-                    setDias(c.dias);
-                    if (Object.keys(sel).length > c.dias * 2) setSel({});
-                    setPaso("catalogo");
-                    track("calendario_elegido", { dias: c.dias });
-                  }}
-                  className="rounded-2xl p-4 pb-3 text-center shadow-lg transition-transform hover:-translate-y-0.5 active:scale-[0.98] flex flex-col"
-                  style={{
-                    background: FONDO_TARJETA,
-                    border: `2px solid ${DORADO}`,
-                  }}
+                  className="rounded-2xl p-4 text-center"
+                  style={{ background: FONDO_TARJETA, border: `1px solid ${DORADO}88` }}
                 >
                   <span className="block text-5xl font-light tabular-nums leading-none pt-1" style={{ color: DORADO }}>
                     {c.dias}
                   </span>
                   <span className="block text-sm uppercase tracking-widest mt-1">días</span>
                   <span className="block text-xs mt-3" style={{ color: "#d9cfbd" }}>
-                    Mínimo {c.dias} · máximo {c.dias * 2} decants
+                    De {c.dias} a {c.dias * 2} decants
                   </span>
                   <span className="block text-sm font-semibold mt-1">Decants + {$(c.precio)}</span>
-                  <span
-                    className="block mt-3 py-2.5 rounded-lg text-sm font-semibold"
-                    style={{ background: ROJO_BOTON, color: "#fff", border: `1px solid ${DORADO}` }}
-                  >
-                    Elegir {c.dias} días
-                  </span>
-                </button>
+                </div>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPaso("catalogo");
+                track("calendario_empezar", {});
+              }}
+              className="w-full py-4 rounded-xl font-semibold text-base shadow-lg active:scale-[0.99]"
+              style={boton(true)}
+            >
+              Empezar a elegir mis decants
+            </button>
           </section>
         )}
 
         {/* ---------- Paso 2: catálogo ---------- */}
-        {paso === "catalogo" && cal && !ver && recomendados === null && (
+        {paso === "catalogo" && !ver && recomendados === null && (
           <p className="px-4 text-center text-sm" style={{ color: "#d9cfbd" }}>
             Cargando…
           </p>
         )}
 
-        {mostrarEleccion && cal && (
+        {mostrarEleccion && (
           <section className="px-4 space-y-4 pt-2">
             <h2 className="text-center text-2xl" style={{ fontFamily: SERIF }}>
               ¿Cómo quieres armarlo?
@@ -553,7 +543,7 @@ export default function CalendarioAdviento() {
           </section>
         )}
 
-        {paso === "catalogo" && cal && !mostrarEleccion && !(!ver && recomendados === null) && (
+        {paso === "catalogo" && !mostrarEleccion && !(!ver && recomendados === null) && (
           <section className="px-4 space-y-4">
             {modoDiego ? (
               <div className="rounded-xl p-4" style={{ background: ROJO_BOTON, border: `2px solid ${DORADO}` }}>
@@ -561,7 +551,7 @@ export default function CalendarioAdviento() {
                   ★ Mis recomendados para Navidad
                 </p>
                 <p className="text-sm mt-1" style={{ color: "#f3e6e6" }}>
-                  Elige de {minimo} a {maximo} decants. Toca los ml que quieres de cada perfume.
+                  Elige de {MIN_DECANTS} a {MAX_DECANTS} decants. Toca los ml que quieres de cada perfume.
                 </p>
                 <button
                   type="button"
@@ -575,7 +565,7 @@ export default function CalendarioAdviento() {
             ) : (
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-sm" style={{ color: "#d9cfbd" }}>
-                  Elige de {minimo} a {maximo} decants. Toca los ml que quieres de cada perfume.
+                  Elige de {MIN_DECANTS} a {MAX_DECANTS} decants. Toca los ml que quieres de cada perfume.
                 </p>
                 {hayRecomendados && (
                   <button
@@ -723,14 +713,14 @@ export default function CalendarioAdviento() {
         )}
 
         {/* ---------- Paso 3: resumen y entrega ---------- */}
-        {paso === "resumen" && cal && (
+        {paso === "resumen" && cuantos >= MIN_DECANTS && (
           <section className="px-4 space-y-4">
             <p className="text-center">
               <span
                 className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold"
                 style={{ background: "#0E2A1D", border: `1px solid ${DORADO}`, color: DORADO }}
               >
-                {cuantos} {cuantos === 1 ? "decant elegido" : "decants elegidos"} · mín {minimo}, máx {maximo}
+                {cuantos} {cuantos === 1 ? "decant elegido" : "decants elegidos"}
               </span>
             </p>
 
@@ -763,6 +753,58 @@ export default function CalendarioAdviento() {
                 ← Cambiar decants
               </button>
             </details>
+
+            <div className="space-y-3 pt-2">
+              <h3 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
+                Elige tu calendario
+              </h3>
+              {Object.values(CALENDARIOS).map((c) => {
+                const cabe = cabeEn(c, cuantos);
+                const activo = dias === c.dias;
+                const motivo =
+                  cuantos < c.dias
+                    ? `Te ${c.dias - cuantos === 1 ? "falta 1 decant" : `faltan ${c.dias - cuantos} decants`} para este calendario.`
+                    : `Lleva de ${c.dias} a ${c.dias * 2} decants; tienes ${cuantos}. Quita ${cuantos - c.dias * 2} para elegirlo.`;
+                return (
+                  <button
+                    key={c.dias}
+                    type="button"
+                    disabled={!cabe}
+                    onClick={() => {
+                      setDias(c.dias);
+                      track("calendario_elegido", { dias: c.dias, decants: cuantos });
+                    }}
+                    role="radio"
+                    aria-checked={activo}
+                    className={`w-full text-left rounded-xl p-4 flex items-start gap-3 shadow-lg transition-transform active:scale-[0.99] disabled:cursor-not-allowed ${cabe ? "" : "opacity-50"}`}
+                    style={{
+                      background: activo ? ROJO_BOTON : FONDO_TARJETA,
+                      border: `2px solid ${activo ? DORADO : `${DORADO}88`}`,
+                    }}
+                  >
+                    <span
+                      className="mt-0.5 w-5 h-5 rounded-full shrink-0 flex items-center justify-center"
+                      style={{ border: `2px solid ${DORADO}`, background: activo ? DORADO : "transparent" }}
+                    >
+                      {activo && <span className="w-2 h-2 rounded-full" style={{ background: ROJO_BOTON }} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex justify-between gap-3">
+                        <span className="text-base font-semibold">Calendario de {c.dias} días</span>
+                        <span className="text-base font-semibold whitespace-nowrap">
+                          {cabe ? $(totalDecants + c.precio) : ""}
+                        </span>
+                      </span>
+                      <span className="block text-xs mt-1" style={{ color: activo ? "#f3e6e6" : "#d9cfbd" }}>
+                        {cabe
+                          ? `Tus decants ${$(totalDecants)} + calendario ${$(c.precio)}. De ${c.dias} a ${c.dias * 2} decants.`
+                          : motivo}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
 
             <div className="space-y-3 pt-2">
               <h3 className="text-2xl text-center" style={{ fontFamily: SERIF, color: CREMA }}>
@@ -836,10 +878,12 @@ export default function CalendarioAdviento() {
                 <span>{cuantos} decants</span>
                 <span>{$(totalDecants)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Calendario {dias} días</span>
-                <span>{$(cal.precio)}</span>
-              </div>
+              {cal && (
+                <div className="flex justify-between">
+                  <span>Calendario {dias} días</span>
+                  <span>{$(cal.precio)}</span>
+                </div>
+              )}
               {entrega && (
                 <div className="flex justify-between">
                   <span>{entrega === "puebla" ? "Entrega en Puebla" : "Envío DHL"}</span>
@@ -863,7 +907,9 @@ export default function CalendarioAdviento() {
                 className="w-full py-3.5 rounded-xl font-semibold text-base disabled:cursor-not-allowed"
                 style={boton(listoParaEnviar)}
               >
-                {!entrega
+                {!cal
+                  ? "Elige tu calendario"
+                  : !entrega
                   ? "Elige cómo quieres recibirlo"
                   : faltaCp
                     ? "Escribe tu código postal"
@@ -913,7 +959,7 @@ export default function CalendarioAdviento() {
       </div>
 
       {/* Barra fija con el avance (en el catálogo) */}
-      {paso === "catalogo" && cal && !mostrarEleccion && (
+      {paso === "catalogo" && !mostrarEleccion && (
         <div
           className="fixed bottom-0 inset-x-0 z-40 px-4 py-3"
           style={{ background: "rgba(11,36,25,0.96)", borderTop: `1px solid ${DORADO}`, backdropFilter: "blur(6px)" }}
@@ -922,33 +968,41 @@ export default function CalendarioAdviento() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold leading-snug">
                 {cuantos} {cuantos === 1 ? "decant" : "decants"}
-                {cuantos < minimo ? (
-                  <span style={{ color: "#f0b4b8" }}> · faltan {minimo - cuantos}</span>
+                {cuantos < MIN_DECANTS ? (
+                  <span style={{ color: "#f0b4b8" }}> · faltan {MIN_DECANTS - cuantos} para el de 12 días</span>
                 ) : lleno ? (
                   <span style={{ color: DORADO }}> · llegaste al máximo</span>
                 ) : (
                   <span style={{ color: DORADO }}>
                     {" "}
-                    · puedes agregar {maximo - cuantos} {maximo - cuantos === 1 ? "decant" : "decants"} más
+                    · alcanza para {calendariosValidos.map((c) => c.dias).join(" o ")} días
                   </span>
                 )}
               </p>
               <p className="text-xs truncate" style={{ color: "#d9cfbd" }}>
-                Mín {minimo} · máx {maximo} · Total {$(totalDecants + cal.precio)}
+                {cuantos >= 12 && cuantos < 24
+                  ? `Con ${24 - cuantos} más alcanza para el de 24 días · `
+                  : cuantos > 24 && !lleno
+                    ? `Puedes agregar ${MAX_DECANTS - cuantos} más · `
+                    : `12 días: 12 a 24 · 24 días: 24 a 48 · `}
+                Decants {$(totalDecants)}
               </p>
               <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
                 <div
                   className="h-full rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (cuantos / minimo) * 100)}%`, background: cuantos >= minimo ? DORADO : ROJO }}
+                  style={{
+                    width: `${Math.min(100, (cuantos / MIN_DECANTS) * 100)}%`,
+                    background: cuantos >= MIN_DECANTS ? DORADO : ROJO,
+                  }}
                 />
               </div>
             </div>
             <button
               type="button"
-              disabled={cuantos < minimo}
+              disabled={cuantos < MIN_DECANTS}
               onClick={() => setPaso("resumen")}
               className="shrink-0 px-5 py-3 rounded-xl font-semibold text-sm disabled:cursor-not-allowed"
-              style={boton(cuantos >= minimo)}
+              style={boton(cuantos >= MIN_DECANTS)}
             >
               Continuar
             </button>
