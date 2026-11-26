@@ -35,6 +35,9 @@ const CAMPO = {
 };
 // Foto de los calendarios (portada).
 const FOTO_CALENDARIO = "/calendario-adviento.jpg?v=2";
+const FOTO_CAJAS = "/calendario-cajitas.jpg?v=2";
+// Foto de portada (arriba de la página): modelo Cajas navideñas.
+const FOTO_PORTADA = FOTO_CAJAS;
 // Modelos del calendario (mismo precio; se elige en el paso 2).
 const MODELOS = {
   pastel: {
@@ -44,7 +47,7 @@ const MODELOS = {
     // Texto que el cliente debe aceptar antes de enviar su pedido.
     aceptar: "Entiendo que el modelo Pastel llega entre el 30 de noviembre y aproximadamente el 4 de diciembre.",
   },
-  cajas: { nombre: "Cajas navideñas", foto: "/calendario-cajitas.jpg?v=2" },
+  cajas: { nombre: "Cajas navideñas", foto: FOTO_CAJAS },
 };
 
 const CALENDARIOS = {
@@ -135,9 +138,9 @@ function Encabezado({ compacto = false, paso, onRegresar }) {
       <p className="relative mt-3 text-sm sm:text-base max-w-md mx-auto" style={{ color: "#d9cfbd" }}>
         Un decant para abrir cada día hasta Navidad, armado con los perfumes que tú elijas.
       </p>
-      {FOTO_CALENDARIO && (
+      {FOTO_PORTADA && (
         <img
-          src={FOTO_CALENDARIO}
+          src={FOTO_PORTADA}
           alt="Calendario de adviento de Perfumes de Diego"
           className="relative mt-6 mx-auto w-full max-w-md rounded-xl shadow-2xl"
           style={{ border: `1px solid ${DORADO}55` }}
