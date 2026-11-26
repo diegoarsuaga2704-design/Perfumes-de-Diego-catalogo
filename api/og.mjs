@@ -115,6 +115,7 @@ ${noindex ? '  <meta name="robots" content="noindex" />' : `  <link rel="canonic
   <meta property="og:image" content="${esc(img)}" />
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="${esc(url)}" />
   <meta property="og:site_name" content="${esc(SITE_NAME)}" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -161,7 +162,7 @@ export default async function handler(req, res) {
         title: `Calendario de adviento | ${SITE_NAME}`,
         description:
           "Arma tu calendario de adviento de 12 o 24 días con los decants que tú elijas.",
-        image: `${SITE_URL}/calendario-cajitas.jpg?v=2`,
+        image: `${SITE_URL}/calendario-compartir.jpg?v=1`,
         url: `${SITE_URL}/calendario-adviento`,
         bodyHtml: `<h1>Calendario de adviento</h1><p>Arma tu calendario de 12 o 24 días con los decants que tú elijas.</p>`,
         noindex: true,
