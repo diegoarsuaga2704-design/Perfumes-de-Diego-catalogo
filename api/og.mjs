@@ -115,7 +115,6 @@ ${noindex ? '  <meta name="robots" content="noindex" />' : `  <link rel="canonic
   <meta property="og:image" content="${esc(img)}" />
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="${esc(url)}" />
   <meta property="og:site_name" content="${esc(SITE_NAME)}" />
   <meta name="twitter:card" content="summary_large_image" />
