@@ -48,8 +48,8 @@ const MODELOS = {
 };
 
 const CALENDARIOS = {
-  12: { dias: 12, precio: 90 },
-  24: { dias: 24, precio: 180 },
+  12: { dias: 12, precio: 95 },
+  24: { dias: 24, precio: 190 },
 };
 // Decants que caben: de N a 2N según el calendario. En total, de 12 a 48.
 const MIN_DECANTS = Math.min(...Object.values(CALENDARIOS).map((c) => c.dias));
